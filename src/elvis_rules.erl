@@ -4,7 +4,7 @@
          line_length/3
         ]).
 
--define(LINE_LENGTH, "Line ~p too long: ~p.").
+-define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -26,12 +26,14 @@ line_length(Config, Target, [Limit]) ->
 
 -spec check_line_length(integer()) -> fun().
 check_line_length(Limit) ->
-  fun(Line, {Results, Num}) ->
-    case byte_size(Line) of
-      Large when Large > Limit ->
-        Result = elvis_result:new(?LINE_LENGTH, [Num, Line, Limit]),
-        {[Result | Results], Num + 1};
-      _ ->
-        {Results, Num + 1}
-    end
-  end.
+    fun(Line, {Results, Num}) ->
+          case byte_size(Line) of
+        Large when Large > Limit ->
+                  Msg = ?LINE_LENGTH_MSG,
+                  Info = [Num, binary_to_list(Line)],
+                  Result = elvis_result:new(specific, Msg, Info),
+                  {[Result | Results], Num + 1};
+              _ ->
+                  {Results, Num + 1}
+          end
+    end.

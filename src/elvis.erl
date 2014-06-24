@@ -63,11 +63,11 @@ apply_rules(Config, FilePath) ->
     Rules = elvis_utils:rules(Config),
     Acc = {[], Config, FilePath},
     {RuleResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
-    elvis_result:new(FilePath, RuleResults).
+    elvis_result:new(file, FilePath, RuleResults).
 
 apply_rule({Function, Args}, Acc) ->
     apply_rule({elvis_rules, Function, Args}, Acc);
 apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
     Results = Module:Function(Config, FilePath, Args),
-    RuleResult = elvis_result:new(Function, Results),
+    RuleResult = elvis_result:new(rule, Function, Results),
     {[RuleResult | Result], Config, FilePath}.
