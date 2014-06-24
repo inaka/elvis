@@ -6,4 +6,6 @@ Erlang Style Reviewer
 
 ## References
 
-Inspired on [HoundCI](/houndci)
+Inspired on [HoundCI][houndci]
+
+  [houndci]: https://houndci.com/
