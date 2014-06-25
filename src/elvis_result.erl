@@ -1,9 +1,17 @@
 -module(elvis_result).
 
+%% API
 -export([
          new/3,
          print/1
         ]).
+
+%% Types
+-export_type([
+              result/0,
+              rule_result/0,
+              file_result/0
+             ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Records
@@ -51,8 +59,6 @@ print([Result | Results]) ->
     print(Result),
     print(Results);
 
-print(#file_result{rules = []}) ->
-    ok;
 print(#file_result{path = Path, rules = Rules}) ->
     io:format("# ~s~n", [Path]),
     print(Rules),

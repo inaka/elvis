@@ -12,8 +12,8 @@
 
 %% @doc Target can be either a filename or the
 %% name of a module.
--spec line_length(elvis:config(), string(), any()) ->
-    [elvis:result()].
+-spec line_length(elvis:config(), string(), [term()]) ->
+    [elvis_result:result()].
 line_length(Config, Target, [Limit]) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     Lines = binary:split(Src, <<"\n">>, [global]),

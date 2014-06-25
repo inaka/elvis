@@ -7,6 +7,10 @@
          rock/1
         ]).
 
+-export_type([
+              config/0
+             ]).
+
 -type config() :: [{atom(), term()}].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -15,14 +19,18 @@
 
 -spec rock() -> ok.
 rock() ->
-    application:start(elvis),
-    rock(application:get_all_env(elvis)).
+    ok = application:start(elvis),
+    Config = application:get_all_env(elvis),
+    rock(Config).
 
 -spec rock(config()) -> ok.
 rock(Config) ->
-    ct:pal("~p", [Config]),
-    run(Config),
-    ok.
+    case elvis_utils:validate_config(Config) of
+        valid ->
+            run(Config);
+        invalid ->
+            throw(invalid_config)
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
@@ -47,8 +55,6 @@ apply_rules(Config, FilePath) ->
     {RuleResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
     elvis_result:new(file, FilePath, RuleResults).
 
-apply_rule({Function, Args}, Acc) ->
-    apply_rule({elvis_rules, Function, Args}, Acc);
 apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
     Results = Module:Function(Config, FilePath, Args),
     RuleResult = elvis_result:new(rule, Function, Results),
