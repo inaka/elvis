@@ -1,17 +1,10 @@
 -module(elvis).
--behavior(application).
 
 %% Public API
 
 -export([
          rock/0,
          rock/1
-        ]).
-
-%% Application Behavior Callbacks
--export([
-         start/2,
-         stop/1
         ]).
 
 -type config() :: [{atom(), term()}].
@@ -22,24 +15,13 @@
 
 -spec rock() -> ok.
 rock() ->
+    application:start(elvis),
     rock(application:get_all_env(elvis)).
 
 -spec rock(config()) -> ok.
 rock(Config) ->
+    ct:pal("~p", [Config]),
     run(Config),
-    ok.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Application behavior callbacks
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
--spec start(kernel:start_type(), term()) ->
-    {ok, pid()} | {ok, pid(), any()} | {error, atom()}.
-start(_StartType, _StartArgs) ->
-    {ok, self()}.
-
--spec stop(any()) -> ok.
-stop(_State) ->
     ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
