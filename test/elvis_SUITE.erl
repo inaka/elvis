@@ -1,7 +1,9 @@
 -module(elvis_SUITE).
 
 -export([
-         all/0
+         all/0,
+         init_per_suite/1,
+         end_per_suite/1
         ]).
 
 -export([
@@ -32,6 +34,16 @@ all() ->
     Exports = elvis_SUITE:module_info(exports),
     [F || {F, _} <- Exports,
           lists:all(fun(E) -> E /= F end, ?EXCLUDED_FUNS)].
+
+-spec init_per_suite(config()) -> config().
+init_per_suite(Config) ->
+    application:start(elvis),
+    Config.
+
+-spec end_per_suite(config()) -> config().
+end_per_suite(Config) ->
+    application:stop(elvis),
+    Config.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test Cases

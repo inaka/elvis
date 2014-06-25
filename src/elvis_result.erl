@@ -60,17 +60,32 @@ print([Result | Results]) ->
     print(Results);
 
 print(#file_result{path = Path, rules = Rules}) ->
-    io:format("# ~s~n", [Path]),
-    print(Rules),
-    ok;
+    %% ct:pal("~p", [Rules]),
+    Status = case file_status(Rules) of
+                 ok -> "OK";
+                 fail -> "FAIL"
+             end,
+
+    io:format("# ~s [~s]~n", [Path, Status]),
+    print(Rules);
 
 print(#rule_result{results = []}) ->
     ok;
 print(#rule_result{name = Name, results = Results}) ->
     io:format("  - ~s~n", [atom_to_list(Name)]),
-    print(Results),
-    ok;
+    print(Results);
 
 print(#item_result{message = Msg, info = Info}) ->
-    io:format("    - " ++ Msg ++ "~n", Info),
-    ok.
+    io:format("    - " ++ Msg ++ "~n", Info).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Private
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-spec file_status([rule_result()]) -> ok | fail.
+file_status([]) ->
+    ok;
+file_status([#rule_result{results = []} | Rules]) ->
+    file_status(Rules);
+file_status(_Rules) ->
+    fail.

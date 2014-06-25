@@ -19,7 +19,6 @@
 
 -spec rock() -> ok.
 rock() ->
-    ok = application:start(elvis),
     Config = application:get_all_env(elvis),
     rock(Config).
 
@@ -46,8 +45,7 @@ run(Config) ->
     FilePaths = lists:flatmap(Fun, SrcDirs),
     Results = lists:map(fun (Path) -> apply_rules(Config, Path) end, FilePaths),
 
-    elvis_result:print(Results),
-    ok.
+    elvis_result:print(Results).
 
 apply_rules(Config, FilePath) ->
     Rules = elvis_utils:rules(Config),
