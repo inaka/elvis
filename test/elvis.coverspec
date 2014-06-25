@@ -5,6 +5,6 @@
   elvis,
   elvis_result,
   elvis_utils,
-  elvis_rules
+  elvis_style
  ]
 }.

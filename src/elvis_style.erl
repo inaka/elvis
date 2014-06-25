@@ -1,4 +1,4 @@
--module(elvis_rules).
+-module(elvis_style).
 
 -export([
          line_length/3,
@@ -31,7 +31,7 @@ no_tabs(Config, Target, []) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -spec check_line_length(binary(), integer(), [term()]) ->
-    elvis_result:item_result().
+    no_result | {ok, elvis_result:item_result()}.
 check_line_length(Line, Num, [Limit]) ->
     case byte_size(Line) of
         Large when Large > Limit ->
@@ -49,6 +49,6 @@ check_no_tabs(Line, Num, _Args) ->
             no_result;
         {Index, _} ->
             Msg = ?NO_TABS_MSG,
-            Result = elvis_results:result(item, Msg, [Index, Num]),
+            Result = elvis_result:new(item, Msg, [Index, Num]),
             {ok, Result}
     end.
