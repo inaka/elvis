@@ -5,7 +5,8 @@
          find_file/2,
          rules/1,
          source_dirs/1,
-         validate_config/1
+         validate_config/1,
+         check_lines/3
         ]).
 
 -type rule() :: mfa() | {Function :: atom(), Args :: list()}.
@@ -56,4 +57,25 @@ validate_config([Key | Keys], Config) ->
             invalid;
         _ ->
             validate_config(Keys, Config)
+    end.
+
+%% @doc Takes a binary that holds source code and applies
+%% Fun to each line. Fun takes 3 arguments (the line
+%% as a binary, the line number and the supplied Args) and
+%% returns 'no_result' or {'ok', Result}.
+-spec check_lines(binary(), fun(), [term()]) ->
+    [elvis_result:item_result()].
+check_lines(Src, Fun, Args) ->
+    Lines = binary:split(Src, <<"\n">>, [global]),
+    check_lines(Lines, Fun, Args, [], 1).
+
+%% @private
+check_lines([], _Fun, _Args, Results, _Num) ->
+    Results;
+check_lines([Line | Lines], Fun, Args, Results, Num) ->
+    case Fun(Line, Num, Args) of
+        {ok, Result} ->
+            check_lines(Lines, Fun, Args, [Result | Results], Num + 1);
+        no_result ->
+            check_lines(Lines, Fun, Args, Results, Num + 1)
     end.
