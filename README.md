@@ -7,7 +7,7 @@ Erlang Style Reviewer
 ## Usage
 
 After adding **elvis** as a dependency and setting up its [configuration](#configutation), you can run it
-form an erlang shell in the following two ways.
+form an Erlang shell in the following two ways.
 
 ```erlang
 elvis:rock().
@@ -18,22 +18,30 @@ elvis:rock().
 %%= ok
 ```
 
-This will try to load the configuration for **elvis** specified in the [configuration](http://www.erlang.org/doc/man/config.html).
-For the **elvis** configuration information to be available, the application needs to be started. If no configuration is found
-(i.e. an empty list `[]` is used) `invalid_config` will be thrown. To start the application enter the following command in the shell:
+This will try to load the configuration for **elvis** specified in the [application's configuration](http://www.erlang.org/doc/man/config.html),
+for this to be available, the application needs to be started. If no configuration is found `invalid_config` will be thrown.
+
+To start the application in the shell enter the following command:
 
 ```erlang
 application:start(elvis).
 %= ok
 ```
 
+Another option for using **elvis** from the shell is explicitly providing a configuration as an argument to ``rock()``:
+
 ```erlang
-Config = [{src_dirs, ["src"]}, {rules, []}]
+Config = [{src_dirs, ["src"]}, {rules, []}],
 elvis:rock(Config).
+%%+ # src/elvis.erl [OK]
+%%+ # src/elvis_result.erl [OK]
+%%+ # src/elvis_style.erl [OK]
+%%+ # src/elvis_utils.erl [OK]
+%%= ok
 ```
 
-This way of using **elvis** allows you to provide its configuration as an argument, `Config` which should have
-a valid format. Since this is a project under development what a valid format is, is still undefined.
+`Config` which should have a valid format. Since this is a project under development what is a valid format is still a
+work in progress.
 
 ## Configuration
 
