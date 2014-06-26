@@ -38,11 +38,8 @@ rock(Config) ->
 -spec run(config()) -> ok.
 run(Config) ->
     SrcDirs = elvis_utils:source_dirs(Config),
-    Filename = "*.erl",
-    Fun = fun(Path) ->
-            elvis_utils:find_file(Path, Filename)
-          end,
-    FilePaths = lists:flatmap(Fun, SrcDirs),
+    Pattern = "*.erl",
+    FilePaths = elvis_utils:find_files(SrcDirs, Pattern),
     Results = lists:map(fun (Path) -> apply_rules(Config, Path) end, FilePaths),
 
     elvis_result:print(Results).

@@ -11,7 +11,8 @@
          rock_with_incomplete_config/1,
          rock_with_file_config/1,
          check_configuration/1,
-         find_file_and_check_src/1
+         find_file_and_check_src/1,
+         verify_line_length_rule/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -76,17 +77,31 @@ rock_with_file_config(_Config) ->
 check_configuration(_Config) ->
     Config = [
               {src_dirs, ["src", "test"]},
-              {rules, []}
+              {rules, [{module, rule1, []}]}
              ],
     ["src", "test"] = elvis_utils:source_dirs(Config),
-    [] = elvis_utils:rules(Config).
+    [{module, rule1, []}] = elvis_utils:rules(Config).
 
 -spec find_file_and_check_src(config()) -> any().
 find_file_and_check_src(_Config) ->
-    Dir = "../../test/examples",
+    Dirs = ["../../test/examples"],
 
-    []= elvis_utils:find_file(Dir, "doesnt_exist.erl"),
-    [Path] = elvis_utils:find_file(Dir, "small.erl"),
+    not_found = elvis_utils:find_file(Dirs, "doesnt_exist.erl"),
+    {ok, Path} = elvis_utils:find_file(Dirs, "small.erl"),
 
     {ok, <<"-module(small).\n">>} = elvis_utils:src([], Path),
-    {error, enoent} = elvis_utils:src([], "doesnt_exist.erl").
+    not_found = elvis_utils:src([], "doesnt_exist.erl").
+
+-spec verify_line_length_rule(config()) -> any().
+verify_line_length_rule(_Config) ->
+    ElvisConfig = application:get_all_env(elvis),
+    SrcDirs = elvis_utils:source_dirs(ElvisConfig),
+
+    File = "fail_line_length.erl",
+    {ok, Path} = elvis_utils:find_file(SrcDirs, File),
+
+    Results = elvis_style:line_length(ElvisConfig, Path, [80]),
+    ok = case length(Results) of
+        2 -> ok;
+        _ -> long_lines_undetected
+    end.

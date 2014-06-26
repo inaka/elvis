@@ -2,6 +2,7 @@
 
 -export([
          src/2,
+         find_files/2,
          find_file/2,
          rules/1,
          source_dirs/1,
@@ -15,19 +16,31 @@
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% @doc Returns the source for the file. If the file
-%% is not found tries to get the source from the compile
-%% bytecode.
+%% @doc Returns the source for the file.
 -spec src(elvis:config(), file:filename()) ->
     {ok, binary()} | not_found.
 src(_Config, FilePath) ->
-    file:read_file(FilePath).
+    case file:read_file(FilePath) of
+        {error, enoent} -> not_found;
+        Result -> Result
+    end.
 
 %% @doc Returns all files under the specified Path
 %% that match the pattern Name.
--spec find_file(string(), string()) -> [string()].
-find_file(Path, Name) ->
-    filelib:wildcard(Path ++ "**/" ++ Name).
+-spec find_files([string()], string()) -> [string()].
+find_files(Dirs, Pattern) ->
+    Fun = fun(Dir) ->
+                filelib:wildcard(Dir ++ "**/" ++ Pattern)
+          end,
+    lists:flatmap(Fun, Dirs).
+
+-spec find_file([string()], string()) ->
+    {ok, string()} | not_found.
+find_file(Dirs, Pattern) ->
+    case find_files(Dirs, Pattern) of
+        [] -> not_found;
+        [Path | _] -> {ok, Path}
+    end.
 
 %% @doc Reads the rules to apply specified in the
 %%  configuration and returns them.

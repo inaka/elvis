@@ -25,7 +25,7 @@ To start the application in the shell enter the following command:
 
 ```erlang
 application:start(elvis).
-%= ok
+%%= ok
 ```
 
 Another option for using **elvis** from the shell is explicitly providing a configuration as an argument to ``rock()``:
@@ -59,7 +59,7 @@ environment values in your [configuration](http://www.erlang.org/doc/man/config.
      {elvis_style, no_tabs, []},
      %% ..
     ]
-   },
+   }
   ]
  }
 ]
