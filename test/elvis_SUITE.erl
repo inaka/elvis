@@ -34,8 +34,7 @@
 -spec all() -> [atom()].
 all() ->
     Exports = elvis_SUITE:module_info(exports),
-    [F || {F, _} <- Exports,
-          lists:all(fun(E) -> E /= F end, ?EXCLUDED_FUNS)].
+    [F || {F, _} <- Exports, not lists:member(F, ?EXCLUDED_FUNS)].
 
 -spec init_per_suite(config()) -> config().
 init_per_suite(Config) ->
