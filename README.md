@@ -43,6 +43,21 @@ elvis:rock(Config).
 `Config` should have a valid format, since this is a project under development the definition for *valid format* is still a
 work in progress.
 
+We have only presented results where all files were well-behaved (respect all the rules), so here's an example of how
+it looks when files break some rules:
+
+```
+# ../../test/examples/fail_line_length.erl [FAIL]
+  - line_length
+    - Line 14 is too long: "    io:format(\"This line is 81 characters long and should be detected, yeah!!!\").".
+    - Line 20 is too long: "    io:format(\"This line is 90 characters long and should be detected!!!!!!!!!!!!!!!!!!\").".
+# ../../test/examples/fail_no_tabs.erl [FAIL]
+  - no_tabs
+    - Line 6 has a tab at column 0.
+    - Line 15 has a tab at column 0.
+# ../../test/examples/small.erl [OK]
+```
+
 ## Configuration
 
 To run **elvis** as described in the first option of the [Usage](#usage) section, you should include the following

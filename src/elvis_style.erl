@@ -51,6 +51,6 @@ check_no_tabs(Line, Num, _Args) ->
             no_result;
         {Index, _} ->
             Msg = ?NO_TABS_MSG,
-            Result = elvis_result:new(item, Msg, [Index, Num]),
+            Result = elvis_result:new(item, Msg, [Num, Index]),
             {ok, Result}
     end.
