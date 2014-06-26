@@ -9,15 +9,25 @@ Erlang Style Reviewer
 After adding **elvis** as a dependency and setting up its [configuration](#configutation), you can run it
 form an erlang shell in the following two ways.
 
-```
+```erlang
 elvis:rock().
+%%+ # src/elvis.erl [OK]
+%%+ # src/elvis_result.erl [OK]
+%%+ # src/elvis_style.erl [OK]
+%%+ # src/elvis_utils.erl [OK]
+%%= ok
 ```
 
 This will try to load the configuration for **elvis** specified in the [configuration](http://www.erlang.org/doc/man/config.html).
-For the **elvis** configuration infomation to be available, the application needs to be started. If no configuration is found
-(i.e. an empty list `[]` is used) `invalid_config` will be thrown.
+For the **elvis** configuration information to be available, the application needs to be started. If no configuration is found
+(i.e. an empty list `[]` is used) `invalid_config` will be thrown. To start the application enter the following command in the shell:
 
+```erlang
+application:start(elvis).
+%= ok
 ```
+
+```erlang
 Config = [{src_dirs, ["src"]}, {rules, []}]
 elvis:rock(Config).
 ```

@@ -71,7 +71,7 @@ check_lines(Src, Fun, Args) ->
 
 %% @private
 check_lines([], _Fun, _Args, Results, _Num) ->
-    Results;
+    lists:reverse(Results);
 check_lines([Line | Lines], Fun, Args, Results, Num) ->
     case Fun(Line, Num, Args) of
         {ok, Result} ->

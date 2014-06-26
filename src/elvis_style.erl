@@ -43,6 +43,8 @@ check_line_length(Line, Num, [Limit]) ->
             no_result
     end.
 
+-spec check_no_tabs(binary(), integer(), [term()]) ->
+    no_result | {ok, elvis_result:item_result()}.
 check_no_tabs(Line, Num, _Args) ->
     case binary:match(Line, <<"\t">>) of
         nomatch ->
