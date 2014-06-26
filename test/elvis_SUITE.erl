@@ -69,9 +69,29 @@ rock_with_incomplete_config(_Config) ->
              throw:invalid_config -> ok
          end.
 
+-define(ROCK_WITH_TESTS,
+        ["# ../../test/examples/fail_line_length.erl [FAIL]\n",
+         "  - line_length\n",
+         "    - Line 14 is too long: \"    io:format(\\\"This line is 81 "
+         ++ "characters long and should be detected, yeah!!!\\\").\".\n",
+         "    - Line 20 is too long: \"    io:format(\\\"This line is 90 "
+         ++ "characters long and should be detected!!!!!!!!!!!!!!!!!!\\\")"
+         ++ ".\".\n",
+         "# ../../test/examples/fail_no_tabs.erl [FAIL]\n",
+         "  - no_tabs\n",
+         "    - Line 6 has a tab at column 0.\n",
+         "    - Line 15 has a tab at column 0.\n",
+         "# ../../test/examples/small.erl [OK]\n"]).
+
 -spec rock_with_file_config(config()) -> ok.
 rock_with_file_config(_Config) ->
-    ok = elvis:rock().
+    ct:capture_start(),
+    ok = elvis:rock(),
+    ct:capture_stop(),
+
+    Captured = ct:capture_get([]),
+
+    ?ROCK_WITH_TESTS = Captured.
 
 -spec check_configuration(config()) -> any().
 check_configuration(_Config) ->
