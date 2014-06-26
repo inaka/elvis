@@ -60,7 +60,6 @@ print([Result | Results]) ->
     print(Results);
 
 print(#file_result{path = Path, rules = Rules}) ->
-    %% ct:pal("~p", [Rules]),
     Status = case file_status(Rules) of
                  ok -> "OK";
                  fail -> "FAIL"

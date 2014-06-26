@@ -3,7 +3,6 @@
 -export([
          src/2,
          find_files/2,
-         find_file/2,
          rules/1,
          source_dirs/1,
          validate_config/1,
@@ -18,12 +17,9 @@
 
 %% @doc Returns the source for the file.
 -spec src(elvis:config(), file:filename()) ->
-    {ok, binary()} | not_found.
+    {ok, binary()} | {error, enoent}.
 src(_Config, FilePath) ->
-    case file:read_file(FilePath) of
-        {error, enoent} -> not_found;
-        Result -> Result
-    end.
+    file:read_file(FilePath).
 
 %% @doc Returns all files under the specified Path
 %% that match the pattern Name.
@@ -33,14 +29,6 @@ find_files(Dirs, Pattern) ->
                 filelib:wildcard(Dir ++ "**/" ++ Pattern)
           end,
     lists:flatmap(Fun, Dirs).
-
--spec find_file([string()], string()) ->
-    {ok, string()} | not_found.
-find_file(Dirs, Pattern) ->
-    case find_files(Dirs, Pattern) of
-        [] -> not_found;
-        [Path | _] -> {ok, Path}
-    end.
 
 %% @doc Reads the rules to apply specified in the
 %%  configuration and returns them.

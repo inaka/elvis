@@ -40,7 +40,7 @@ elvis:rock(Config).
 %%= ok
 ```
 
-`Config` which should have a valid format. Since this is a project under development what is a valid format is still a
+`Config` should have a valid format, since this is a project under development the definition for *valid format* is still a
 work in progress.
 
 ## Configuration

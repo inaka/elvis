@@ -87,11 +87,11 @@ check_configuration(_Config) ->
 find_file_and_check_src(_Config) ->
     Dirs = ["../../test/examples"],
 
-    not_found = elvis_utils:find_file(Dirs, "doesnt_exist.erl"),
-    {ok, Path} = elvis_utils:find_file(Dirs, "small.erl"),
+    [] = elvis_utils:find_files(Dirs, "doesnt_exist.erl"),
+    [Path] = elvis_utils:find_files(Dirs, "small.erl"),
 
     {ok, <<"-module(small).\n">>} = elvis_utils:src([], Path),
-    not_found = elvis_utils:src([], "doesnt_exist.erl").
+    {error, enoent} = elvis_utils:src([], "doesnt_exist.erl").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -103,7 +103,7 @@ verify_line_length_rule(_Config) ->
     SrcDirs = elvis_utils:source_dirs(ElvisConfig),
 
     File = "fail_line_length.erl",
-    {ok, Path} = elvis_utils:find_file(SrcDirs, File),
+    {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
     Results = elvis_style:line_length(ElvisConfig, Path, [80]),
     ok = case length(Results) of
@@ -117,7 +117,7 @@ verify_no_tabs_rule(_Config) ->
     SrcDirs = elvis_utils:source_dirs(ElvisConfig),
 
     File = "fail_no_tabs.erl",
-    {ok, Path} = elvis_utils:find_file(SrcDirs, File),
+    {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
     Results = elvis_style:no_tabs(ElvisConfig, Path, []),
     ok = case length(Results) of
