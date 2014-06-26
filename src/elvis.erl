@@ -102,8 +102,11 @@ process_options(Options, Commands) ->
 process_options([help | Opts], Cmds, Config) ->
     help(),
     process_options(Opts, Cmds, Config);
-process_options([{config, Path} | Opts], Cmds, _Config) ->
+process_options([{config, Path} | Opts], Cmds, _) ->
     Config = config(Path),
+    process_options(Opts, Cmds, Config);
+process_options([commands | Opts], Cmds, Config) ->
+    commands(),
     process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config);
@@ -153,3 +156,11 @@ config(Path) ->
         {error, Reason} ->
             throw(Reason)
     end.
+
+-spec commands() -> ok.
+commands() ->
+    Commands = <<"Elvis will do the following things for you when asked nicely:
+
+rock             Rock your socks off by running all rules to your source files.
+">>,
+   io:put_chars(Commands).
