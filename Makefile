@@ -1,9 +1,10 @@
 PROJECT = elvis
 
-DEPS = lager sync
+DEPS = lager sync getopt
 
-dep_lager = https://github.com/basho/lager.git master
+dep_lager = https://github.com/basho/lager.git 2.0.3
 dep_sync = https://github.com/rustyio/sync.git master
+dep_getopt = https://github.com/jcomellas/getopt v0.8.2
 
 include erlang.mk
 
@@ -17,3 +18,8 @@ ERLC_OPTS += +warn_export_vars +warn_exported_vars +warn_missing_spec +warn_unty
 TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
 CT_SUITES = elvis
 CT_OPTS = -cover test/elvis.coverspec  -erl_args -config config/test
+
+# Builds the elvis escript.
+escript: all
+	rebar escriptize
+	./elvis help
