@@ -13,7 +13,13 @@
          check_configuration/1,
          find_file_and_check_src/1,
          verify_line_length_rule/1,
-         verify_no_tabs_rule/1
+         verify_no_tabs_rule/1,
+         main_help/1,
+         main_commands/1,
+         main_config/1,
+         main_rock/1,
+         main_default_config/1,
+         main_unexistent/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -50,6 +56,9 @@ end_per_suite(Config) ->
 %% Test Cases
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%
+%%% Rocking
+
 -spec rock_with_empty_config(config()) -> any().
 rock_with_empty_config(_Config) ->
     ok = try
@@ -69,29 +78,15 @@ rock_with_incomplete_config(_Config) ->
              throw:invalid_config -> ok
          end.
 
--define(ROCK_WITH_TESTS,
-        ["# ../../test/examples/fail_line_length.erl [FAIL]\n",
-         "  - line_length\n",
-         "    - Line 14 is too long: \"    io:format(\\\"This line is 81 "
-         ++ "characters long and should be detected, yeah!!!\\\").\".\n",
-         "    - Line 20 is too long: \"    io:format(\\\"This line is 90 "
-         ++ "characters long and should be detected!!!!!!!!!!!!!!!!!!\\\")"
-         ++ ".\".\n",
-         "# ../../test/examples/fail_no_tabs.erl [FAIL]\n",
-         "  - no_tabs\n",
-         "    - Line 6 has a tab at column 0.\n",
-         "    - Line 15 has a tab at column 0.\n",
-         "# ../../test/examples/small.erl [OK]\n"]).
-
 -spec rock_with_file_config(config()) -> ok.
 rock_with_file_config(_Config) ->
-    ct:capture_start(),
-    ok = elvis:rock(),
-    ct:capture_stop(),
+    Fun = fun() -> elvis:rock() end,
+    Expected = "# ../../test/examples/fail_line_length.erl [FAIL]\n",
+    check_first_line_output(Fun, Expected),
+    ok.
 
-    Captured = ct:capture_get([]),
-
-    ?ROCK_WITH_TESTS = Captured.
+%%%%%%%%%%%%%%%
+%%% Utils
 
 -spec check_configuration(config()) -> any().
 check_configuration(_Config) ->
@@ -112,9 +107,8 @@ find_file_and_check_src(_Config) ->
     {ok, <<"-module(small).\n">>} = elvis_utils:src([], Path),
     {error, enoent} = elvis_utils:src([], "doesnt_exist.erl").
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Rules
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%
+%%% Rules
 
 -spec verify_line_length_rule(config()) -> any().
 verify_line_length_rule(_Config) ->
@@ -143,3 +137,112 @@ verify_no_tabs_rule(_Config) ->
         2 -> ok;
         _ -> tabs_undetected
     end.
+
+%%%%%%%%%%%%%%%
+%%% CLI
+
+-spec main_help(config()) -> any().
+main_help(_Config) ->
+    Expected = "Usage: elvis",
+
+    ShortOptFun = fun() -> elvis:main("-h") end,
+    check_first_line_output(ShortOptFun, Expected, fun starts_with/2),
+
+    LongOptFun = fun() -> elvis:main("--help") end,
+    check_first_line_output(LongOptFun, Expected, fun starts_with/2),
+
+    EmptyFun = fun() -> elvis:main("") end,
+    check_first_line_output(EmptyFun, Expected, fun starts_with/2),
+
+    CmdFun = fun() -> elvis:main("help") end,
+    check_first_line_output(CmdFun, Expected, fun starts_with/2),
+
+    ok.
+
+-spec main_commands(config()) -> any().
+main_commands(_Config) ->
+    Expected = "Elvis will do the following things",
+
+    OptFun = fun() -> elvis:main("--commands") end,
+    check_first_line_output(OptFun, Expected, fun starts_with/2),
+
+    ok.
+
+-spec main_config(config()) -> any().
+main_config(_Config) ->
+    Expected = "Error: missing_option_arg config",
+
+    OptFun = fun() -> elvis:main("-c") end,
+    check_first_line_output(OptFun, Expected, fun starts_with/2),
+
+    EnoentExpected = "Error: enoent.\n",
+    OptEnoentFun = fun() -> elvis:main("-c missing") end,
+    check_first_line_output(OptEnoentFun, EnoentExpected),
+
+    ConfigFileFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
+    check_first_line_output(ConfigFileFun, ""),
+
+    ok.
+
+-spec main_rock(config()) -> any().
+main_rock(_Config) ->
+    ExpectedFail = "# ../../test/examples/fail_line_length.erl [FAIL]\n",
+
+    NoConfigArgs = "rock",
+    NoConfigFun = fun() -> elvis:main(NoConfigArgs) end,
+    check_first_line_output(NoConfigFun, ExpectedFail, fun starts_with/2),
+
+    Expected = "# ../../src/elvis.erl [OK]",
+
+    ConfigArgs = "rock -c ../../config/elvis-test.config",
+    ConfigFun = fun() -> elvis:main(ConfigArgs) end,
+    check_first_line_output(ConfigFun, Expected, fun starts_with/2),
+
+    ok.
+
+-spec main_default_config(config()) -> any().
+main_default_config(_Config) ->
+    Src = "../../config/elvis-test.config",
+    Dest = "./elvis.config",
+    file:copy(Src, Dest),
+
+    Expected = "# ../../src/elvis.erl [OK]",
+    RockFun = fun() -> elvis:main("rock") end,
+    check_first_line_output(RockFun, Expected, fun starts_with/2),
+
+    file:delete(Dest),
+
+    ok.
+
+-spec main_unexistent(config()) -> any().
+main_unexistent(_Config) ->
+    Expected = "Error: unrecognized_or_unimplemened_command.\n",
+
+    UnexistentFun = fun() -> elvis:main("aaarrrghh") end,
+    check_first_line_output(UnexistentFun, Expected),
+
+    ok.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Private
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+check_first_line_output(Fun, Expected) ->
+    Equals = fun(Result, Exp) ->
+                 Result = Exp
+             end,
+    check_first_line_output(Fun, Expected, Equals).
+
+check_first_line_output(Fun, Expected, CheckFun) ->
+    ct:capture_start(),
+    Fun(),
+    ct:capture_stop(),
+    Result = case ct:capture_get([]) of
+                 [] -> "";
+                 [Head | _] -> Head
+             end,
+
+    CheckFun(Result, Expected).
+
+starts_with(Result, Expected) ->
+    1 = string:str(Result, Expected).

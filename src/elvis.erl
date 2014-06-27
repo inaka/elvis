@@ -109,9 +109,7 @@ process_options([commands | Opts], Cmds, Config) ->
     commands(),
     process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
-    process_commands(Cmds, Config);
-process_options([_Opt | _Opts], _Cmds, _Config) ->
-    throw(unrecognized_or_unimplemened_option).
+    process_commands(Cmds, Config).
 
 -spec process_commands([string()], config()) -> ok.
 process_commands(["rock" | Cmds], Config) ->
@@ -141,7 +139,7 @@ default_config() ->
 -spec help() -> ok.
 help() ->
     OptSpecList = option_spec_list(),
-    getopt:usage(OptSpecList, ?APP_NAME).
+    getopt:usage(OptSpecList, ?APP_NAME, standard_io).
 
 -spec help(config()) -> config().
 help(Config) ->
