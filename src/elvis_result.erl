@@ -3,6 +3,7 @@
 %% API
 -export([
          new/3,
+         status/1,
          print/1
         ]).
 
@@ -60,7 +61,7 @@ print([Result | Results]) ->
     print(Results);
 
 print(#file_result{path = Path, rules = Rules}) ->
-    Status = case file_status(Rules) of
+    Status = case status(Rules) of
                  ok -> "OK";
                  fail -> "FAIL"
              end,
@@ -81,10 +82,17 @@ print(#item_result{message = Msg, info = Info}) ->
 %% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec file_status([rule_result()]) -> ok | fail.
-file_status([]) ->
+-spec status([rule_result()]) -> ok | fail.
+status([]) ->
     ok;
-file_status([#rule_result{results = []} | Rules]) ->
-    file_status(Rules);
-file_status(_Rules) ->
+
+status([#file_result{rules = Rules} | Files]) ->
+    case status(Rules) of
+        fail -> fail;
+        ok -> status(Files)
+    end;
+
+status([#rule_result{results = []} | Rules]) ->
+    status(Rules);
+status(_Rules) ->
     fail.

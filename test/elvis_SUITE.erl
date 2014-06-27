@@ -62,7 +62,7 @@ end_per_suite(Config) ->
 -spec rock_with_empty_config(config()) -> any().
 rock_with_empty_config(_Config) ->
     ok = try
-             elvis:rock([]),
+             elvis:rock(#{}),
              fail
          catch
              throw:invalid_config -> ok
@@ -70,7 +70,7 @@ rock_with_empty_config(_Config) ->
 
 -spec rock_with_incomplete_config(config()) -> any().
 rock_with_incomplete_config(_Config) ->
-    ElvisConfig = [{src_dirs, ["src"]}],
+    ElvisConfig = #{src_dirs => ["src"]},
     ok = try
              elvis:rock(ElvisConfig),
              fail
@@ -90,12 +90,12 @@ rock_with_file_config(_Config) ->
 
 -spec check_configuration(config()) -> any().
 check_configuration(_Config) ->
-    Config = [
-              {src_dirs, ["src", "test"]},
-              {rules, [{module, rule1, []}]}
-             ],
-    ["src", "test"] = elvis_utils:source_dirs(Config),
-    [{module, rule1, []}] = elvis_utils:rules(Config).
+    ElvisConfig = #{
+                    src_dirs => ["src", "test"],
+                    rules => [{module, rule1, []}]
+                   },
+    ["src", "test"] = maps:get(src_dirs, ElvisConfig),
+    [{module, rule1, []}] = maps:get(rules, ElvisConfig).
 
 -spec find_file_and_check_src(config()) -> any().
 find_file_and_check_src(_Config) ->
@@ -112,8 +112,8 @@ find_file_and_check_src(_Config) ->
 
 -spec verify_line_length_rule(config()) -> any().
 verify_line_length_rule(_Config) ->
-    ElvisConfig = application:get_all_env(elvis),
-    SrcDirs = elvis_utils:source_dirs(ElvisConfig),
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
 
     File = "fail_line_length.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
@@ -126,8 +126,8 @@ verify_line_length_rule(_Config) ->
 
 -spec verify_no_tabs_rule(config()) -> any().
 verify_no_tabs_rule(_Config) ->
-    ElvisConfig = application:get_all_env(elvis),
-    SrcDirs = elvis_utils:source_dirs(ElvisConfig),
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
 
     File = "fail_no_tabs.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
@@ -245,4 +245,7 @@ check_first_line_output(Fun, Expected, CheckFun) ->
     CheckFun(Result, Expected).
 
 starts_with(Result, Expected) ->
-    1 = string:str(Result, Expected).
+    case string:str(Result, Expected) of
+        1 -> ok;
+        _ ->  {Expected, Expected}= {Result, Expected}
+    end.

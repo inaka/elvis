@@ -3,20 +3,15 @@
 -export([
          src/2,
          find_files/2,
-         rules/1,
-         source_dirs/1,
-         validate_config/1,
          check_lines/3
         ]).
-
--type rule() :: mfa() | {Function :: atom(), Args :: list()}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Returns the source for the file.
--spec src(elvis:config(), file:filename()) ->
+-spec src(elvis_config:config(), file:filename()) ->
     {ok, binary()} | {error, enoent}.
 src(_Config, FilePath) ->
     file:read_file(FilePath).
@@ -29,36 +24,6 @@ find_files(Dirs, Pattern) ->
                 filelib:wildcard(Dir ++ "**/" ++ Pattern)
           end,
     lists:flatmap(Fun, Dirs).
-
-%% @doc Reads the rules to apply specified in the
-%%  configuration and returns them.
--spec rules(elvis:config()) -> [rule()].
-rules(Config) ->
-    proplists:get_value(rules, Config).
-
-%% @doc Reads the source code directories specified in
-%% the configuration and returns them.
--spec source_dirs(elvis:config()) -> [string()].
-source_dirs(Config) ->
-    proplists:get_value(src_dirs, Config).
-
-%% @doc Checks that the configuration has all the required keys.
--spec validate_config(elvis:config()) -> valid | invalid.
-validate_config(Config) ->
-    RequiredKeys = [src_dirs, rules],
-    validate_config(RequiredKeys, Config).
-
-%% @private.
--spec validate_config([atom()], elvis:config()) -> valid | invalid.
-validate_config([], _Config) ->
-    valid;
-validate_config([Key | Keys], Config) ->
-    case proplists:get_value(Key, Config) of
-        undefined ->
-            invalid;
-        _ ->
-            validate_config(Keys, Config)
-    end.
 
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line
