@@ -72,6 +72,7 @@ environment values in your [configuration](http://www.erlang.org/doc/man/config.
     [
      {elvis_style, line_length, [80]},
      {elvis_style, no_tabs, []},
+     {elvis_style, macro_names, []},
      %% ..
     ]
    }

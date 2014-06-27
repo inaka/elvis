@@ -2,11 +2,14 @@
 
 -export([
          line_length/3,
-         no_tabs/3
+         no_tabs/3,
+         macro_names/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
 -define(NO_TABS_MSG, "Line ~p has a tab at column ~p.").
+-define(INVALID_MACRO_NAME_MSG,
+            "Invalid macro name ~s on line ~p. Use UPPER_CASE.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -25,6 +28,13 @@ line_length(Config, Target, [Limit]) ->
 no_tabs(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_no_tabs/3, []).
+
+-spec macro_names(elvis:config(), string(), [term()]) ->
+    [elvis_result:item_result()].
+macro_names(Config, Target, []) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    elvis_utils:check_lines(Src, fun check_macro_names/3, []).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
@@ -53,4 +63,23 @@ check_no_tabs(Line, Num, _Args) ->
             Msg = ?NO_TABS_MSG,
             Result = elvis_result:new(item, Msg, [Num, Index]),
             {ok, Result}
+    end.
+
+-spec check_macro_names(binary(), integer(), [term()]) ->
+    no_result | {ok, elvis_result:item_result()}.
+check_macro_names(Line, Num, _Args) ->
+    {ok, Regex} = re:compile("^ *[-]define *[(]([^,]+)"),
+    case re:run(Line, Regex, [{capture, all_but_first, list}]) of
+        nomatch ->
+            no_result;
+        {match, [MacroName]} ->
+            case string:to_upper(MacroName) of
+                MacroName ->
+                    no_result;
+                _ ->
+                    Msg = ?INVALID_MACRO_NAME_MSG,
+                    Result =
+                        elvis_result:new(item, Msg, [MacroName, Num]),
+                    {ok, Result}
+            end
     end.
