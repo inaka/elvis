@@ -41,12 +41,7 @@ rock() ->
 
 -spec rock(elvis_config:config()) -> ok.
 rock(Config) ->
-    case elvis_config:validate(Config) of
-        valid ->
-            run(Config);
-        invalid ->
-            throw(invalid_config)
-    end.
+    run(Config).
 
 -spec git_hook(elvis_config:config()) -> ok.
 git_hook(Config) ->
@@ -74,7 +69,7 @@ run(Config = #{files := Files, rules := _Rules}) ->
 
     elvis_result:print(Results),
     elvis_result:status(Results);
-run(Config = #{src_dirs := SrcDirs}) ->
+run(Config = #{src_dirs := SrcDirs, rules := _Rules}) ->
     Pattern = ?FILE_PATTERN,
     Files = elvis_utils:find_files(SrcDirs, Pattern),
 

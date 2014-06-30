@@ -2,7 +2,6 @@
 
 -export([
          default/0,
-         validate/1,
          load_file/1
         ]).
 
@@ -27,16 +26,6 @@ default() ->
             application:get_env(elvis, config, #{});
         {error, Reason} ->
             throw(Reason)
-    end.
-
-%% @doc Checks that the configuration has all the required keys.
--spec validate(config()) -> valid | invalid.
-validate(Config) ->
-    RequiredKeys = [src_dirs, rules],
-    Fun = fun(Key) -> maps:is_key(Key, Config) end,
-    case lists:all(Fun, RequiredKeys) of
-        true -> valid;
-        false -> invalid
     end.
 
 -spec load_file(string()) -> config().

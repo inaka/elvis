@@ -65,7 +65,7 @@ rock_with_empty_config(_Config) ->
              elvis:rock(#{}),
              fail
          catch
-             throw:invalid_config -> ok
+             throw:{invalid_config, _} -> ok
          end.
 
 -spec rock_with_incomplete_config(config()) -> any().
@@ -75,7 +75,7 @@ rock_with_incomplete_config(_Config) ->
              elvis:rock(ElvisConfig),
              fail
          catch
-             throw:invalid_config -> ok
+             throw:{invalid_config, _} -> ok
          end.
 
 -spec rock_with_file_config(config()) -> ok.
