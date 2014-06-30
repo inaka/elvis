@@ -12,12 +12,8 @@
         ]).
 
 -define(APP_NAME, "elvis").
-
--export_type([
-              config/0
-             ]).
-
--type config() :: [{atom(), term()}].
+-define(FILE_PATTERN, "*.erl").
+-define(FILE_EXTENSIONS, [".erl"]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
@@ -36,52 +32,67 @@ main(Args) ->
             help()
     end.
 
--spec rock() -> ok.
+%%% Rock Command
+
+-spec rock() -> ok | fail.
 rock() ->
-    Config = default_config(),
+    Config = elvis_config:default(),
     rock(Config).
 
--spec rock(config()) -> ok.
+-spec rock(elvis_config:config()) -> ok | fail.
+rock(Config = #{files := Files, rules := _Rules}) ->
+    Results = [apply_rules(Config, File) || File <- Files],
+
+    elvis_result:print(Results),
+    elvis_result:status(Results);
+rock(Config = #{src_dirs := SrcDirs, rules := _Rules}) ->
+    Pattern = ?FILE_PATTERN,
+    Files = elvis_utils:find_files(SrcDirs, Pattern),
+
+    rock(Config#{files => Files});
 rock(Config) ->
-    case elvis_utils:validate_config(Config) of
-        valid ->
-            run(Config);
-        invalid ->
-            throw(invalid_config)
+    throw({invalid_config, Config}).
+
+%%% Git-Hook Command
+
+-spec git_hook(elvis_config:config()) -> ok.
+git_hook(Config) ->
+    Files = elvis_git:staged_files(),
+    ErlFiles = [File || File = #{path := Path} <- Files,
+                        lists:member(filename:extension(Path),
+                                     ?FILE_EXTENSIONS)],
+
+    NewConfig = Config#{files => ErlFiles},
+
+    case rock(NewConfig) of
+        fail -> elvis_utils:erlang_halt(1);
+        ok -> ok
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%% Rocking it hard
-
--spec run(config()) -> ok.
-run(Config) ->
-    SrcDirs = elvis_utils:source_dirs(Config),
-    Pattern = "*.erl",
-    FilePaths = elvis_utils:find_files(SrcDirs, Pattern),
-    Results = lists:map(fun (Path) -> apply_rules(Config, Path) end, FilePaths),
-
-    elvis_result:print(Results).
-
-apply_rules(Config, FilePath) ->
-    Rules = elvis_utils:rules(Config),
-    Acc = {[], Config, FilePath},
+-spec apply_rules(elvis_config:config(), elvis_utils:file()) ->
+    elvis_result:file_result().
+apply_rules(Config = #{rules := Rules}, File = #{path := Path}) ->
+    Acc = {[], Config, File},
     {RuleResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
-    elvis_result:new(file, FilePath, RuleResults).
+
+    elvis_result:new(file, Path, RuleResults).
 
 apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
     Results = Module:Function(Config, FilePath, Args),
     RuleResult = elvis_result:new(rule, Function, Results),
     {[RuleResult | Result], Config, FilePath}.
 
-
 %%% Command Line Interface
 
 -spec option_spec_list() -> [getopt:option_spec()].
 option_spec_list() ->
-    Commands = "Provide the path to the configuration file.",
+    Commands = "Provide the path to the configuration file. "
+               ++ "When none is provided elvis checks if there's "
+               ++ "an elvis.config file.",
     [
      {help, $h, "help", undefined, "Show this help information."},
      {config, $c, "config", string, Commands},
@@ -91,19 +102,20 @@ option_spec_list() ->
 -spec process_options([atom()], [string()]) -> ok.
 process_options(Options, Commands) ->
     try
-        Config = default_config(),
-        process_options(Options, Commands, Config)
+        Config = elvis_config:default(),
+        AtomCommands = lists:map(fun list_to_atom/1, Commands),
+        process_options(Options, AtomCommands, Config)
     catch
         throw:Exception ->
             io:format("Error: ~p.~n", [Exception])
     end.
 
--spec process_options([atom()], [string()], config()) -> ok.
+-spec process_options([atom()], [string()], elvis_config:config()) -> ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
     process_options(Opts, Cmds, Config);
 process_options([{config, Path} | Opts], Cmds, _) ->
-    Config = config(Path),
+    Config = elvis_config:load_file(Path),
     process_options(Opts, Cmds, Config);
 process_options([commands | Opts], Cmds, Config) ->
     commands(),
@@ -111,28 +123,20 @@ process_options([commands | Opts], Cmds, Config) ->
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
--spec process_commands([string()], config()) -> ok.
-process_commands(["rock" | Cmds], Config) ->
+-spec process_commands([string()], elvis_config:config()) -> ok.
+process_commands([rock | Cmds], Config) ->
     rock(Config),
     process_commands(Cmds, Config);
-process_commands(["help" | Cmds], Config) ->
-    Config = help(Config),
+process_commands([help | Cmds], Config) ->
+    help(Config),
+    process_commands(Cmds, Config);
+process_commands(['git-hook' | Cmds], Config) ->
+    git_hook(Config),
     process_commands(Cmds, Config);
 process_commands([], _Config) ->
     ok;
 process_commands([_Cmd | _Cmds], _Config) ->
     throw(unrecognized_or_unimplemened_command).
-
--spec default_config() -> config().
-default_config() ->
-    case file:consult("./elvis.config") of
-        {ok, [Config]} ->
-            Config;
-        {error, enoent} ->
-            application:get_all_env(elvis);
-        {error, Reason} ->
-            throw(Reason)
-    end.
 
 %%% Options
 
@@ -141,24 +145,20 @@ help() ->
     OptSpecList = option_spec_list(),
     getopt:usage(OptSpecList, ?APP_NAME, standard_io).
 
--spec help(config()) -> config().
+-spec help(elvis_config:config()) ->
+    elvis_config:config().
 help(Config) ->
     help(),
     Config.
-
--spec config(string()) -> config().
-config(Path) ->
-    case file:consult(Path) of
-        {ok, [Config]} ->
-            Config;
-        {error, Reason} ->
-            throw(Reason)
-    end.
 
 -spec commands() -> ok.
 commands() ->
     Commands = <<"Elvis will do the following things for you when asked nicely:
 
 rock             Rock your socks off by running all rules to your source files.
+
+git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
+                                      specified in the configuration to those
+                                      files.
 ">>,
    io:put_chars(Commands).

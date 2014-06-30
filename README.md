@@ -6,8 +6,43 @@ Erlang Style Reviewer
 
 ## Usage
 
+### Script
+
+Elvis can also be turned into a script by executing `make escript`. This will generate an `elvis` self-contained executable script,
+from which you can get help by typing `elvis help`. A list of available commands can be shown using the `--commands` options as
+in `elvis --commands`.
+
+To run `elvis` from the command shell use the `rock` command (i.e. `elvis rock`). There's no need to specify a configuration file
+path if you have an `elvis.config` file in the same location where you are executing the script, otherwise a configuration file
+can be specified through the use of the `--config` option.
+
+```bash
+elvis rock --config config/elvis.config
+```
+
+### Git hook
+
+**elvis** can be used as a git pre-commit hook using the `git-hook` command, just add something like the following script to
+your pre-commit script:
+
+```bash
+#!/bin/sh
+#
+# Runs elvis to all Erlang staged files.
+
+elvis git-hook
+```
+
+As the comment states, **elvis** will search for files with the `.erl` extension among the staged files, get their staged
+content and run the rules specified in the configuration. If any rule fails then **elvis** exits with a non-zero code, which
+signals `git` that the commit shouldn't be made.
+
+Make sure your pre-commit hook script is executable (`chmod +x pre-commit`), otherwise git won't run it.
+
+### Erlang Shell
+
 After adding **elvis** as a dependency and setting up its [configuration](#configutation), you can run it
-form an Erlang shell in the following two ways.
+from an Erlang shell in the following two ways.
 
 ```erlang
 elvis:rock().
@@ -60,39 +95,47 @@ it looks when files break some rules:
 
 ## Configuration
 
-To run **elvis** as described in the first option of the [Usage](#usage) section, you should include the following
+To provide a default configuration to **elvis** while in the Erlang shell you should include the following
 environment values in your [configuration](http://www.erlang.org/doc/man/config.html) file:
 
 ```erlang
 [
  {elvis,
-  [
-   {src_dirs, ["src", "test"]},
-   {rules,
-    [
-     {elvis_style, line_length, [80]},
-     {elvis_style, no_tabs, []},
-     {elvis_style, macro_names, []},
-     %% ..
-    ]
+  #{
+    src_dirs => ["src", "test"],
+    rules => [
+              {elvis_style, line_length, [80]},
+              {elvis_style, no_tabs, []},
+              {elvis_style, macro_names, []},
+              %% ..
+             ]
    }
   ]
  }
 ]
 ```
 
-The `src_dirs` entry is a list that indicates where **elvis** should look for the `*.erl` files that will be run through
-each of the rules specified by the `rules` entry, which is list of rules with the following structure `{Module, Function, Args}`.
+The `src_dirs` key is a list that indicates where **elvis** should look for the `*.erl` files that will be run through
+each of the rules specified by the `rules` entry, which is list of items with the following structure `{Module, Function, Args}`.
 
-As you can see a rule is just a function, one that takes 3 arguments: **elvis**'s [configuration](#configuration), the path of the file and the
-`Args` specified for the rule in the configuration. This means that you can define rules of your own as long as the functions
-that implement them respect this arity.
+As you can see a rule is just a function that takes 3 arguments: **elvis**'s [configuration](#configuration), information
+of the file to be analyzed and the `Args` specified for the rule in the configuration.
+This means that you can define rules of your own as long as the functions that implement them respect this arity.
 
 There's currently no default configuration for **elvis**, but in the meantime you can take the one in `config/app.config`
 as a starting point.
+
+## Dependencies
+
+- Erlang/OTP 17.0
+- make
+- git
 
 ## References
 
 Inspired on [HoundCI][houndci]
 
   [houndci]: https://houndci.com/
+  [erlang]: http://www.erlang.org/download_release/24
+  [make]: http://www.gnu.org/software/make/
+  [git]: http://git-scm.com/

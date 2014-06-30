@@ -17,19 +17,19 @@
 
 %% @doc Target can be either a filename or the
 %% name of a module.
--spec line_length(elvis:config(), string(), [term()]) ->
+-spec line_length(elvis_config:config(), map(), [term()]) ->
     [elvis_result:item_result()].
 line_length(Config, Target, [Limit]) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_line_length/3, [Limit]).
 
--spec no_tabs(elvis:config(), string(), [term()]) ->
+-spec no_tabs(elvis_config:config(), map(), [term()]) ->
     [elvis_result:item_result()].
 no_tabs(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_no_tabs/3, []).
 
--spec macro_names(elvis:config(), string(), [term()]) ->
+-spec macro_names(elvis_config:config(), map(), [term()]) ->
     [elvis_result:item_result()].
 macro_names(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),

@@ -51,8 +51,8 @@ end_per_suite(Config) ->
 
 -spec verify_line_length_rule(config()) -> any().
 verify_line_length_rule(_Config) ->
-    ElvisConfig = application:get_all_env(elvis),
-    SrcDirs = elvis_utils:source_dirs(ElvisConfig),
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
 
     File = "fail_line_length.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
@@ -65,8 +65,8 @@ verify_line_length_rule(_Config) ->
 
 -spec verify_no_tabs_rule(config()) -> any().
 verify_no_tabs_rule(_Config) ->
-    ElvisConfig = application:get_all_env(elvis),
-    SrcDirs = elvis_utils:source_dirs(ElvisConfig),
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
 
     File = "fail_no_tabs.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
@@ -76,11 +76,10 @@ verify_no_tabs_rule(_Config) ->
         2 -> ok;
         _ -> tabs_undetected
     end.
-
 -spec verify_macro_names_rule(config()) -> any().
 verify_macro_names_rule(_Config) ->
-    ElvisConfig = application:get_all_env(elvis),
-    SrcDirs = elvis_utils:source_dirs(ElvisConfig),
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
 
     File = "fail_macro_names.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),

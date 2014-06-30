@@ -16,6 +16,8 @@
          main_commands/1,
          main_config/1,
          main_rock/1,
+         main_git_hook_fail/1,
+         main_git_hook_ok/1,
          main_default_config/1,
          main_unexistent/1
         ]).
@@ -60,20 +62,20 @@ end_per_suite(Config) ->
 -spec rock_with_empty_config(config()) -> any().
 rock_with_empty_config(_Config) ->
     ok = try
-             elvis:rock([]),
+             elvis:rock(#{}),
              fail
          catch
-             throw:invalid_config -> ok
+             throw:{invalid_config, _} -> ok
          end.
 
 -spec rock_with_incomplete_config(config()) -> any().
 rock_with_incomplete_config(_Config) ->
-    ElvisConfig = [{src_dirs, ["src"]}],
+    ElvisConfig = #{src_dirs => ["src"]},
     ok = try
              elvis:rock(ElvisConfig),
              fail
          catch
-             throw:invalid_config -> ok
+             throw:{invalid_config, _} -> ok
          end.
 
 -spec rock_with_file_config(config()) -> ok.
@@ -88,12 +90,12 @@ rock_with_file_config(_Config) ->
 
 -spec check_configuration(config()) -> any().
 check_configuration(_Config) ->
-    Config = [
-              {src_dirs, ["src", "test"]},
-              {rules, [{module, rule1, []}]}
-             ],
-    ["src", "test"] = elvis_utils:source_dirs(Config),
-    [{module, rule1, []}] = elvis_utils:rules(Config).
+    ElvisConfig = #{
+                    src_dirs => ["src", "test"],
+                    rules => [{module, rule1, []}]
+                   },
+    ["src", "test"] = maps:get(src_dirs, ElvisConfig),
+    [{module, rule1, []}] = maps:get(rules, ElvisConfig).
 
 -spec find_file_and_check_src(config()) -> any().
 find_file_and_check_src(_Config) ->
@@ -103,10 +105,7 @@ find_file_and_check_src(_Config) ->
     [Path] = elvis_utils:find_files(Dirs, "small.erl"),
 
     {ok, <<"-module(small).\n">>} = elvis_utils:src([], Path),
-    {error, enoent} = elvis_utils:src([], "doesnt_exist.erl").
-
-%%%%%%%%%%%%%%%
-%%% CLI
+    {error, enoent} = elvis_utils:src([], #{path => "doesnt_exist.erl"}).
 
 -spec main_help(config()) -> any().
 main_help(_Config) ->
@@ -167,6 +166,49 @@ main_rock(_Config) ->
 
     ok.
 
+-spec main_git_hook_fail(config()) -> any().
+main_git_hook_fail(_Config) ->
+    try
+        meck:new(elvis_utils, [passthrough]),
+        meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
+
+        meck:new(elvis_git, [passthrough]),
+        LongLine = <<"Loooooooooooooooooooooooooooooooooooooooooooooooooooong ",
+                     "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
+        Files = [
+                 #{path => "fake_long_line.erl",
+                   content => LongLine}
+                ],
+        FakeStagedFiles = fun() -> Files end,
+        meck:expect(elvis_git, staged_files, FakeStagedFiles),
+
+        Expected = "# fake_long_line.erl [FAIL]",
+
+        ConfigArgs = "git-hook -c ../../config/elvis-test.config",
+        ConfigFun = fun() -> elvis:main(ConfigArgs) end,
+        check_first_line_output(ConfigFun, Expected, fun starts_with/2),
+
+        meck:expect(elvis_git, staged_files, fun() -> [] end),
+        check_first_line_output(ConfigFun, [])
+    after
+        catch
+            meck:unload(elvis_utils),
+            meck:unload(elvis_git)
+    end.
+
+-spec main_git_hook_ok(config()) -> any().
+main_git_hook_ok(_Config) ->
+    try
+        meck:new(elvis_git, [passthrough]),
+        meck:expect(elvis_git, staged_files, fun() -> [] end),
+
+        ConfigArgs = "git-hook -c ../../config/elvis-test.config",
+        ConfigFun = fun() -> elvis:main(ConfigArgs) end,
+        check_first_line_output(ConfigFun, [])
+    after
+        catch meck:unload(elvis_git)
+    end.
+
 -spec main_default_config(config()) -> any().
 main_default_config(_Config) ->
     Src = "../../config/elvis-test.config",
@@ -212,4 +254,7 @@ check_first_line_output(Fun, Expected, CheckFun) ->
     CheckFun(Result, Expected).
 
 starts_with(Result, Expected) ->
-    1 = string:str(Result, Expected).
+    case string:str(Result, Expected) of
+        1 -> ok;
+        _ ->  {Expected, Expected}= {Result, Expected}
+    end.
