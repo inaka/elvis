@@ -9,25 +9,26 @@
         "git diff --name-only --staged").
 
 -define(STAGED_CONTENT(Path),
-        ["git show :", Path]).
-
--type file() :: {Path :: string(), Contents :: string()}.
+        "git show :" ++ Path).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec staged_files() -> [file()].
+-spec staged_files() -> [elvis_utils:file()].
 staged_files() ->
     Cmd = ?LIST_STAGED,
     Output = list_to_binary(os:cmd(Cmd)),
 
     Lines = binary:split(Output, <<"\n">>, [global]),
-    Paths = lists:filter(fun(X) -> byte_size(X) > 0  end, Lines),
+    Paths = [binary_to_list(Path) || Path <- Lines, byte_size(Path) > 0],
 
     lists:map(fun staged_content/1, Paths).
 
--spec staged_content(string()) -> file().
+-spec staged_content(string()) -> elvis_utils:file().
 staged_content(Path) ->
     Content = os:cmd(?STAGED_CONTENT(Path)),
-    {Path, Content}.
+    #{
+       path => Path,
+       content => list_to_binary(Content)
+     }.

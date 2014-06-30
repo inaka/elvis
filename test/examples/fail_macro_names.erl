@@ -4,7 +4,10 @@
 -define(GOOD_NAME,  "(megusta)").
 -define(wtf_NAME,   "(yuno)").
 
--export([define/1]).
+-export([
+         define/1,
+         use_define/1
+        ]).
 
 define(not_a_macro) -> its_not.
 define(_Also, not_a_macro) -> still_not.

@@ -6,24 +6,33 @@
          check_lines/3
         ]).
 
+-export_type([file/0]).
+
+-type file() :: #{atom() => string(), atom() => binary()}.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Returns the source for the file.
--spec src(elvis_config:config(), file:filename()) ->
+-spec src(elvis_config:config(), file()) ->
     {ok, binary()} | {error, enoent}.
-src(_Config, FilePath) ->
-    file:read_file(FilePath).
+src(_Config, #{content := Content}) ->
+    {ok, Content};
+src(_Config, #{path := Path}) ->
+    file:read_file(Path);
+src(_Config, File) ->
+    throw({invalid_file, File}).
+
 
 %% @doc Returns all files under the specified Path
 %% that match the pattern Name.
--spec find_files([string()], string()) -> [string()].
+-spec find_files([string()], string()) -> [file()].
 find_files(Dirs, Pattern) ->
     Fun = fun(Dir) ->
                 filelib:wildcard(Dir ++ "**/" ++ Pattern)
           end,
-    lists:flatmap(Fun, Dirs).
+    [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
 
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line

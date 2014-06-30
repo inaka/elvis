@@ -64,22 +64,26 @@ git_hook(Config) ->
 %%% Rocking it hard
 
 -spec run(elvis_config:config()) -> ok | fail.
-run(#{files := Files}) ->
-    io:format("~p", [Files]),
-    ok;
-run(Config = #{src_dirs := SrcDirs}) ->
-    Pattern = "*.erl",
-    FilePaths = elvis_utils:find_files(SrcDirs, Pattern),
-    Results = lists:map(fun (Path) -> apply_rules(Config, Path) end, FilePaths),
+run(Config = #{files := Files}) ->
+    Results = [apply_rules(Config, File) || File <- Files],
 
     elvis_result:print(Results),
+    elvis_result:status(Results);
+run(Config = #{src_dirs := SrcDirs}) ->
+    Pattern = "*.erl",
+    Files = elvis_utils:find_files(SrcDirs, Pattern),
 
-    elvis_result:status(Results).
+    run(Config#{files => Files});
+run(Config) ->
+    throw({invalid_config, Config}).
 
-apply_rules(Config = #{rules := Rules}, FilePath) ->
-    Acc = {[], Config, FilePath},
+-spec apply_rules(elvis_config:config(), elvis_utils:file()) ->
+    elvis_result:file_result().
+apply_rules(Config = #{rules := Rules}, File = #{path := Path}) ->
+    Acc = {[], Config, File},
     {RuleResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
-    elvis_result:new(file, FilePath, RuleResults).
+
+    elvis_result:new(file, Path, RuleResults).
 
 apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
     Results = Module:Function(Config, FilePath, Args),

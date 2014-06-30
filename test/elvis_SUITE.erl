@@ -103,7 +103,7 @@ find_file_and_check_src(_Config) ->
     [Path] = elvis_utils:find_files(Dirs, "small.erl"),
 
     {ok, <<"-module(small).\n">>} = elvis_utils:src([], Path),
-    {error, enoent} = elvis_utils:src([], "doesnt_exist.erl").
+    {error, enoent} = elvis_utils:src([], #{path => "doesnt_exist.erl"}).
 
 -spec main_help(config()) -> any().
 main_help(_Config) ->
