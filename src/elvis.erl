@@ -32,16 +32,28 @@ main(Args) ->
             help()
     end.
 
-%%% Commands
+%%% Rock Command
 
--spec rock() -> ok.
+-spec rock() -> ok | fail.
 rock() ->
     Config = elvis_config:default(),
     rock(Config).
 
--spec rock(elvis_config:config()) -> ok.
+-spec rock(elvis_config:config()) -> ok | fail.
+rock(Config = #{files := Files, rules := _Rules}) ->
+    Results = [apply_rules(Config, File) || File <- Files],
+
+    elvis_result:print(Results),
+    elvis_result:status(Results);
+rock(Config = #{src_dirs := SrcDirs, rules := _Rules}) ->
+    Pattern = ?FILE_PATTERN,
+    Files = elvis_utils:find_files(SrcDirs, Pattern),
+
+    rock(Config#{files => Files});
 rock(Config) ->
-    run(Config).
+    throw({invalid_config, Config}).
+
+%%% Git-Hook Command
 
 -spec git_hook(elvis_config:config()) -> ok.
 git_hook(Config) ->
@@ -52,7 +64,7 @@ git_hook(Config) ->
 
     NewConfig = Config#{files => ErlFiles},
 
-    case run(NewConfig) of
+    case rock(NewConfig) of
         fail -> elvis_utils:erlang_halt(1);
         ok -> ok
     end.
@@ -60,22 +72,6 @@ git_hook(Config) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%% Rocking it hard
-
--spec run(elvis_config:config()) -> ok | fail.
-run(Config = #{files := Files, rules := _Rules}) ->
-    Results = [apply_rules(Config, File) || File <- Files],
-
-    elvis_result:print(Results),
-    elvis_result:status(Results);
-run(Config = #{src_dirs := SrcDirs, rules := _Rules}) ->
-    Pattern = ?FILE_PATTERN,
-    Files = elvis_utils:find_files(SrcDirs, Pattern),
-
-    run(Config#{files => Files});
-run(Config) ->
-    throw({invalid_config, Config}).
 
 -spec apply_rules(elvis_config:config(), elvis_utils:file()) ->
     elvis_result:file_result().
