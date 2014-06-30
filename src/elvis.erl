@@ -58,7 +58,7 @@ git_hook(Config) ->
     NewConfig = Config#{files => ErlFiles},
 
     case run(NewConfig) of
-        fail -> halt(1);
+        fail -> elvis_utils:erlang_halt(1);
         ok -> ok
     end.
 
@@ -69,7 +69,7 @@ git_hook(Config) ->
 %%% Rocking it hard
 
 -spec run(elvis_config:config()) -> ok | fail.
-run(Config = #{files := Files}) ->
+run(Config = #{files := Files, rules := _Rules}) ->
     Results = [apply_rules(Config, File) || File <- Files],
 
     elvis_result:print(Results),

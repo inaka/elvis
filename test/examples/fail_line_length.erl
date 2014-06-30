@@ -18,3 +18,5 @@ function_3() ->
 
 function_4() ->
     io:format("This line is 90 characters long and should be detected!!!!!!!!!!!!!!!!!!").
+
+%

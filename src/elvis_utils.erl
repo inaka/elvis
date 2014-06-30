@@ -3,7 +3,8 @@
 -export([
          src/2,
          find_files/2,
-         check_lines/3
+         check_lines/3,
+         erlang_halt/1
         ]).
 
 -export_type([file/0]).
@@ -54,3 +55,8 @@ check_lines([Line | Lines], Fun, Args, Results, Num) ->
         no_result ->
             check_lines(Lines, Fun, Args, Results, Num + 1)
     end.
+
+%% @doc This is defined so tht it an be mocked for tests.
+-spec erlang_halt(integer()) -> any().
+erlang_halt(Code) ->
+    halt(Code).

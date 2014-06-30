@@ -16,6 +16,8 @@
          main_commands/1,
          main_config/1,
          main_rock/1,
+         main_git_hook_fail/1,
+         main_git_hook_ok/1,
          main_default_config/1,
          main_unexistent/1
         ]).
@@ -163,6 +165,49 @@ main_rock(_Config) ->
     check_first_line_output(ConfigFun, Expected, fun starts_with/2),
 
     ok.
+
+-spec main_git_hook_fail(config()) -> any().
+main_git_hook_fail(_Config) ->
+    try
+        meck:new(elvis_utils, [passthrough]),
+        meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
+
+        meck:new(elvis_git, [passthrough]),
+        LongLine = <<"Loooooooooooooooooooooooooooooooooooooooooooooooooooong ",
+                     "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
+        Files = [
+                 #{path => "fake_long_line.erl",
+                   content => LongLine}
+                ],
+        FakeStagedFiles = fun() -> Files end,
+        meck:expect(elvis_git, staged_files, FakeStagedFiles),
+
+        Expected = "# fake_long_line.erl [FAIL]",
+
+        ConfigArgs = "git-hook -c ../../config/elvis-test.config",
+        ConfigFun = fun() -> elvis:main(ConfigArgs) end,
+        check_first_line_output(ConfigFun, Expected, fun starts_with/2),
+
+        meck:expect(elvis_git, staged_files, fun() -> [] end),
+        check_first_line_output(ConfigFun, [])
+    after
+        catch
+            meck:unload(elvis_utils),
+            meck:unload(elvis_git)
+    end.
+
+-spec main_git_hook_ok(config()) -> any().
+main_git_hook_ok(_Config) ->
+    try
+        meck:new(elvis_git, [passthrough]),
+        meck:expect(elvis_git, staged_files, fun() -> [] end),
+
+        ConfigArgs = "git-hook -c ../../config/elvis-test.config",
+        ConfigFun = fun() -> elvis:main(ConfigArgs) end,
+        check_first_line_output(ConfigFun, [])
+    after
+        catch meck:unload(elvis_git)
+    end.
 
 -spec main_default_config(config()) -> any().
 main_default_config(_Config) ->

@@ -1,10 +1,12 @@
 PROJECT = elvis
 
 DEPS = lager sync getopt
+TEST_DEPS = meck
 
 dep_lager = https://github.com/basho/lager.git 2.0.3
 dep_sync = https://github.com/rustyio/sync.git master
 dep_getopt = https://github.com/jcomellas/getopt v0.8.2
+dep_meck = https://github.com/eproxus/meck 0.8.2
 
 include erlang.mk
 
