@@ -6,6 +6,39 @@ Erlang Style Reviewer
 
 ## Usage
 
+### Script
+
+Elvis can also be turned into a script by executing `make escript`. This will generate an `elvis` self-contained executable script,
+from which you can get help by typing `elvis help`. A list of available commands can be shown using the `--commands` options as
+in `elvis --commands`.
+
+To run `elvis` from the command shell use the `rock` command (i.e. `elvis rock`). There's no need to specify a configuration file
+path if you have an `elvis.config` file in the same location where you are executing the script, otherwise a configuration file
+can be specified through the use of the `--config` option.
+
+```bash
+elvis rock --config config/elvis.config
+```
+
+### Git hook
+
+**elvis** can be used as a git pre-commit hook using the `git-hook` command, just add something like the following script to
+your pre-commit script:
+
+```bash
+#!/bin/sh
+#
+# Runs elvis to all Erlang staged files.
+
+elvis git-hook
+```
+
+As the comment states, **elvis** will search for files with the `.erl` extension among the staged files, get their staged
+content and run the rules specified in the configuration. If any rule fails then **elvis** exits with a non-zero code, which
+signals `git` that the commit shouldn't be made.
+
+Make sure your pre-commit hook script is executable (`chmod +x pre-commit`), otherwise git won't run it.
+
 ### Erlang Shell
 
 After adding **elvis** as a dependency and setting up its [configuration](#configutation), you can run it
@@ -59,39 +92,6 @@ it looks when files break some rules:
     - Line 15 has a tab at column 0.
 # ../../test/examples/small.erl [OK]
 ```
-
-### Script
-
-Elvis can also be turned into a script by executing `make escript`. This will generate an `elvis` self-contained executable script,
-from which you can get help by typing `elvis help`. A list of available commands can be shown using the `--commands` options as
-in `elvis --commands`.
-
-To run `elvis` from the command shell use the `rock` command (i.e. `elvis rock`). There's no need to specify a configuration file
-path if you have an `elvis.config` file in the same location where you are executing the script, otherwise a configuration file
-can be specified through the use of the `--config` option.
-
-```bash
-elvis rock --config config/elvis.config
-```
-
-### Git hook
-
-**elvis** can be used as a git pre-commit hook using the `git-hook` command, just add something like the following script to
-your pre-commit script:
-
-```bash
-#!/bin/sh
-#
-# Runs elvis to all Erlang staged files.
-
-elvis git-hook
-```
-
-As the comment states, **elvis** will search for files with the `.erl` extension among the staged files, get their staged
-content and run the rules specified in the configuration. If any rule fails then **elvis** exits with a non-zero code, which
-signals `git` that the commit shouldn't be made.
-
-Make sure your pre-commit hook script is executable (`chmod +x pre-commit`), otherwise git won't run it.
 
 ## Configuration
 
