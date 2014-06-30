@@ -30,7 +30,7 @@ src(_Config, File) ->
 -spec find_files([string()], string()) -> [file()].
 find_files(Dirs, Pattern) ->
     Fun = fun(Dir) ->
-                filelib:wildcard(Dir ++ "**/" ++ Pattern)
+                filelib:wildcard(Dir ++ "/**/" ++ Pattern)
           end,
     [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
 

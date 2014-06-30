@@ -12,6 +12,8 @@
         ]).
 
 -define(APP_NAME, "elvis").
+-define(FILE_PATTERN, "*.erl").
+-define(FILE_EXTENSIONS, [".erl"]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
@@ -49,8 +51,11 @@ rock(Config) ->
 -spec git_hook(elvis_config:config()) -> ok.
 git_hook(Config) ->
     Files = elvis_git:staged_files(),
+    ErlFiles = [File || File = #{path := Path} <- Files,
+                        lists:member(filename:extension(Path),
+                                     ?FILE_EXTENSIONS)],
 
-    NewConfig = Config#{files => Files},
+    NewConfig = Config#{files => ErlFiles},
 
     case run(NewConfig) of
         fail -> halt(1);
@@ -70,7 +75,7 @@ run(Config = #{files := Files}) ->
     elvis_result:print(Results),
     elvis_result:status(Results);
 run(Config = #{src_dirs := SrcDirs}) ->
-    Pattern = "*.erl",
+    Pattern = ?FILE_PATTERN,
     Files = elvis_utils:find_files(SrcDirs, Pattern),
 
     run(Config#{files => Files});
@@ -89,7 +94,6 @@ apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
     Results = Module:Function(Config, FilePath, Args),
     RuleResult = elvis_result:new(rule, Function, Results),
     {[RuleResult | Result], Config, FilePath}.
-
 
 %%% Command Line Interface
 
@@ -133,7 +137,7 @@ process_commands([rock | Cmds], Config) ->
     rock(Config),
     process_commands(Cmds, Config);
 process_commands([help | Cmds], Config) ->
-    Config = help(Config),
+    help(Config),
     process_commands(Cmds, Config);
 process_commands(['git-hook' | Cmds], Config) ->
     git_hook(Config),
