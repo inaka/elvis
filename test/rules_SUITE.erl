@@ -10,7 +10,8 @@
          verify_line_length_rule/1,
          verify_no_tabs_rule/1,
          verify_macro_names_rule/1,
-         verify_macro_module_names/1
+         verify_macro_module_names/1,
+         verify_operator_spaces/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -89,3 +90,21 @@ verify_macro_module_names(_Config) ->
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
     [_, _, _, _] = elvis_style:macro_module_names(ElvisConfig, Path, []).
+
+-spec verify_operator_spaces(config()) -> any().
+verify_operator_spaces(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
+    
+    File = "fail_operator_spaces.erl",
+    {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
+
+    [] = elvis_style:operator_spaces(ElvisConfig, Path, []),
+    
+    [_, _, _] = elvis_style:operator_spaces(ElvisConfig, Path, [{right, [","]}]),
+    
+    AppendOptions = [{right, ["++"]}, {left, ["++"]}],
+    [_] = elvis_style:operator_spaces(ElvisConfig, Path, AppendOptions),
+
+    AllOptions = [{right, ","}, {right, "++"}, {left, ["++"]}],
+    [_, _, _, _] = elvis_style:operator_spaces(ElvisConfig, Path, AllOptions).
