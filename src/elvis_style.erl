@@ -4,7 +4,7 @@
          line_length/3,
          no_tabs/3,
          macro_names/3,
-         macro_mdoule_names/3
+         macro_module_names/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -40,11 +40,11 @@ macro_names(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_macro_names/3, []).
 
--spec macro_mdoule_names(elvis_config:config(), map(), []) ->
+-spec macro_module_names(elvis_config:config(), map(), []) ->
     [elvis_result:item_result()].
-macro_mdoule_names(Config, Target, []) ->
+macro_module_names(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
-    elvis_utils:check_lines(Src, fun check_macro_mdoule_names/3, []).
+    elvis_utils:check_lines(Src, fun check_macro_module_names/3, []).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
@@ -94,9 +94,9 @@ check_macro_names(Line, Num, _Args) ->
             end
     end.
 
--spec check_macro_mdoule_names(binary(), integer(), [term()]) ->
+-spec check_macro_module_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item_result()}.
-check_macro_mdoule_names(Line, Num, _Args) ->
+check_macro_module_names(Line, Num, _Args) ->
     {ok, ModNameRegex} = re:compile("[?]([A-z0-9_]+)[:]"),
     {ok, FunNameRegex} = re:compile("[:][?]([A-z0-9_]+)"),
     io:format("~p", [Line]),

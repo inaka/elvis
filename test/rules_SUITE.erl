@@ -88,4 +88,4 @@ verify_macro_module_names(_Config) ->
     File = "fail_macro_module_names.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    [_, _, _, _] = elvis_style:macro_mdoule_names(ElvisConfig, Path, []).
+    [_, _, _, _] = elvis_style:macro_module_names(ElvisConfig, Path, []).
