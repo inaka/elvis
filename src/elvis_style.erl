@@ -3,13 +3,18 @@
 -export([
          line_length/3,
          no_tabs/3,
-         macro_names/3
+         macro_names/3,
+         macro_module_names/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
 -define(NO_TABS_MSG, "Line ~p has a tab at column ~p.").
 -define(INVALID_MACRO_NAME_MSG,
             "Invalid macro name ~s on line ~p. Use UPPER_CASE.").
+-define(MACRO_AS_MODULE_NAME,
+            "Don't use macros (like ~s on line ~p) as module names.").
+-define(MACRO_AS_FUNCTION_NAME,
+            "Don't use macros (like ~s on line ~p) as function names.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -35,6 +40,11 @@ macro_names(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_macro_names/3, []).
 
+-spec macro_module_names(elvis_config:config(), map(), []) ->
+    [elvis_result:item_result()].
+macro_module_names(Config, Target, []) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    elvis_utils:check_lines(Src, fun check_macro_module_names/3, []).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
@@ -82,4 +92,26 @@ check_macro_names(Line, Num, _Args) ->
                         elvis_result:new(item, Msg, [MacroName, Num]),
                     {ok, Result}
             end
+    end.
+
+-spec check_macro_module_names(binary(), integer(), [term()]) ->
+    no_result | {ok, elvis_result:item_result()}.
+check_macro_module_names(Line, Num, _Args) ->
+    {ok, ModNameRegex} = re:compile("[?]([A-z0-9_]+)[:]"),
+    {ok, FunNameRegex} = re:compile("[:][?]([A-z0-9_]+)"),
+    io:format("~p", [Line]),
+    case re:run(Line, ModNameRegex, [{capture, all_but_first, list}]) of
+        nomatch ->
+            case re:run(Line, FunNameRegex, [{capture, all_but_first, list}]) of
+                nomatch ->
+                    no_result;
+                {match, [MacroName]} ->
+                    Msg = ?MACRO_AS_FUNCTION_NAME,
+                    Result = elvis_result:new(item, Msg, [MacroName, Num]),
+                    {ok, Result}
+            end;
+        {match, [MacroName]} ->
+            Msg = ?MACRO_AS_MODULE_NAME,
+            Result = elvis_result:new(item, Msg, [MacroName, Num]),
+            {ok, Result}
     end.
