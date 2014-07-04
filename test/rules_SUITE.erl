@@ -9,7 +9,8 @@
 -export([
          verify_line_length_rule/1,
          verify_no_tabs_rule/1,
-         verify_macro_names_rule/1
+         verify_macro_names_rule/1,
+         verify_macro_module_names/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -57,11 +58,7 @@ verify_line_length_rule(_Config) ->
     File = "fail_line_length.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    Results = elvis_style:line_length(ElvisConfig, Path, [80]),
-    ok = case length(Results) of
-        2 -> ok;
-        _ -> long_lines_undetected
-    end.
+    [_, _] = elvis_style:line_length(ElvisConfig, Path, [80]).
 
 -spec verify_no_tabs_rule(config()) -> any().
 verify_no_tabs_rule(_Config) ->
@@ -71,11 +68,8 @@ verify_no_tabs_rule(_Config) ->
     File = "fail_no_tabs.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    Results = elvis_style:no_tabs(ElvisConfig, Path, []),
-    ok = case length(Results) of
-        2 -> ok;
-        _ -> tabs_undetected
-    end.
+    [_, _] = elvis_style:no_tabs(ElvisConfig, Path, []).
+
 -spec verify_macro_names_rule(config()) -> any().
 verify_macro_names_rule(_Config) ->
     ElvisConfig = elvis_config:default(),
@@ -84,8 +78,14 @@ verify_macro_names_rule(_Config) ->
     File = "fail_macro_names.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    Results = elvis_style:macro_names(ElvisConfig, Path, []),
-    ok = case length(Results) of
-        2 -> ok;
-        _ -> macro_names_undetected
-    end.
+    [_, _] = elvis_style:macro_names(ElvisConfig, Path, []).
+
+-spec verify_macro_module_names(config()) -> any().
+verify_macro_module_names(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
+    
+    File = "fail_macro_module_names.erl",
+    {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
+
+    [_, _, _, _] = elvis_style:macro_mdoule_names(ElvisConfig, Path, []).
