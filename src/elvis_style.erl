@@ -4,17 +4,19 @@
          line_length/3,
          no_tabs/3,
          macro_names/3,
-         macro_module_names/3
+         macro_module_names/3,
+         operator_spaces/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
 -define(NO_TABS_MSG, "Line ~p has a tab at column ~p.").
 -define(INVALID_MACRO_NAME_MSG,
             "Invalid macro name ~s on line ~p. Use UPPER_CASE.").
--define(MACRO_AS_MODULE_NAME,
+-define(MACRO_AS_MODULE_NAME_MSG,
             "Don't use macros (like ~s on line ~p) as module names.").
--define(MACRO_AS_FUNCTION_NAME,
+-define(MACRO_AS_FUNCTION_NAME_MSG,
             "Don't use macros (like ~s on line ~p) as function names.").
+-define(OPERATOR_SPACE_MSG, "Missing space ~s ~p on line ~p").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -45,6 +47,12 @@ macro_names(Config, Target, []) ->
 macro_module_names(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_macro_module_names/3, []).
+
+-spec operator_spaces(elvis_config:config(), map(), [{right|left, string()}]) ->
+    [elvis_result:item_result()].
+operator_spaces(Config, Target, Rules) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    elvis_utils:check_lines(Src, fun check_operator_spaces/3, Rules).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
@@ -99,19 +107,50 @@ check_macro_names(Line, Num, _Args) ->
 check_macro_module_names(Line, Num, _Args) ->
     {ok, ModNameRegex} = re:compile("[?]([A-z0-9_]+)[:]"),
     {ok, FunNameRegex} = re:compile("[:][?]([A-z0-9_]+)"),
-    io:format("~p", [Line]),
     case re:run(Line, ModNameRegex, [{capture, all_but_first, list}]) of
         nomatch ->
             case re:run(Line, FunNameRegex, [{capture, all_but_first, list}]) of
                 nomatch ->
                     no_result;
                 {match, [MacroName]} ->
-                    Msg = ?MACRO_AS_FUNCTION_NAME,
+                    Msg = ?MACRO_AS_FUNCTION_NAME_MSG,
                     Result = elvis_result:new(item, Msg, [MacroName, Num]),
                     {ok, Result}
             end;
         {match, [MacroName]} ->
-            Msg = ?MACRO_AS_MODULE_NAME,
+            Msg = ?MACRO_AS_MODULE_NAME_MSG,
             Result = elvis_result:new(item, Msg, [MacroName, Num]),
+            {ok, Result}
+    end.
+
+-spec check_operator_spaces(binary(), integer(), [{right|left, string()}]) ->
+    no_result | {ok, elvis_result:item_result()}.
+check_operator_spaces(Line, Num, Rules) ->
+    AllResults =
+        [check_operator_spaces_rule(Line, Num, Rule) || Rule <- Rules],
+    case [Result || {ok, Result} <- AllResults] of
+        [] -> no_result;
+        [Result|_] -> {ok, Result}
+    end.
+check_operator_spaces_rule(Line, Num, {right, Operator}) ->
+    Escaped = [[$[, Char, $]] || Char <- Operator],
+    {ok, Regex} = re:compile(Escaped ++ "[^ ]"),
+    case re:run(<<Line/binary, " ">>, Regex) of
+        nomatch ->
+            no_result;
+        {match, _} ->
+            Msg = ?OPERATOR_SPACE_MSG,
+            Result = elvis_result:new(item, Msg, ["after", Operator, Num]),
+            {ok, Result}
+    end;
+check_operator_spaces_rule(Line, Num, {left, Operator}) ->
+    Escaped = [[$[, Char, $]] || Char <- Operator],
+    {ok, Regex} = re:compile("[^ ]" ++ Escaped),
+    case re:run(<<" ", Line/binary>>, Regex) of
+        nomatch ->
+            no_result;
+        {match, _} ->
+            Msg = ?OPERATOR_SPACE_MSG,
+            Result = elvis_result:new(item, Msg, ["before", Operator, Num]),
             {ok, Result}
     end.
