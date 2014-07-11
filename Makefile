@@ -1,12 +1,14 @@
 PROJECT = elvis
 
-DEPS = lager sync getopt
+DEPS = lager sync getopt jiffy ibrowse
 TEST_DEPS = meck
 
 dep_lager = https://github.com/basho/lager.git 2.0.3
 dep_sync = https://github.com/rustyio/sync.git master
 dep_getopt = https://github.com/jcomellas/getopt v0.8.2
 dep_meck = https://github.com/eproxus/meck 0.8.2
+dep_jiffy = https://github.com/davisp/jiffy 0.11.3
+dep_ibrowse = https://github.com/cmullaparthi/ibrowse v4.1.1
 
 include erlang.mk
 
@@ -25,3 +27,6 @@ CT_OPTS = -cover test/elvis.coverspec  -erl_args -config config/test
 escript: all
 	rebar escriptize
 	./elvis help
+
+shell: app
+	erl -pa ebin -pa deps/*/ebin -s sync -s elvis -config config/app.config

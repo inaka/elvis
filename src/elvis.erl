@@ -8,16 +8,21 @@
 
 -export([
          rock/0,
-         rock/1
+         rock/1,
+         webhook/1
         ]).
 
+-export([start/0]).
+
 -define(APP_NAME, "elvis").
--define(FILE_PATTERN, "*.erl").
--define(FILE_EXTENSIONS, [".erl"]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-spec start() -> ok.
+start() ->
+    application:ensure_all_started(elvis).
 
 -spec main([string()]) -> ok.
 main(Args) ->
@@ -34,20 +39,22 @@ main(Args) ->
 
 %%% Rock Command
 
--spec rock() -> ok | fail.
+-spec rock() -> ok | {fail, elvis_result:file_result()}.
 rock() ->
     Config = elvis_config:default(),
     rock(Config).
 
--spec rock(elvis_config:config()) -> ok | fail.
+-spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file_result()}.
 rock(Config = #{files := Files, rules := _Rules}) ->
     Results = [apply_rules(Config, File) || File <- Files],
 
     elvis_result:print(Results),
-    elvis_result:status(Results);
+    case elvis_result:status(Results) of
+        fail -> {fail, Results};
+        ok -> ok
+    end;
 rock(Config = #{src_dirs := SrcDirs, rules := _Rules}) ->
-    Pattern = ?FILE_PATTERN,
-    Files = elvis_utils:find_files(SrcDirs, Pattern),
+    Files = elvis_utils:find_files(SrcDirs),
 
     rock(Config#{files => Files});
 rock(Config) ->
@@ -58,16 +65,19 @@ rock(Config) ->
 -spec git_hook(elvis_config:config()) -> ok.
 git_hook(Config) ->
     Files = elvis_git:staged_files(),
-    ErlFiles = [File || File = #{path := Path} <- Files,
-                        lists:member(filename:extension(Path),
-                                     ?FILE_EXTENSIONS)],
+    ErlFiles = elvis_utils:filter_files(Files),
 
     NewConfig = Config#{files => ErlFiles},
 
     case rock(NewConfig) of
-        fail -> elvis_utils:erlang_halt(1);
+        {fail, _} -> elvis_utils:erlang_halt(1);
         ok -> ok
     end.
+
+%% @doc Should receive the payload of a Github event and act accordingly.
+-spec webhook(map()) -> ok | {error, term()}.
+webhook(Request) ->
+    elvis_webhook:event(Request).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private

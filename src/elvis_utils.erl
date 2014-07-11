@@ -2,12 +2,18 @@
 
 -export([
          src/2,
-         find_files/2,
+         find_files/1,
          check_lines/3,
-         erlang_halt/1
+         erlang_halt/1,
+         to_str/1,
+         is_erlang_file/1,
+         filter_files/1
         ]).
 
 -export_type([file/0]).
+
+-define(FILE_PATTERN, "*.erl").
+-define(FILE_EXTENSIONS, [".erl"]).
 
 -type file() :: #{atom() => string(), atom() => binary()}.
 
@@ -28,10 +34,10 @@ src(_Config, File) ->
 
 %% @doc Returns all files under the specified Path
 %% that match the pattern Name.
--spec find_files([string()], string()) -> [file()].
-find_files(Dirs, Pattern) ->
+-spec find_files([string()]) -> [file()].
+find_files(Dirs) ->
     Fun = fun(Dir) ->
-                filelib:wildcard(Dir ++ "/**/" ++ Pattern)
+                filelib:wildcard(Dir ++ "/**/" ++ ?FILE_PATTERN)
           end,
     [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
 
@@ -60,3 +66,23 @@ check_lines([Line | Lines], Fun, Args, Results, Num) ->
 -spec erlang_halt(integer()) -> any().
 erlang_halt(Code) ->
     halt(Code).
+
+-spec to_str(binary() | list()) -> string().
+to_str(Arg) when is_binary(Arg) ->
+    binary_to_list(Arg);
+to_str(Arg) when is_atom(Arg) ->
+    atom_to_list(Arg);
+to_str(Arg) when is_integer(Arg) ->
+    integer_to_list(Arg);
+to_str(Arg) when is_list(Arg) ->
+    Arg.
+
+-spec is_erlang_file(string()) -> true | false.
+is_erlang_file(Path) ->
+    Path1 = to_str(Path),
+    lists:member(filename:extension(Path1), ?FILE_EXTENSIONS).
+
+-spec filter_files([map()]) -> [map()].
+filter_files(Files) ->
+    [File || File = #{path := Path} <- Files,
+             is_erlang_file(Path)].

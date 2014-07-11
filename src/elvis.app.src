@@ -3,6 +3,6 @@
   [
    {description, "Erlang Style Reviewer, inspired on HoundCI"},
    {vsn, "0.1.0-alpha"},
-   {applications, [kernel, stdlib]}
+   {applications, [kernel, stdlib, ibrowse, ssl]}
   ]
 }.
