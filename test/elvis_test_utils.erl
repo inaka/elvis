@@ -11,5 +11,3 @@ find_file(Dirs, Pattern) ->
         [] -> {error, enoent};
         [Path | _] -> {ok, Path}
     end.
-
-

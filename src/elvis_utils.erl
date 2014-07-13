@@ -3,6 +3,7 @@
 -export([
          src/2,
          find_files/1,
+         find_files/2,
          check_lines/3,
          erlang_halt/1,
          to_str/1,
@@ -34,12 +35,16 @@ src(_Config, File) ->
 
 %% @doc Returns all files under the specified Path
 %% that match the pattern Name.
--spec find_files([string()]) -> [file()].
-find_files(Dirs) ->
+-spec find_files([string()], string()) -> [file()].
+find_files(Dirs, Pattern) ->
     Fun = fun(Dir) ->
-                filelib:wildcard(Dir ++ "/**/" ++ ?FILE_PATTERN)
+                filelib:wildcard(Dir ++ "/**/" ++ Pattern)
           end,
     [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
+
+-spec find_files([string()]) -> [file()].
+find_files(Dirs) ->
+    find_files(Dirs, ?FILE_PATTERN).
 
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line
