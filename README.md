@@ -48,7 +48,7 @@ Make sure your pre-commit hook script is executable (i.e. by running
 ### Erlang Shell
 
 After adding `elvis` as a dependency to your project and setting up its
-[configuration](#configutation), you can run it from an Erlang shell in the
+[configuration](#configuration), you can run it from an Erlang shell in the
 following two ways.
 
 ```erlang
