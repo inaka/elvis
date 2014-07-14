@@ -12,6 +12,10 @@
          file_content/4
         ]).
 
+-export_type([
+              credentials/0,
+              repository/0
+             ]).
 
 -type credentials() :: {Username :: string(), Password :: string()}.
 -type repository() :: string(). %% "username/reponame"
@@ -41,14 +45,13 @@ pull_req_files(Credentials, Repo, PR) ->
 pull_req_comment_line(Credentials, Repo, PR,
                       CommitId, Filename, Line, Comment) ->
     URL = io_lib:format(?PULL_REQS ++ "/comments", [Repo, PR]),
-    Body = #{<<"commit_id">> => CommitId,
+    Body = #{<<"commit_id">> => list_to_binary(CommitId),
              <<"path">> => Filename,
              <<"position">> => Line,
-             <<"body">> => Comment
+             <<"body">> => list_to_binary(Comment)
             },
     JsonBody = jiffy:encode(Body),
-    _Result = auth_req(Credentials, URL, post, JsonBody),
-    ok.
+    auth_req(Credentials, URL, post, JsonBody).
 
 -spec file_content(credentials(), repository(), string(), string()) ->
     binary().
@@ -74,6 +77,8 @@ auth_req({Username, Password}, URL, Method, Body) ->
     io:format("[Github API] ~s~n", [URL]),
     case ibrowse:send_req(URL, Headers, Method, Body, Options) of
         {ok, "200", _RespHeaders, RespBody} ->
+            {ok, RespBody};
+        {ok, "201", _RespHeaders, RespBody} ->
             {ok, RespBody};
         {ok, "302", RespHeaders, _} ->
             RedirectURL = proplists:get_value("Location", RespHeaders),
