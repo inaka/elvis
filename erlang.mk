@@ -215,7 +215,7 @@ clean-docs:
 $(foreach dep,$(TEST_DEPS),$(eval $(call dep_target,$(dep))))
 
 TEST_ERLC_OPTS ?= +debug_info +warn_export_vars +warn_shadow_vars +warn_obsolete_guard
-TEST_ERLC_OPTS += -DTEST=1 -DEXTRA=1 +'{parse_transform, eunit_autoexport}'
+TEST_ERLC_OPTS += -DTEST=1 -DEXTRA=1
 
 build-test-deps: $(ALL_TEST_DEPS_DIRS)
 	@for dep in $(ALL_TEST_DEPS_DIRS) ; do $(MAKE) -C $$dep; done
