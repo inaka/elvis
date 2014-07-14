@@ -2,19 +2,22 @@
 
 -export([event/1]).
 
+-export_type([request/0]).
+
 -type event() :: pull_request.
+-type request() :: #{ headers => map(), body => map()}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec event(map()) -> ok | {error, term()}.
+-spec event(request()) -> ok | {error, term()}.
 event(#{headers := Headers, body := Body}) ->
-    Event = maps:get(<<"X-GitHub-Event">>, Headers),
-    EventAtom = list_to_atom(binary_to_list(Event)),
-    Data = jiffy:decode(Body, [return_maps]),
+    EventName = maps:get(<<"X-GitHub-Event">>, Headers),
+    EventData = jiffy:decode(Body, [return_maps]),
     Config = elvis_config:default(),
-    event(Config, EventAtom, Data).
+
+    event(Config, EventName, EventData).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private functions
@@ -25,7 +28,7 @@ event(#{headers := Headers, body := Body}) ->
 
 -spec event(elvis_config:config(), event(), map()) -> ok | {error, term()}.
 event(Config,
-      pull_request,
+      <<"pull_request">>,
       #{<<"number">> := PR, <<"repository">> := Repo}) ->
     RepoName = binary_to_list(maps:get(<<"full_name">>, Repo)),
     Cred = github_credentials(),
@@ -38,7 +41,7 @@ event(Config,
     Config1 = Config#{files => ErlFiles},
     case elvis:rock(Config1) of
         {fail, Results} ->
-            %% TODO: Comment each line that failed.
+            comment_files(Cred, RepoName, PR, Results),
             {fail, Results};
         ok -> ok
     end;
@@ -56,7 +59,7 @@ file_info(Cred, Repo,
     #{path => Filename, content => Content, commit_id => CommitId}.
 
 %% @doc Gets the github
--spec github_credentials() -> [string()].
+-spec github_credentials() -> elvis_github:credentials().
 github_credentials() ->
     User = application:get_env(elvis, github_user, ""),
     Password = application:get_env(elvis, github_password, ""),
@@ -69,3 +72,35 @@ commit_id_from_raw_url(Url, Filename) ->
     Regex = ".+/raw/(.+)/" ++ Filename,
     {match, [_, {Pos, Len} | _]} = re:run(UrlString, Regex),
     string:substr(UrlString, Pos + 1, Len).
+
+%% @doc Comment files that failed rules.
+comment_files(Cred, Repo, PR, Results) ->
+    Fun = fun(#{file := File, rules := Rules}) ->
+              comment_rules(Cred, Repo, PR, Rules, File)
+          end,
+    lists:foreach(Fun, Results).
+
+comment_rules(Cred, Repo, PR, Rules, File) ->
+    Fun = fun(#{items := Items}) ->
+              comment_lines(Cred, Repo, PR, Items, File)
+          end,
+    lists:foreach(Fun, Rules).
+
+-spec comment_lines(elvis_github:credentials(),
+                    elvis_github:repository(),
+                    integer(),
+                    elvis_result:file_item(),
+                    {string(), atom()}) -> ok.
+comment_lines(_Cred, _Repo, _PR, [], _File) ->
+    ok;
+comment_lines(Cred, Repo, PR,
+              [#{line_num := Line,
+                 message := Message,
+                 info := Info}
+               | Items],
+              File = #{path := Path, commit_id := CommitId}) ->
+    Comment = io_lib:format(Message, Info),
+    {ok, _Response} =
+        elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
+                                           Path, Line, Comment),
+    comment_lines(Cred, Repo, PR, Items, File).

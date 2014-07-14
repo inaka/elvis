@@ -39,12 +39,12 @@ main(Args) ->
 
 %%% Rock Command
 
--spec rock() -> ok | {fail, elvis_result:file_result()}.
+-spec rock() -> ok | {fail, elvis_result:file()}.
 rock() ->
     Config = elvis_config:default(),
     rock(Config).
 
--spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file_result()}.
+-spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file()}.
 rock(Config = #{files := Files, rules := _Rules}) ->
     Results = [apply_rules(Config, File) || File <- Files],
 
@@ -75,7 +75,7 @@ git_hook(Config) ->
     end.
 
 %% @doc Should receive the payload of a Github event and act accordingly.
--spec webhook(map()) -> ok | {error, term()}.
+-spec webhook(webhook:request()) -> ok | {error, term()}.
 webhook(Request) ->
     elvis_webhook:event(Request).
 
@@ -84,16 +84,17 @@ webhook(Request) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -spec apply_rules(elvis_config:config(), elvis_utils:file()) ->
-    elvis_result:file_result().
-apply_rules(Config = #{rules := Rules}, File = #{path := Path}) ->
+    elvis_result:file().
+apply_rules(Config = #{rules := Rules}, File) ->
     Acc = {[], Config, File},
-    {RuleResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
+    {RulesResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
 
-    elvis_result:new(file, Path, RuleResults).
+    #{file => File, rules => RulesResults}.
 
 apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
     Results = Module:Function(Config, FilePath, Args),
-    RuleResult = elvis_result:new(rule, Function, Results),
+    RuleResult = #{name => Function, items => Results},
+    
     {[RuleResult | Result], Config, FilePath}.
 
 %%% Command Line Interface

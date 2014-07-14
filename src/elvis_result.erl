@@ -2,65 +2,52 @@
 
 %% API
 -export([
-         new/3,
          status/1,
          print/1
         ]).
 
 %% Types
 -export_type([
-              item_result/0,
-              rule_result/0,
-              file_result/0
+              item/0,
+              rule/0,
+              file/0
              ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Records
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--record(item_result,
-        {
-          message = "" :: string(),
-          info = [] :: list()
-        }).
-
--record(rule_result,
-        {
-          name :: atom(),
-          results = [] :: [item_result()]
-        }).
-
--record(file_result,
-        {
-          path = "" :: string(),
-          rules = [] :: list()
-        }).
-
--type item_result() :: #item_result{}.
--type rule_result() :: #rule_result{}.
--type file_result() :: #file_result{}.
+-type item() ::
+        #{
+           message => string(),
+           info => list()
+         }.
+-type rule() ::
+        #{
+           name => atom(),
+           items => [item()]
+         }.
+-type file() ::
+        #{
+           file => elvis_utils:file(),
+           rules => list()
+         }.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec new(item | rule | file, any(), any()) ->
-    item_result() | rule_result() | file_result().
-new(item, Msg, Info) ->
-    #item_result{message = Msg, info= Info};
-new(rule, Name, Results) ->
-    #rule_result{name = Name, results = Results};
-new(file, Path, Rules) ->
-    #file_result{path = Path, rules = Rules}.
+%% Print
 
--spec print(item_result() | rule_result() | [file_result()]) -> ok.
+-spec print(item() | rule() | [file()]) -> ok.
 print([]) ->
     ok;
 print([Result | Results]) ->
     print(Result),
     print(Results);
 
-print(#file_result{path = Path, rules = Rules}) ->
+print(#{file := File, rules := Rules}) ->
+    Path = maps:get(path, File),
     Status = case status(Rules) of
                  ok -> "OK";
                  fail -> "FAIL"
@@ -69,30 +56,24 @@ print(#file_result{path = Path, rules = Rules}) ->
     io:format("# ~s [~s]~n", [Path, Status]),
     print(Rules);
 
-print(#rule_result{results = []}) ->
+print(#{items := []}) ->
     ok;
-print(#rule_result{name = Name, results = Results}) ->
+print(#{name := Name, items := Items}) ->
     io:format("  - ~s~n", [atom_to_list(Name)]),
-    print(Results);
+    print(Items);
 
-print(#item_result{message = Msg, info = Info}) ->
+print(#{message := Msg, info := Info}) ->
     io:format("    - " ++ Msg ++ "~n", Info).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Private
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
--spec status([rule_result()]) -> ok | fail.
+-spec status([rule()]) -> ok | fail.
 status([]) ->
     ok;
-
-status([#file_result{rules = Rules} | Files]) ->
+status([#{rules := Rules} | Files]) ->
     case status(Rules) of
         fail -> fail;
         ok -> status(Files)
     end;
-
-status([#rule_result{results = []} | Rules]) ->
+status([#{items := []} | Rules]) ->
     status(Rules);
 status(_Rules) ->
     fail.

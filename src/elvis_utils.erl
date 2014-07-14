@@ -16,7 +16,7 @@
 -define(FILE_PATTERN, "*.erl").
 -define(FILE_EXTENSIONS, [".erl"]).
 
--type file() :: #{atom() => string(), atom() => binary()}.
+-type file() :: #{path => string(), content => binary()}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
@@ -51,7 +51,7 @@ find_files(Dirs) ->
 %% as a binary, the line number and the supplied Args) and
 %% returns 'no_result' or {'ok', Result}.
 -spec check_lines(binary(), fun(), [term()]) ->
-    [elvis_result:item_result()].
+    [elvis_result:item()].
 check_lines(Src, Fun, Args) ->
     Lines = binary:split(Src, <<"\n">>, [global]),
     check_lines(Lines, Fun, Args, [], 1).
