@@ -5,7 +5,15 @@
 -export_type([request/0]).
 
 -type event() :: pull_request.
--type request() :: #{ headers => map(), body => map()}.
+-type request() :: #{headers => map(), body => map()}.
+
+-type github_info() ::
+        {
+          elvis_github:credentials(),
+          elvis_github:repository(),
+          integer(),
+          [map()]
+        }.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
@@ -29,19 +37,22 @@ event(#{headers := Headers, body := Body}) ->
 -spec event(elvis_config:config(), event(), map()) -> ok | {error, term()}.
 event(Config,
       <<"pull_request">>,
-      #{<<"number">> := PR, <<"repository">> := Repo}) ->
-    RepoName = binary_to_list(maps:get(<<"full_name">>, Repo)),
+      #{<<"number">> := PR, <<"repository">> := Repository}) ->
+    Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
     Cred = github_credentials(),
 
-    {ok, GithubFiles} = elvis_github:pull_req_files(Cred, RepoName, PR),
-    ErlFiles = [file_info(Cred, RepoName, F)
+    {ok, GithubFiles} = elvis_github:pull_req_files(Cred, Repo, PR),
+    ErlFiles = [file_info(Cred, Repo, F)
                 || F = #{<<"filename">> := Path} <- GithubFiles,
                    elvis_utils:is_erlang_file(Path)],
 
     Config1 = Config#{files => ErlFiles},
     case elvis:rock(Config1) of
         {fail, Results} ->
-            comment_files(Cred, RepoName, PR, Results),
+            {ok, Comments} = elvis_github:pull_req_comments(Cred, Repo, PR),
+            % io:format("Comments ~p~n", [Comments]),
+            GithubInfo = {Cred, Repo, PR, Comments},
+            comment_files(GithubInfo, Results),
             {fail, Results};
         ok -> ok
     end;
@@ -74,33 +85,44 @@ commit_id_from_raw_url(Url, Filename) ->
     string:substr(UrlString, Pos + 1, Len).
 
 %% @doc Comment files that failed rules.
-comment_files(Cred, Repo, PR, Results) ->
+comment_files(GithubInfo, Results) ->
     Fun = fun(#{file := File, rules := Rules}) ->
-              comment_rules(Cred, Repo, PR, Rules, File)
+              comment_rules(GithubInfo, Rules, File)
           end,
     lists:foreach(Fun, Results).
 
-comment_rules(Cred, Repo, PR, Rules, File) ->
+comment_rules(GithubInfo, Rules, File) ->
     Fun = fun(#{items := Items}) ->
-              comment_lines(Cred, Repo, PR, Items, File)
+              comment_lines(GithubInfo, Items, File)
           end,
     lists:foreach(Fun, Rules).
 
--spec comment_lines(elvis_github:credentials(),
-                    elvis_github:repository(),
-                    integer(),
-                    elvis_result:file_item(),
-                    {string(), atom()}) -> ok.
-comment_lines(_Cred, _Repo, _PR, [], _File) ->
+-spec comment_lines(github_info(), elvis_result:item(), elvis_utils:file()) ->
+    ok.
+comment_lines(_GithubInfo, [], _File) ->
     ok;
-comment_lines(Cred, Repo, PR,
-              [#{line_num := Line,
-                 message := Message,
-                 info := Info}
-               | Items],
-              File = #{path := Path, commit_id := CommitId}) ->
-    Comment = io_lib:format(Message, Info),
-    {ok, _Response} =
-        elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
-                                           Path, Line, Comment),
-    comment_lines(Cred, Repo, PR, Items, File).
+comment_lines(GithubInfo, [Item | Items], File) ->
+    {Cred, Repo, PR, Comments} = GithubInfo,
+    #{path := Path, commit_id := CommitId} = File,
+    #{line_num := Line, message := Message, info := Info} = Item,
+
+    Text = list_to_binary(io_lib:format(Message, Info)),
+
+    try
+        comment_exists(Comments, Path, Line, Text),
+        {ok, _Response} =
+            elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
+                                               Path, Line, Text)
+    catch
+        error:{badmatch, _} -> ok
+    end,
+    comment_lines(GithubInfo, Items, File).
+
+comment_exists([], _Path, _Line, _Body) ->
+    ok;
+comment_exists([Comment | Comments], Path, Line, Body) ->
+    #{<<"path">> := Path,
+      <<"position">> := Line,
+      <<"body">> := Body} = Comment,
+
+    comment_exists(Comments, Path, Line, Body).

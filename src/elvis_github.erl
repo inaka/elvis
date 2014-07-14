@@ -4,7 +4,8 @@
 %% Pull Requests
 -export([
          pull_req_files/3,
-         pull_req_comment_line/7
+         pull_req_comment_line/7,
+         pull_req_comments/3
         ]).
 
 %% Files
@@ -43,15 +44,23 @@ pull_req_files(Credentials, Repo, PR) ->
                             string(), string(), integer(), string()) ->
     result().
 pull_req_comment_line(Credentials, Repo, PR,
-                      CommitId, Filename, Line, Comment) ->
+                      CommitId, Filename, Line, Text) ->
     URL = io_lib:format(?PULL_REQS ++ "/comments", [Repo, PR]),
     Body = #{<<"commit_id">> => list_to_binary(CommitId),
              <<"path">> => Filename,
              <<"position">> => Line,
-             <<"body">> => list_to_binary(Comment)
+             <<"body">> => Text
             },
     JsonBody = jiffy:encode(Body),
     auth_req(Credentials, URL, post, JsonBody).
+
+-spec pull_req_comments(credentials(), repository(), integer()) ->
+    result().
+pull_req_comments(Cred, Repo, PR) ->
+    URL =  io_lib:format(?PULL_REQS ++ "/comments", [Repo, PR]),
+    {ok, Result} = auth_req(Cred, URL),
+    Comments = jiffy:decode(Result, [return_maps]),
+    {ok, Comments}.
 
 -spec file_content(credentials(), repository(), string(), string()) ->
     binary().
