@@ -8,7 +8,7 @@ Erlang Style Reviewer
 
 ### Script
 
-Elvis can be turned into a script by executing `make escript`. This will
+`elvis` can be turned into a script by executing `make escript`. This will
 generate an `elvis` self-contained executable script, from which you can get
 help by typing `elvis help`. A list of available commands can be shown using the
 `--commands` option (i.e. `elvis --commands`).
@@ -25,7 +25,7 @@ elvis rock --config config/elvis.config
 
 ### Git hook
 
-`elvis` can be used as a [`git` pre-commit hook](pre-commit)
+`elvis` can also be used as a [`git` pre-commit hook][pre-commit]
 using the `git-hook` command, just use something like the following as
 your pre-commit script:
 
