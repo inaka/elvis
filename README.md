@@ -104,6 +104,28 @@ rules:
 # ../../test/examples/small.erl [OK]
 ```
 
+### Webhook
+
+There's also a way to use `elvis` as a GitHub [webhook][webhooks] for
+`pull request` (PR) events by calling the `webhook/1` function. This will add
+a comment for each rule that is broken by a line in the files associated wiith
+the PR.
+
+Since GitHub's API needs a valid user and password to allow the creation of
+comments, the parameters `github_user` and `github_password` need to be added to
+`elvis`'s [configuration](#configuration).
+
+The `webhook/1` function takes a map containing the keys `headers` and `body`,
+whose values should be the map of headers and the body from the GitHub's event
+request.
+
+```erlang
+Headers = #{<<"X-GitHub-Event">>, <<"pull_request">>},
+Body = <<"{}">>, %% JSON data form GitHub's event.
+Request = #{headers => Headers, body => Body},
+elvis:webhook(Request).
+```
+
 ## Configuration
 
 To provide a default configuration for `elvis` you should either provide an
@@ -112,21 +134,24 @@ environment values in your [configuration][config] file:
 
 ```erlang
 [
- {elvis,
-  #{
-    src_dirs => ["src", "test"],
-    rules => [
-              {elvis_style, line_length, [80]},
-              {elvis_style, no_tabs, []},
-              {elvis_style, macro_names, []},
-              {elvis_style, macro_module_names, []},
-              {elvis_style, operator_spaces, [{right, ","}, {right, "++"}, {left, "++"}]}
-              %% ..
-             ]
-   }
-  ]
+ {
+   elvis,
+   [
+    {config,
+      #{src_dirs => ["src", "test"],
+        rules    => [{elvis_style, line_length, [80]},
+                     {elvis_style, no_tabs, []},
+                     {elvis_style, macro_names, []},
+                     {elvis_style, macro_module_names, []},
+                     {elvis_style, operator_spaces, [{right, ","}, {right, "++"}, {left, "++"}]}
+                    ]
+       }
+    },
+    {github_user, "user"},
+    {github_password, "password"}
+   ]
  }
-]
+].
 ```
 
 The `src_dirs` key is a list that indicates where `elvis` should look for the
@@ -142,6 +167,9 @@ this arity.
 
 There's currently no default configuration for `elvis`, but in the meantime
 you can take the one in `config/app.config` as a starting point.
+
+The GitHub configuration parameters `github_user` and `github_password` are
+required only when `elvis` is used as a [webhook](#webhook).
 
 ## Dependencies
 
