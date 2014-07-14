@@ -115,12 +115,14 @@ check_macro_module_names(Line, Num, _Args) ->
                     no_result;
                 {match, [MacroName]} ->
                     Msg = ?MACRO_AS_FUNCTION_NAME_MSG,
-                    Result = elvis_result:new(item, Msg, [MacroName, Num]),
+                    Info = [MacroName, Num],
+                    Result = #{message => Msg, info => Info, line_num => Num},
                     {ok, Result}
             end;
         {match, [MacroName]} ->
             Msg = ?MACRO_AS_MODULE_NAME_MSG,
-            Result = elvis_result:new(item, Msg, [MacroName, Num]),
+            Info = [MacroName, Num],
+            Result = #{message => Msg, info => Info, line_num => Num},
             {ok, Result}
     end.
 
@@ -141,7 +143,8 @@ check_operator_spaces_rule(Line, Num, {right, Operator}) ->
             no_result;
         {match, _} ->
             Msg = ?OPERATOR_SPACE_MSG,
-            Result = elvis_result:new(item, Msg, ["after", Operator, Num]),
+            Info = ["after", Operator, Num],
+            Result = #{message => Msg, info => Info, line_num => Num},
             {ok, Result}
     end;
 check_operator_spaces_rule(Line, Num, {left, Operator}) ->
@@ -152,6 +155,7 @@ check_operator_spaces_rule(Line, Num, {left, Operator}) ->
             no_result;
         {match, _} ->
             Msg = ?OPERATOR_SPACE_MSG,
-            Result = elvis_result:new(item, Msg, ["before", Operator, Num]),
+            Info = ["before", Operator, Num],
+            Result = #{message => Msg, info => Info, line_num => Num},
             {ok, Result}
     end.

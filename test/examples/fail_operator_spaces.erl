@@ -6,5 +6,5 @@ function1(Should,Fail) ->
   [Should,Fail].
 
 function2(Shouldnt, Fail) ->
-  Unless = [we, consider]++ [operands, as, well],
-  WithDash = Shouldnt - Fail.
+  _Unless = [we, consider]++ [operands, as, well],
+  _WithDash = Shouldnt - Fail.
