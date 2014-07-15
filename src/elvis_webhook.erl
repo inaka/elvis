@@ -21,11 +21,16 @@
 
 -spec event(request()) -> ok | {error, term()}.
 event(#{headers := Headers, body := Body}) ->
-    EventName = maps:get(<<"X-GitHub-Event">>, Headers),
-    EventData = jiffy:decode(Body, [return_maps]),
-    Config = elvis_config:default(),
-
-    event(Config, EventName, EventData).
+    HeaderName = <<"x-github-event">>,
+    case maps:is_key(HeaderName, Headers) of
+        false ->
+            {error, missing_header};
+        true ->
+            EventName = maps:get(HeaderName, Headers),
+            EventData = jiffy:decode(Body, [return_maps]),
+            Config = elvis_config:default(),
+            event(Config, EventName, EventData)
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private functions
@@ -51,13 +56,12 @@ event(Config,
         {fail, Results} ->
             {ok, Comments} = elvis_github:pull_req_comments(Cred, Repo, PR),
             GithubInfo = {Cred, Repo, PR, Comments},
-            comment_files(GithubInfo, Results),
-            {fail, Results};
+            comment_files(GithubInfo, Results);
         ok -> ok
     end;
 
 event(_Config, Event, _Data) ->
-    {error, io:format("Nothing to do for event: ~p.~n", [Event])}.
+    {error, io_lib:format("Nothing to do for event: ~p.~n", [Event])}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helper functions
@@ -84,6 +88,7 @@ commit_id_from_raw_url(Url, Filename) ->
     string:substr(UrlString, Pos + 1, Len).
 
 %% @doc Comment files that failed rules.
+-spec comment_files(github_info(), [elvis_result:file()]) -> ok.
 comment_files(GithubInfo, Results) ->
     Fun = fun(Result) ->
                   File = elvis_result:get_file(Result),
@@ -92,6 +97,8 @@ comment_files(GithubInfo, Results) ->
           end,
     lists:foreach(Fun, Results).
 
+-spec comment_rules(github_info(), [elvis_result:rule()], elvis_utils:file()) ->
+    ok.
 comment_rules(GithubInfo, Rules, File) ->
     Fun = fun(Rule) ->
               Items = elvis_result:get_items(Rule),
@@ -112,21 +119,26 @@ comment_lines(GithubInfo, [Item | Items], File) ->
 
     Text = list_to_binary(io_lib:format(Message, Info)),
 
-    ok = try
-             comment_exists(Comments, Path, LineNum, Text),
-             {ok, _Response} =
-                 elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
-                                                    Path, LineNum, Text)
-         catch
-             error:{badmatch, _} -> ok
-         end,
+    case comment_exists(Comments, Path, LineNum, Text) of
+        exists ->
+            Args = [Text, Path, LineNum],
+            lager:info("Comment '~p' for ~p on line ~p exists", Args);
+        not_exists ->
+            {ok, _Response} =
+                elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
+                                                   Path, LineNum, Text)
+    end,
     comment_lines(GithubInfo, Items, File).
 
 comment_exists([], _Path, _Line, _Body) ->
-    ok;
+    not_exists;
 comment_exists([Comment | Comments], Path, Line, Body) ->
-    #{<<"path">> := Path,
-      <<"position">> := Line,
-      <<"body">> := Body} = Comment,
-
-    comment_exists(Comments, Path, Line, Body).
+    try
+        #{<<"path">> := Path,
+          <<"position">> := Line,
+          <<"body">> := Body} = Comment,
+        exists
+    catch
+        error:{badmatch, _} ->
+            comment_exists(Comments, Path, Line, Body)
+    end.

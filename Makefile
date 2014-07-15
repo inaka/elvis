@@ -29,4 +29,4 @@ escript: all
 	./elvis help
 
 shell: app
-	erl -pa ebin -pa deps/*/ebin -s sync -s elvis -config config/app.config
+	erl -pa ebin -pa deps/*/ebin -s sync -s elvis -s lager -config config/app.config
