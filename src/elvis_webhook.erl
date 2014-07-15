@@ -76,7 +76,7 @@ github_credentials() ->
     Password = application:get_env(elvis, github_password, ""),
     {User, Password}.
 
-%% @doc Get a raw_url for a file and extracts the commit id form it.
+%% @doc Gets a raw_url for a file and extracts the commit id from it.
 -spec commit_id_from_raw_url(string(), string()) -> string().
 commit_id_from_raw_url(Url, Filename) ->
     UrlString = elvis_utils:to_str(Url),
@@ -86,13 +86,16 @@ commit_id_from_raw_url(Url, Filename) ->
 
 %% @doc Comment files that failed rules.
 comment_files(GithubInfo, Results) ->
-    Fun = fun(#{file := File, rules := Rules}) ->
-              comment_rules(GithubInfo, Rules, File)
+    Fun = fun(Result) ->
+                  File = elvis_result:get_file(Result),
+                  Rules = elvis_result:get_rules(Result),
+                  comment_rules(GithubInfo, Rules, File)
           end,
     lists:foreach(Fun, Results).
 
 comment_rules(GithubInfo, Rules, File) ->
-    Fun = fun(#{items := Items}) ->
+    Fun = fun(Rule) ->
+              Items = elvis_result:get_items(Rule),
               comment_lines(GithubInfo, Items, File)
           end,
     lists:foreach(Fun, Rules).
@@ -104,15 +107,17 @@ comment_lines(_GithubInfo, [], _File) ->
 comment_lines(GithubInfo, [Item | Items], File) ->
     {Cred, Repo, PR, Comments} = GithubInfo,
     #{path := Path, commit_id := CommitId} = File,
-    #{line_num := Line, message := Message, info := Info} = Item,
+    Message = elvis_result:get_message(Item),
+    Info = elvis_result:get_info(Item),
+    LineNum = elvis_result:get_line_num(Item),
 
     Text = list_to_binary(io_lib:format(Message, Info)),
 
     try
-        comment_exists(Comments, Path, Line, Text),
+        comment_exists(Comments, Path, LineNum, Text),
         {ok, _Response} =
             elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
-                                               Path, Line, Text)
+                                               Path, LineNum, Text)
     catch
         error:{badmatch, _} -> ok
     end,

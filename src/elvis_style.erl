@@ -65,7 +65,7 @@ check_line_length(Line, Num, [Limit]) ->
         Large when Large > Limit ->
             Msg = ?LINE_LENGTH_MSG,
             Info = [Num, binary_to_list(Line)],
-            Result = #{message => Msg, info => Info, line_num => Num},
+            Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result};
         _ ->
             no_result
@@ -80,7 +80,7 @@ check_no_tabs(Line, Num, _Args) ->
         {Index, _} ->
             Msg = ?NO_TABS_MSG,
             Info = [Num, Index],
-            Result = #{message => Msg, info => Info, line_num => Num},
+            Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result}
     end.
 
@@ -98,7 +98,7 @@ check_macro_names(Line, Num, _Args) ->
                 _ ->
                     Msg = ?INVALID_MACRO_NAME_MSG,
                     Info = [MacroName, Num],
-                    Result = #{message => Msg, info => Info, line_num => Num},
+                    Result = elvis_result:new(item, Msg, Info, Num),
                     {ok, Result}
             end
     end.
@@ -116,13 +116,13 @@ check_macro_module_names(Line, Num, _Args) ->
                 {match, [MacroName]} ->
                     Msg = ?MACRO_AS_FUNCTION_NAME_MSG,
                     Info = [MacroName, Num],
-                    Result = #{message => Msg, info => Info, line_num => Num},
+                    Result = elvis_result:new(item, Msg, Info, Num),
                     {ok, Result}
             end;
         {match, [MacroName]} ->
             Msg = ?MACRO_AS_MODULE_NAME_MSG,
             Info = [MacroName, Num],
-            Result = #{message => Msg, info => Info, line_num => Num},
+            Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result}
     end.
 
@@ -144,7 +144,7 @@ check_operator_spaces_rule(Line, Num, {right, Operator}) ->
         {match, _} ->
             Msg = ?OPERATOR_SPACE_MSG,
             Info = ["after", Operator, Num],
-            Result = #{message => Msg, info => Info, line_num => Num},
+            Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result}
     end;
 check_operator_spaces_rule(Line, Num, {left, Operator}) ->
@@ -156,6 +156,6 @@ check_operator_spaces_rule(Line, Num, {left, Operator}) ->
         {match, _} ->
             Msg = ?OPERATOR_SPACE_MSG,
             Info = ["before", Operator, Num],
-            Result = #{message => Msg, info => Info, line_num => Num},
+            Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result}
     end.

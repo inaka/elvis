@@ -89,12 +89,12 @@ apply_rules(Config = #{rules := Rules}, File) ->
     Acc = {[], Config, File},
     {RulesResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
 
-    #{file => File, rules => RulesResults}.
+    elvis_result:new(file, File, RulesResults).
 
 apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
     Results = Module:Function(Config, FilePath, Args),
-    RuleResult = #{name => Function, items => Results},
-    
+    RuleResult = elvis_result:new(rule, Function, Results),
+
     {[RuleResult | Result], Config, FilePath}.
 
 %%% Command Line Interface

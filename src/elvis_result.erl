@@ -2,8 +2,20 @@
 
 %% API
 -export([
+         new/3,
+         new/4,
          status/1,
          print/1
+        ]).
+
+-export([
+         get_file/1,
+         get_rules/1,
+         get_name/1,
+         get_items/1,
+         get_message/1,
+         get_info/1,
+         get_line_num/1
         ]).
 
 %% Types
@@ -36,6 +48,45 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% New
+
+-spec new(item | rule | file, any(), any()) ->
+    item() | rule() | file().
+new(item, Msg, Info) ->
+    #{message => Msg, info => Info};
+new(rule, Name, Results) ->
+    #{name => Name, items => Results};
+new(file, File, Rules) ->
+    #{file => File, rules => Rules}.
+
+-spec new(item(), any(), any(), any()) -> item().
+new(item, Msg, Info, LineNum) ->
+    Item = new(item, Msg, Info),
+    Item#{line_num => LineNum}.
+
+%% Getters
+
+-spec get_file(file()) -> elvis_utils:file().
+get_file(#{file := File}) -> File.
+
+-spec get_rules(file()) -> [rule()].
+get_rules(#{rules := Rules}) -> Rules.
+
+-spec get_name(rule()) -> atom().
+get_name(#{name := Name}) -> Name.
+
+-spec get_items(rule()) -> [item()].
+get_items(#{items := Items}) -> Items.
+
+-spec get_message(item()) -> string().
+get_message(#{message := Message}) -> Message.
+
+-spec get_info(item()) -> list().
+get_info(#{info := Info}) -> Info.
+
+-spec get_line_num(item()) -> list().
+get_line_num(#{line_num := LineNum}) -> LineNum.
 
 %% Print
 
