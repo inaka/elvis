@@ -123,7 +123,8 @@ comment_lines(GithubInfo, [Item | Items], File) ->
              comment_exists(Comments, Path, LineNum, Text),
              {ok, _Response} =
                  elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
-                                                    Path, LineNum, Text)
+                                                    Path, LineNum, Text),
+             ok
          catch
              error:{badmatch, _} -> ok
          end,
