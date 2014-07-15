@@ -8,16 +8,23 @@
 
 -export([
          rock/0,
-         rock/1
+         rock/1,
+         webhook/1
         ]).
 
+-export([start/0]).
+
 -define(APP_NAME, "elvis").
--define(FILE_PATTERN, "*.erl").
--define(FILE_EXTENSIONS, [".erl"]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% @doc Used when starting the application on the shell.
+-spec start() -> ok.
+start() ->
+    {ok, _} = application:ensure_all_started(elvis),
+    ok.
 
 -spec main([string()]) -> ok.
 main(Args) ->
@@ -34,20 +41,22 @@ main(Args) ->
 
 %%% Rock Command
 
--spec rock() -> ok | fail.
+-spec rock() -> ok | {fail, elvis_result:file()}.
 rock() ->
     Config = elvis_config:default(),
     rock(Config).
 
--spec rock(elvis_config:config()) -> ok | fail.
+-spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file()}.
 rock(Config = #{files := Files, rules := _Rules}) ->
     Results = [apply_rules(Config, File) || File <- Files],
 
     elvis_result:print(Results),
-    elvis_result:status(Results);
+    case elvis_result:status(Results) of
+        fail -> {fail, Results};
+        ok -> ok
+    end;
 rock(Config = #{src_dirs := SrcDirs, rules := _Rules}) ->
-    Pattern = ?FILE_PATTERN,
-    Files = elvis_utils:find_files(SrcDirs, Pattern),
+    Files = elvis_utils:find_files(SrcDirs),
 
     rock(Config#{files => Files});
 rock(Config) ->
@@ -58,32 +67,36 @@ rock(Config) ->
 -spec git_hook(elvis_config:config()) -> ok.
 git_hook(Config) ->
     Files = elvis_git:staged_files(),
-    ErlFiles = [File || File = #{path := Path} <- Files,
-                        lists:member(filename:extension(Path),
-                                     ?FILE_EXTENSIONS)],
+    ErlFiles = elvis_utils:filter_files(Files),
 
     NewConfig = Config#{files => ErlFiles},
 
     case rock(NewConfig) of
-        fail -> elvis_utils:erlang_halt(1);
+        {fail, _} -> elvis_utils:erlang_halt(1);
         ok -> ok
     end.
+
+%% @doc Should receive the payload of a Github event and act accordingly.
+-spec webhook(webhook:request()) -> ok | {error, term()}.
+webhook(Request) ->
+    elvis_webhook:event(Request).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -spec apply_rules(elvis_config:config(), elvis_utils:file()) ->
-    elvis_result:file_result().
-apply_rules(Config = #{rules := Rules}, File = #{path := Path}) ->
+    elvis_result:file().
+apply_rules(Config = #{rules := Rules}, File) ->
     Acc = {[], Config, File},
-    {RuleResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
+    {RulesResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
 
-    elvis_result:new(file, Path, RuleResults).
+    elvis_result:new(file, File, RulesResults).
 
 apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
     Results = Module:Function(Config, FilePath, Args),
     RuleResult = elvis_result:new(rule, Function, Results),
+
     {[RuleResult | Result], Config, FilePath}.
 
 %%% Command Line Interface
@@ -125,10 +138,10 @@ process_options([], Cmds, Config) ->
 
 -spec process_commands([string()], elvis_config:config()) -> ok.
 process_commands([rock | Cmds], Config) ->
-    rock(Config),
+    _Result = rock(Config),
     process_commands(Cmds, Config);
 process_commands([help | Cmds], Config) ->
-    help(Config),
+    Config = help(Config),
     process_commands(Cmds, Config);
 process_commands(['git-hook' | Cmds], Config) ->
     git_hook(Config),

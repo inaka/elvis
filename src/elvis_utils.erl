@@ -2,14 +2,21 @@
 
 -export([
          src/2,
+         find_files/1,
          find_files/2,
          check_lines/3,
-         erlang_halt/1
+         erlang_halt/1,
+         to_str/1,
+         is_erlang_file/1,
+         filter_files/1
         ]).
 
 -export_type([file/0]).
 
--type file() :: #{atom() => string(), atom() => binary()}.
+-define(FILE_PATTERN, "*.erl").
+-define(FILE_EXTENSIONS, [".erl"]).
+
+-type file() :: #{path => string(), content => binary()}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
@@ -35,12 +42,16 @@ find_files(Dirs, Pattern) ->
           end,
     [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
 
+-spec find_files([string()]) -> [file()].
+find_files(Dirs) ->
+    find_files(Dirs, ?FILE_PATTERN).
+
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line
 %% as a binary, the line number and the supplied Args) and
 %% returns 'no_result' or {'ok', Result}.
 -spec check_lines(binary(), fun(), [term()]) ->
-    [elvis_result:item_result()].
+    [elvis_result:item()].
 check_lines(Src, Fun, Args) ->
     Lines = binary:split(Src, <<"\n">>, [global]),
     check_lines(Lines, Fun, Args, [], 1).
@@ -60,3 +71,23 @@ check_lines([Line | Lines], Fun, Args, Results, Num) ->
 -spec erlang_halt(integer()) -> any().
 erlang_halt(Code) ->
     halt(Code).
+
+-spec to_str(binary() | list() | atom()) -> string().
+to_str(Arg) when is_binary(Arg) ->
+    binary_to_list(Arg);
+to_str(Arg) when is_atom(Arg) ->
+    atom_to_list(Arg);
+to_str(Arg) when is_integer(Arg) ->
+    integer_to_list(Arg);
+to_str(Arg) when is_list(Arg) ->
+    Arg.
+
+-spec is_erlang_file(string()) -> true | false.
+is_erlang_file(Path) ->
+    Path1 = to_str(Path),
+    lists:member(filename:extension(Path1), ?FILE_EXTENSIONS).
+
+-spec filter_files([elvis_utils:file()]) -> [elvis_utils:file()].
+filter_files(Files) ->
+    [File || File = #{path := Path} <- Files,
+             is_erlang_file(Path)].

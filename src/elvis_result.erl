@@ -3,64 +3,102 @@
 %% API
 -export([
          new/3,
+         new/4,
          status/1,
          print/1
         ]).
 
+-export([
+         get_file/1,
+         get_rules/1,
+         get_name/1,
+         get_items/1,
+         get_message/1,
+         get_info/1,
+         get_line_num/1
+        ]).
+
 %% Types
 -export_type([
-              item_result/0,
-              rule_result/0,
-              file_result/0
+              item/0,
+              rule/0,
+              file/0
              ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Records
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--record(item_result,
-        {
-          message = "" :: string(),
-          info = [] :: list()
-        }).
-
--record(rule_result,
-        {
-          name :: atom(),
-          results = [] :: [item_result()]
-        }).
-
--record(file_result,
-        {
-          path = "" :: string(),
-          rules = [] :: list()
-        }).
-
--type item_result() :: #item_result{}.
--type rule_result() :: #rule_result{}.
--type file_result() :: #file_result{}.
+-type item() ::
+        #{
+           message => string(),
+           info => list()
+         }.
+-type rule() ::
+        #{
+           name => atom(),
+           items => [item()]
+         }.
+-type file() ::
+        #{
+           file => elvis_utils:file(),
+           rules => list()
+         }.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec new(item | rule | file, any(), any()) ->
-    item_result() | rule_result() | file_result().
-new(item, Msg, Info) ->
-    #item_result{message = Msg, info= Info};
-new(rule, Name, Results) ->
-    #rule_result{name = Name, results = Results};
-new(file, Path, Rules) ->
-    #file_result{path = Path, rules = Rules}.
+%% New
 
--spec print(item_result() | rule_result() | [file_result()]) -> ok.
+-spec new(item | rule | file, any(), any()) ->
+    item() | rule() | file().
+new(item, Msg, Info) ->
+    #{message => Msg, info => Info};
+new(rule, Name, Results) ->
+    #{name => Name, items => Results};
+new(file, File, Rules) ->
+    #{file => File, rules => Rules}.
+
+-spec new(item, term(), any(), any()) -> item().
+new(item, Msg, Info, LineNum) ->
+    Item = new(item, Msg, Info),
+    Item#{line_num => LineNum}.
+
+%% Getters
+
+-spec get_file(file()) -> elvis_utils:file().
+get_file(#{file := File}) -> File.
+
+-spec get_rules(file()) -> [rule()].
+get_rules(#{rules := Rules}) -> Rules.
+
+-spec get_name(rule()) -> atom().
+get_name(#{name := Name}) -> Name.
+
+-spec get_items(rule()) -> [item()].
+get_items(#{items := Items}) -> Items.
+
+-spec get_message(item()) -> string().
+get_message(#{message := Message}) -> Message.
+
+-spec get_info(item()) -> list().
+get_info(#{info := Info}) -> Info.
+
+-spec get_line_num(item()) -> list().
+get_line_num(#{line_num := LineNum}) -> LineNum.
+
+%% Print
+
+-spec print(item() | rule() | [file()]) -> ok.
 print([]) ->
     ok;
 print([Result | Results]) ->
     print(Result),
     print(Results);
 
-print(#file_result{path = Path, rules = Rules}) ->
+print(#{file := File, rules := Rules}) ->
+    Path = maps:get(path, File),
     Status = case status(Rules) of
                  ok -> "OK";
                  fail -> "FAIL"
@@ -69,30 +107,24 @@ print(#file_result{path = Path, rules = Rules}) ->
     io:format("# ~s [~s]~n", [Path, Status]),
     print(Rules);
 
-print(#rule_result{results = []}) ->
+print(#{items := []}) ->
     ok;
-print(#rule_result{name = Name, results = Results}) ->
+print(#{name := Name, items := Items}) ->
     io:format("  - ~s~n", [atom_to_list(Name)]),
-    print(Results);
+    print(Items);
 
-print(#item_result{message = Msg, info = Info}) ->
+print(#{message := Msg, info := Info}) ->
     io:format("    - " ++ Msg ++ "~n", Info).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Private
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
--spec status([rule_result()]) -> ok | fail.
+-spec status([rule()]) -> ok | fail.
 status([]) ->
     ok;
-
-status([#file_result{rules = Rules} | Files]) ->
+status([#{rules := Rules} | Files]) ->
     case status(Rules) of
         fail -> fail;
         ok -> status(Files)
     end;
-
-status([#rule_result{results = []} | Rules]) ->
+status([#{items := []} | Rules]) ->
     status(Rules);
 status(_Rules) ->
     fail.

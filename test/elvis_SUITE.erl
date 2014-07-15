@@ -7,11 +7,18 @@
         ]).
 
 -export([
+         %% Rocking
          rock_with_empty_config/1,
          rock_with_incomplete_config/1,
          rock_with_file_config/1,
-         check_configuration/1,
+         %% Webhook
+         run_webhook/1,
+         %% Utill & Config
+         throw_configuration/1,
          find_file_and_check_src/1,
+         invalid_file/1,
+         to_string/1,
+         %% Mains & Commands
          main_help/1,
          main_commands/1,
          main_config/1,
@@ -86,16 +93,43 @@ rock_with_file_config(_Config) ->
     ok.
 
 %%%%%%%%%%%%%%%
+%%% Webhook
+
+-spec run_webhook(config()) -> any().
+run_webhook(_Config) ->
+    Headers = #{<<"X-GitHub-Event">> => <<"pull_request">>},
+    Path = "../../test/examples/pull_request.js",
+    {ok, Body} = file:read_file(Path),
+    Request = #{headers => Headers, body => Body},
+
+    try
+        elvis:start(),
+
+        meck:new(elvis_github, [passthrough]),
+        FakeFun = fun(_, _, _) -> {ok, []} end,
+        meck:expect(elvis_github, pull_req_files, FakeFun),
+        meck:expect(elvis_github, pull_req_comments, FakeFun),
+
+        ok = elvis:webhook(Request)
+    after
+        meck:unload(elvis_github)
+    end.
+
+%%%%%%%%%%%%%%%
 %%% Utils
 
--spec check_configuration(config()) -> any().
-check_configuration(_Config) ->
-    ElvisConfig = #{
-                    src_dirs => ["src", "test"],
-                    rules => [{module, rule1, []}]
-                   },
-    ["src", "test"] = maps:get(src_dirs, ElvisConfig),
-    [{module, rule1, []}] = maps:get(rules, ElvisConfig).
+-spec throw_configuration(config()) -> any().
+throw_configuration(_Config) ->
+    Filename = "./elvis.config",
+    ok = file:write_file(Filename, <<"-">>),
+    ok = try
+             elvis_config:default(),
+             fail
+         catch
+             throw:_ -> ok
+         after
+             file:delete(Filename)
+         end.
 
 -spec find_file_and_check_src(config()) -> any().
 find_file_and_check_src(_Config) ->
@@ -106,6 +140,24 @@ find_file_and_check_src(_Config) ->
 
     {ok, <<"-module(small).\n">>} = elvis_utils:src([], Path),
     {error, enoent} = elvis_utils:src([], #{path => "doesnt_exist.erl"}).
+
+-spec invalid_file(config()) -> any().
+invalid_file(_Config) ->
+    ok = try
+             elvis_utils:src(#{}, #{}),
+             fail
+         catch
+             throw:{invalid_file, #{}} -> ok
+         end.
+
+-spec to_string(config()) -> any().
+to_string(_Config) ->
+    "1" = elvis_utils:to_str(1),
+    "hello" = elvis_utils:to_str(<<"hello">>),
+    "atom" = elvis_utils:to_str(atom).
+
+%%%%%%%%%%%%%%%
+%%% Main & Commands
 
 -spec main_help(config()) -> any().
 main_help(_Config) ->
