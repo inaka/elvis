@@ -50,7 +50,6 @@ event(Config,
     case elvis:rock(Config1) of
         {fail, Results} ->
             {ok, Comments} = elvis_github:pull_req_comments(Cred, Repo, PR),
-            % io:format("Comments ~p~n", [Comments]),
             GithubInfo = {Cred, Repo, PR, Comments},
             comment_files(GithubInfo, Results),
             {fail, Results};
@@ -100,7 +99,7 @@ comment_rules(GithubInfo, Rules, File) ->
           end,
     lists:foreach(Fun, Rules).
 
--spec comment_lines(github_info(), elvis_result:item(), elvis_utils:file()) ->
+-spec comment_lines(github_info(), [elvis_result:item()], elvis_utils:file()) ->
     ok.
 comment_lines(_GithubInfo, [], _File) ->
     ok;
@@ -113,14 +112,14 @@ comment_lines(GithubInfo, [Item | Items], File) ->
 
     Text = list_to_binary(io_lib:format(Message, Info)),
 
-    try
-        comment_exists(Comments, Path, LineNum, Text),
-        {ok, _Response} =
-            elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
-                                               Path, LineNum, Text)
-    catch
-        error:{badmatch, _} -> ok
-    end,
+    ok = try
+             comment_exists(Comments, Path, LineNum, Text),
+             {ok, _Response} =
+                 elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
+                                                    Path, LineNum, Text)
+         catch
+             error:{badmatch, _} -> ok
+         end,
     comment_lines(GithubInfo, Items, File).
 
 comment_exists([], _Path, _Line, _Body) ->

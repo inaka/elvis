@@ -20,9 +20,11 @@
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% @doc Used when starting the application on the shell.
 -spec start() -> ok.
 start() ->
-    application:ensure_all_started(elvis).
+    {ok, _} = application:ensure_all_started(elvis),
+    ok.
 
 -spec main([string()]) -> ok.
 main(Args) ->
@@ -136,10 +138,10 @@ process_options([], Cmds, Config) ->
 
 -spec process_commands([string()], elvis_config:config()) -> ok.
 process_commands([rock | Cmds], Config) ->
-    rock(Config),
+    _Result = rock(Config),
     process_commands(Cmds, Config);
 process_commands([help | Cmds], Config) ->
-    help(Config),
+    Config = help(Config),
     process_commands(Cmds, Config);
 process_commands(['git-hook' | Cmds], Config) ->
     git_hook(Config),

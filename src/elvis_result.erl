@@ -60,7 +60,7 @@ new(rule, Name, Results) ->
 new(file, File, Rules) ->
     #{file => File, rules => Rules}.
 
--spec new(item(), any(), any(), any()) -> item().
+-spec new(item, term(), any(), any()) -> item().
 new(item, Msg, Info, LineNum) ->
     Item = new(item, Msg, Info),
     Item#{line_num => LineNum}.

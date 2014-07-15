@@ -72,7 +72,7 @@ check_lines([Line | Lines], Fun, Args, Results, Num) ->
 erlang_halt(Code) ->
     halt(Code).
 
--spec to_str(binary() | list()) -> string().
+-spec to_str(binary() | list() | atom()) -> string().
 to_str(Arg) when is_binary(Arg) ->
     binary_to_list(Arg);
 to_str(Arg) when is_atom(Arg) ->
@@ -87,7 +87,7 @@ is_erlang_file(Path) ->
     Path1 = to_str(Path),
     lists:member(filename:extension(Path1), ?FILE_EXTENSIONS).
 
--spec filter_files([map()]) -> [map()].
+-spec filter_files([elvis_utils:file()]) -> [elvis_utils:file()].
 filter_files(Files) ->
     [File || File = #{path := Path} <- Files,
              is_erlang_file(Path)].
