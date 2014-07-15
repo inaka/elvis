@@ -93,7 +93,7 @@ auth_req({Username, Password}, Url, Method, Body) ->
     Options = [{basic_auth, {Username, Password}},
                {ssl_options, [{depth, 0}]}],
     Headers = [{"User-Agent", "Elvis-Webhook"}],
-    io:format("[Github API] ~s~n", [Url]),
+    lager:info("[Github API] ~s", [Url]),
     case ibrowse:send_req(Url, Headers, Method, Body, Options) of
         {ok, "200", _RespHeaders, RespBody} ->
             {ok, RespBody};

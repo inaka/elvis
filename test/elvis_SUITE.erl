@@ -97,7 +97,7 @@ rock_with_file_config(_Config) ->
 
 -spec run_webhook(config()) -> any().
 run_webhook(_Config) ->
-    Headers = #{<<"X-GitHub-Event">> => <<"pull_request">>},
+    Headers = #{<<"x-github-event">> => <<"pull_request">>},
     Path = "../../test/examples/pull_request.js",
     {ok, Body} = file:read_file(Path),
     Request = #{headers => Headers, body => Body},
