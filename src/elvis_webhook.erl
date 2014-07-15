@@ -119,22 +119,26 @@ comment_lines(GithubInfo, [Item | Items], File) ->
 
     Text = list_to_binary(io_lib:format(Message, Info)),
 
-    ok = try
-             comment_exists(Comments, Path, LineNum, Text),
-             {ok, _Response} =
-                 elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
-                                                    Path, LineNum, Text),
-             ok
-         catch
-             error:{badmatch, _} -> ok
-         end,
+    case comment_exists(Comments, Path, LineNum, Text) of
+        exists ->
+            Args = [Text, Path, LineNum],
+            lager:info("Comment '~p' for ~p on line ~p exists", Args);
+        ok ->
+            {ok, _Response} =
+                elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
+                                                   Path, LineNum, Text)
+    end,
     comment_lines(GithubInfo, Items, File).
 
 comment_exists([], _Path, _Line, _Body) ->
     ok;
 comment_exists([Comment | Comments], Path, Line, Body) ->
-    #{<<"path">> := Path,
-      <<"position">> := Line,
-      <<"body">> := Body} = Comment,
-
-    comment_exists(Comments, Path, Line, Body).
+    try
+        #{<<"path">> := Path,
+          <<"position">> := Line,
+          <<"body">> := Body} = Comment,
+        exists
+    catch
+        error:{badmatch, _} ->
+            comment_exists(Comments, Path, Line, Body)
+    end.
