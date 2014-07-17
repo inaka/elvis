@@ -2,7 +2,6 @@
 
 -export([
          parse_tree/1,
-         nesting_level/1,
          past_nesting_limit/2
         ]).
 
@@ -54,28 +53,6 @@ content(#{content := Content}) ->
     Content.
 
 %%% Processing functions
-
-%% @doc Returns the maximum nesting level in the node.
--spec nesting_level(tree_node()) -> integer().
-nesting_level(#{type := Type, content := Content}) when
-      Type == function;
-      Type == 'case';
-      Type == 'try';
-      Type == 'if';
-      Type == 'catch';
-      Type == 'fun';
-      Type == 'receive' ->
-    1 + max_level(Content);
-nesting_level(#{content := Content}) ->
-    max_level(Content);
-nesting_level(_Node) ->
-    0.
-
-%% @private
-%% @doc Returns the maximum nesting level of all the children.
-max_level(Content) ->
-    Levels = lists:map(fun nesting_level/1, Content),
-    lists:max(Levels).
 
 %% @doc Takes a node and returns all nodes where the nesting limit is exceeded.
 -spec past_nesting_limit(tree_node(), integer()) ->
