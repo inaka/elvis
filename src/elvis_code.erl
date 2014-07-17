@@ -2,7 +2,14 @@
 
 -export([
          parse_tree/1,
-         nesting_level/1
+         nesting_level/1,
+         past_nesting_limit/2
+        ]).
+
+-export([
+         type/1,
+         attr/2,
+         content/1
         ]).
 
 -type tree_node() ::
@@ -14,7 +21,8 @@
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec parse_tree(string() | binary()) -> [{ok | error, erl_parse:abstract_form()}].
+-spec parse_tree(string() | binary()) ->
+    [{ok | error, erl_parse:abstract_form()}].
 parse_tree(Source) ->
     SourceStr = elvis_utils:to_str(Source),
     {ok, Tokens, _} = erl_scan:string(SourceStr, {1, 1}, []),
@@ -27,7 +35,28 @@ parse_tree(Source) ->
     #{type => root,
       content => Children}.
 
--spec nesting_level(map()) -> integer().
+
+%% Getters
+
+-spec type(tree_node()) -> atom().
+type(#{type := Type}) ->
+    Type.
+
+-spec attr(term(), tree_node()) -> term() | undefined.
+attr(Key, #{attrs := Attrs}) ->
+    case maps:is_key(Key, Attrs) of
+        true -> maps:get(Key, Attrs);
+        false -> undefined
+    end.
+
+-spec content(tree_node()) -> [tree_node()].
+content(#{content := Content}) ->
+    Content.
+
+%%% Processing functions
+
+%% @doc Returns the maximum nesting level in the node.
+-spec nesting_level(tree_node()) -> integer().
 nesting_level(#{type := Type, content := Content}) when
       Type == function;
       Type == 'case';
@@ -42,9 +71,42 @@ nesting_level(#{content := Content}) ->
 nesting_level(_Node) ->
     0.
 
+%% @private
+%% @doc Returns the maximum nesting level of all the children.
 max_level(Content) ->
     Levels = lists:map(fun nesting_level/1, Content),
     lists:max(Levels).
+
+%% @doc Takes a node and returns all nodes where the nesting limit is exceeded.
+-spec past_nesting_limit(tree_node(), integer()) ->
+    [{tree_node(), integer()}].
+past_nesting_limit(Node, MaxLevel) ->
+    ResultNodes = past_nesting_limit(Node, 1, MaxLevel),
+    lists:reverse(ResultNodes).
+
+past_nesting_limit(Node, CurrentLevel, MaxLevel) when CurrentLevel > MaxLevel ->
+    [Node];
+past_nesting_limit(#{content := Content},
+                   CurrentLevel,
+                   MaxLevel) ->
+    Fun = fun(ChildNode = #{type := Type}) ->
+              Increment = level_increment(Type),
+              past_nesting_limit(ChildNode,
+                                 Increment + CurrentLevel,
+                                 MaxLevel)
+          end,
+    lists:flatmap(Fun, Content);
+past_nesting_limit(_Node, _CurrentLeve, _MaxLevel) ->
+    [].
+
+%% @private
+%% @doc Takes a node type and determines its nesting level increment.
+level_increment(Type) ->
+    IncrementOne = [function, 'case', 'try', 'if', 'catch', 'fun', 'receive'],
+    case lists:member(Type, IncrementOne) of
+        true -> 1;
+        false -> 0
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private

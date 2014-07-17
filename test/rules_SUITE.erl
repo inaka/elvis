@@ -11,7 +11,8 @@
          verify_no_tabs_rule/1,
          verify_macro_names_rule/1,
          verify_macro_module_names/1,
-         verify_operator_spaces/1
+         verify_operator_spaces/1,
+         verify_nesting_level/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -85,7 +86,7 @@ verify_macro_names_rule(_Config) ->
 verify_macro_module_names(_Config) ->
     ElvisConfig = elvis_config:default(),
     #{src_dirs := SrcDirs} = ElvisConfig,
-    
+
     File = "fail_macro_module_names.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
@@ -95,16 +96,30 @@ verify_macro_module_names(_Config) ->
 verify_operator_spaces(_Config) ->
     ElvisConfig = elvis_config:default(),
     #{src_dirs := SrcDirs} = ElvisConfig,
-    
+
     File = "fail_operator_spaces.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
     [] = elvis_style:operator_spaces(ElvisConfig, Path, []),
-    
+
     [_, _, _] = elvis_style:operator_spaces(ElvisConfig, Path, [{right, [","]}]),
-    
+
     AppendOptions = [{right, ["++"]}, {left, ["++"]}],
     [_] = elvis_style:operator_spaces(ElvisConfig, Path, AppendOptions),
 
     AllOptions = [{right, ","}, {right, "++"}, {left, ["++"]}],
     [_, _, _, _] = elvis_style:operator_spaces(ElvisConfig, Path, AllOptions).
+
+-spec verify_nesting_level(config()) -> any().
+verify_nesting_level(_Config) ->
+    ElvisConfig = elvis_config:default(),
+
+    #{src_dirs := SrcDirs} = ElvisConfig,
+
+    lager:info("~p", [SrcDirs]),
+
+    Path = "fail_nesting_level.erl",
+    {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
+
+    [#{line_num := 10},
+     #{line_num := 17}] = elvis_style:nesting_level(ElvisConfig, File, [3]).

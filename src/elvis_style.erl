@@ -5,7 +5,8 @@
          no_tabs/3,
          macro_names/3,
          macro_module_names/3,
-         operator_spaces/3
+         operator_spaces/3,
+         nesting_level/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -17,6 +18,9 @@
 -define(MACRO_AS_FUNCTION_NAME_MSG,
             "Don't use macros (like ~s on line ~p) as function names.").
 -define(OPERATOR_SPACE_MSG, "Missing space ~s ~p on line ~p").
+-define(NESTING_LEVEL_MSG,
+        "The expression on line ~p and column ~p is nested "
+        ++ "beyond the maximum level of ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -24,35 +28,44 @@
 
 %% @doc Target can be either a filename or the
 %% name of a module.
--spec line_length(elvis_config:config(), map(), [term()]) ->
+-spec line_length(elvis_config:config(), elvis_utils:file(), [term()]) ->
     [elvis_result:item()].
 line_length(Config, Target, [Limit]) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_line_length/3, [Limit]).
 
--spec no_tabs(elvis_config:config(), map(), [term()]) ->
+-spec no_tabs(elvis_config:config(), elvis_utils:file(), [term()]) ->
     [elvis_result:item()].
 no_tabs(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_no_tabs/3, []).
 
--spec macro_names(elvis_config:config(), map(), [term()]) ->
+-spec macro_names(elvis_config:config(), elvis_utils:file(), [term()]) ->
     [elvis_result:item()].
 macro_names(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_macro_names/3, []).
 
--spec macro_module_names(elvis_config:config(), map(), []) ->
+-spec macro_module_names(elvis_config:config(), elvis_utils:file(), []) ->
     [elvis_result:item_result()].
 macro_module_names(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_macro_module_names/3, []).
 
--spec operator_spaces(elvis_config:config(), map(), [{right|left, string()}]) ->
+-spec operator_spaces(elvis_config:config(),
+                      elvis_utils:file(),
+                      [{right|left, string()}]) ->
     [elvis_result:item_result()].
 operator_spaces(Config, Target, Rules) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_operator_spaces/3, Rules).
+
+-spec nesting_level(elvis_config:config(), elvis_utils:file(), [integer()]) ->
+    [elvis_result:item_result()].
+nesting_level(Config, Target, [Level]) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    Root = elvis_code:parse_tree(Src),
+    elvis_utils:check_nodes(Root, fun check_nesting_level/2, [Level]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
@@ -158,4 +171,21 @@ check_operator_spaces_rule(Line, Num, {left, Operator}) ->
             Info = ["before", Operator, Num],
             Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result}
+    end.
+
+-spec check_nesting_level(elvis_code:tree_node(), [integer()]) ->
+    [elvis_result:item_result()].
+check_nesting_level(ParentNode, [MaxLevel]) ->
+    case elvis_code:past_nesting_limit(ParentNode, MaxLevel) of
+        [] -> [];
+        NestedNodes ->
+            Msg = ?NESTING_LEVEL_MSG,
+
+            Fun = fun(Node) ->
+                      {Line, Col} = elvis_code:attr(location, Node),
+                      Info = [Line, Col, MaxLevel],
+                      elvis_result:new(item, Msg, Info, Line)
+                  end,
+
+            lists:map(Fun, NestedNodes)
     end.
