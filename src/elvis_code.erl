@@ -1,22 +1,50 @@
 -module(elvis_code).
 
 -export([
-         parse_tree/1
+         parse_tree/1,
+         nesting_level/1
         ]).
+
+-type tree_node() ::
+        #{type => atom(),
+          attrs => map(),
+          content => [tree_node()]}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec parse_tree(string()) -> [{ok | error, erl_parse:abstract_form()}].
+-spec parse_tree(string() | binary()) -> [{ok | error, erl_parse:abstract_form()}].
 parse_tree(Source) ->
     SourceStr = elvis_utils:to_str(Source),
     {ok, Tokens, _} = erl_scan:string(SourceStr, {1, 1}, []),
     {ok, NewTokens} = aleppo:process_tokens(Tokens),
 
     Forms = split_when(fun is_dot/1, NewTokens),
-    [to_map(Parsed)
-     || {ok, Parsed} <- lists:map(fun erl_parse:parse_form/1, Forms)].
+    ParsedForms = lists:map(fun erl_parse:parse_form/1, Forms),
+    Children = [to_map(Parsed) || {ok, Parsed} <- ParsedForms],
+
+    #{type => root,
+      content => Children}.
+
+-spec nesting_level(map()) -> integer().
+nesting_level(#{type := Type, content := Content}) when
+      Type == function;
+      Type == 'case';
+      Type == 'try';
+      Type == 'if';
+      Type == 'catch';
+      Type == 'fun';
+      Type == 'receive' ->
+    1 + max_level(Content);
+nesting_level(#{content := Content}) ->
+    max_level(Content);
+nesting_level(_Node) ->
+    0.
+
+max_level(Content) ->
+    Levels = lists:map(fun nesting_level/1, Content),
+    lists:max(Levels).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
@@ -47,7 +75,7 @@ is_dot(_) -> false.
 
 %% @doc Converts a parse tree form the abstract format to a map based repr.
 %% TODO: Attributes are not being handled correctly.
--spec to_map(term()) -> ok.
+-spec to_map(term()) -> tree_node().
 to_map(ListParsed) when is_list(ListParsed) ->
     lists:map(fun to_map/1, ListParsed);
 
@@ -131,10 +159,10 @@ to_map({remote, Location, Module, Function}) ->
 
 %% Keywords
 
-to_map({'case', Location, Expression, Clauses}) ->
+to_map({'case', Location, Expr, Clauses}) ->
     #{type => 'case',
       attrs => #{location => Location,
-                 expression => to_map(Expression)},
+                 expression => to_map(Expr)},
       content => to_map(Clauses)};
 
 to_map({'fun', Location, {function, Name, Arity}}) ->
@@ -143,6 +171,29 @@ to_map({'fun', Location, {function, Name, Arity}}) ->
                  name => Name,
                  arity => Arity}};
 
+to_map({'fun', Location, {function, Module, Name, Arity}}) ->
+    #{type => 'fun',
+      attrs => #{location => Location,
+                 module => Module,
+                 name => Name,
+                 arity => Arity}};
+
+to_map({'fun', Location, {clauses, Clauses}}) ->
+    #{type => 'fun',
+      attrs => #{location => Location},
+      content => to_map(Clauses)};
+
+to_map({named_fun, Location, Name, Clauses}) ->
+    #{type => named_fun,
+      attrs => #{location => Location,
+                 name => Name},
+      content => to_map(Clauses)};
+
+%% Deprecated, implemented for completion.
+to_map({'query', Location, ListCompr}) ->
+    #{type => 'query',
+      attrs => #{location => Location},
+      content => to_map(ListCompr)};
 
 to_map({'try', Location, Body, CaseClauses, CatchClauses, AfterBody}) ->
     #{type => 'try',
@@ -151,6 +202,28 @@ to_map({'try', Location, Body, CaseClauses, CatchClauses, AfterBody}) ->
                  catch_clauses => to_map(CatchClauses),
                  after_body => to_map(AfterBody)},
       content => to_map(Body)};
+
+to_map({'if', Location, IfClauses}) ->
+    #{type => 'if',
+      attrs => #{location => Location},
+      content => to_map(IfClauses)};
+
+to_map({'catch', Location, Expr}) ->
+    #{type => 'catch',
+      attrs => #{location => Location},
+      content => [to_map(Expr)]};
+
+to_map({'receive', Location, Clauses}) ->
+    #{type => 'receive',
+      attrs => #{location => Location},
+      content => to_map(Clauses)};
+
+to_map({'receive', Location, Clauses, AfterExpr, AfterBody}) ->
+    #{type => 'receive',
+      attrs => #{location => Location,
+                 after_expr => to_map(AfterExpr),
+                 after_body => to_map(AfterBody)},
+      content => to_map(Clauses)};
 
 %% List
 
