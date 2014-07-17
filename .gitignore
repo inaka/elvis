@@ -6,7 +6,7 @@ ebin
 *.beam
 *.plt
 erl_crash.dump
-log*
+log*/
 
 # Ignore elvis escript
 elvis

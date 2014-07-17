@@ -34,7 +34,6 @@ parse_tree(Source) ->
     #{type => root,
       content => Children}.
 
-
 %% Getters
 
 -spec type(tree_node()) -> atom().
@@ -79,7 +78,15 @@ past_nesting_limit(_Node, _CurrentLeve, _MaxLevel) ->
 %% @private
 %% @doc Takes a node type and determines its nesting level increment.
 level_increment(Type) ->
-    IncrementOne = [function, 'case', 'try', 'if', 'catch', 'fun', 'receive'],
+    IncrementOne = [function,
+                    'case',
+                    'if',
+                    try_case,
+                    try_catch,
+                    'fun',
+                    named_fun,
+                    receive_case
+                   ],
     case lists:member(Type, IncrementOne) of
         true -> 1;
         false -> 0
@@ -196,13 +203,15 @@ to_map({remote, Location, Module, Function}) ->
                  module => to_map(Module),
                  function => to_map(Function)}};
 
-%% Keywords
+%% case
 
 to_map({'case', Location, Expr, Clauses}) ->
     #{type => 'case',
       attrs => #{location => Location,
                  expression => to_map(Expr)},
       content => to_map(Clauses)};
+
+%% fun
 
 to_map({'fun', Location, {function, Name, Arity}}) ->
     #{type => 'fun',
@@ -228,41 +237,92 @@ to_map({named_fun, Location, Name, Clauses}) ->
                  name => Name},
       content => to_map(Clauses)};
 
-%% Deprecated, implemented for completion.
+%% query - deprecated, implemented for completion.
+
 to_map({'query', Location, ListCompr}) ->
     #{type => 'query',
       attrs => #{location => Location},
       content => to_map(ListCompr)};
 
-to_map({'try', Location, Body, CaseClauses, CatchClauses, AfterBody}) ->
+%% try..catch..after
+
+to_map({'try', Location, Body, [], CatchClauses, AfterBody}) ->
+    TryBody = to_map(Body),
+    TryCatch = to_map({try_catch, Location, CatchClauses}),
+    TryAfter = to_map({try_after, Location, AfterBody}),
+
     #{type => 'try',
       attrs => #{location => Location,
-                 case_clauses => to_map(CaseClauses),
                  catch_clauses => to_map(CatchClauses),
                  after_body => to_map(AfterBody)},
-      content => to_map(Body)};
+      content => TryBody ++ [TryCatch, TryAfter]};
+
+%% try..of..catch..after
+
+to_map({'try', Location, Expr, CaseClauses, CatchClauses, AfterBody}) ->
+    TryCase = to_map({try_case, Location, Expr, CaseClauses}),
+    TryCatch = to_map({try_catch, Location, CatchClauses}),
+    TryAfter = to_map({try_after, Location, AfterBody}),
+
+    #{type => 'try',
+      attrs => #{location => Location},
+      content => [TryCase, TryCatch, TryAfter]};
+
+to_map({try_case, Location, Expr, Clauses}) ->
+    #{type => try_case,
+      attrs => #{location => Location,
+                 expression => Expr},
+      content => to_map(Clauses)};
+
+to_map({try_catch, Location, Clauses}) ->
+    #{type => try_catch,
+      attrs => #{location => Location},
+      content => to_map(Clauses)};
+
+to_map({try_after, Location, AfterBody}) ->
+    #{type => try_after,
+      attrs => #{location => Location},
+      content => to_map(AfterBody)};
+
+%% if
 
 to_map({'if', Location, IfClauses}) ->
     #{type => 'if',
       attrs => #{location => Location},
       content => to_map(IfClauses)};
 
+%% catch
+
 to_map({'catch', Location, Expr}) ->
     #{type => 'catch',
       attrs => #{location => Location},
       content => [to_map(Expr)]};
 
+%% receive
+
 to_map({'receive', Location, Clauses}) ->
+    RecClauses = to_map({receive_case, Location, Clauses}),
     #{type => 'receive',
+      attrs => #{location => Location},
+      content => [RecClauses]};
+
+to_map({'receive', Location, Clauses, AfterExpr, AfterBody}) ->
+    RecClauses = to_map({receive_case, Location, Clauses}),
+    RecAfter = to_map({receive_after, Location, AfterExpr, AfterBody}),
+    #{type => 'receive',
+      attrs => #{location => Location},
+      content => [RecClauses, RecAfter]};
+
+to_map({receive_case, Location, Clauses}) ->
+    #{type => receive_case,
       attrs => #{location => Location},
       content => to_map(Clauses)};
 
-to_map({'receive', Location, Clauses, AfterExpr, AfterBody}) ->
-    #{type => 'receive',
+to_map({receive_after, Location, Expr, Body}) ->
+    #{type => receive_after,
       attrs => #{location => Location,
-                 after_expr => to_map(AfterExpr),
-                 after_body => to_map(AfterBody)},
-      content => to_map(Clauses)};
+                 expression => to_map(Expr)},
+      content => to_map(Body)};
 
 %% List
 

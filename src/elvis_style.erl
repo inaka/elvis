@@ -20,7 +20,7 @@
 -define(OPERATOR_SPACE_MSG, "Missing space ~s ~p on line ~p").
 -define(NESTING_LEVEL_MSG,
         "The expression on line ~p and column ~p is nested "
-        ++ "beyond the maximum level of ~p.").
+        "beyond the maximum level of ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules

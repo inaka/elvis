@@ -121,5 +121,9 @@ verify_nesting_level(_Config) ->
     Path = "fail_nesting_level.erl",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
 
-    [#{line_num := 10},
-     #{line_num := 17}] = elvis_style:nesting_level(ElvisConfig, File, [3]).
+    [#{line_num := 9},
+     #{line_num := 16},
+     #{line_num := 28},
+     #{line_num := 43},
+     #{line_num := 76},
+     #{line_num := 118}] = elvis_style:nesting_level(ElvisConfig, File, [3]).
