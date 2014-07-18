@@ -12,7 +12,8 @@
          verify_macro_names_rule/1,
          verify_macro_module_names/1,
          verify_operator_spaces/1,
-         verify_nesting_level/1
+         verify_nesting_level/1,
+         verify_god_modules/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -115,9 +116,6 @@ verify_nesting_level(_Config) ->
     ElvisConfig = elvis_config:default(),
 
     #{src_dirs := SrcDirs} = ElvisConfig,
-
-    lager:info("~p", [SrcDirs]),
-
     Path = "fail_nesting_level.erl",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
 
@@ -127,3 +125,11 @@ verify_nesting_level(_Config) ->
      #{line_num := 43},
      #{line_num := 76},
      #{line_num := 118}] = elvis_style:nesting_level(ElvisConfig, File, [3]).
+
+-spec verify_god_modules(config()) -> any().
+verify_god_modules(_Config) ->
+    ElvisConfig = elvis_config:default(),
+        #{src_dirs := SrcDirs} = ElvisConfig,
+    Path = "fail_god_modules.erl",
+    {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
+    [_] = elvis_style:god_modules(ElvisConfig, File, [25]).

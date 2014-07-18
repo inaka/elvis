@@ -88,8 +88,8 @@ rock_with_incomplete_config(_Config) ->
 -spec rock_with_file_config(config()) -> ok.
 rock_with_file_config(_Config) ->
     Fun = fun() -> elvis:rock() end,
-    Expected = "# ../../test/examples/fail_line_length.erl [FAIL]\n",
-    check_first_line_output(Fun, Expected),
+    Expected = "# \\.\\./\\.\\./test/examples/.*\\.erl \\[FAIL\\]\n",
+    check_first_line_output(Fun, Expected, fun matches_regex/2),
     ok.
 
 %%%%%%%%%%%%%%%
@@ -204,11 +204,11 @@ main_config(_Config) ->
 
 -spec main_rock(config()) -> any().
 main_rock(_Config) ->
-    ExpectedFail = "# ../../test/examples/fail_line_length.erl [FAIL]\n",
+    ExpectedFail = "# \\.\\./\\.\\./test/examples/.*\\.erl \\[FAIL\\]\n",
 
     NoConfigArgs = "rock",
     NoConfigFun = fun() -> elvis:main(NoConfigArgs) end,
-    check_first_line_output(NoConfigFun, ExpectedFail, fun starts_with/2),
+    check_first_line_output(NoConfigFun, ExpectedFail, fun matches_regex/2),
 
     Expected = "# ../../src/elvis.erl [OK]",
 
@@ -309,4 +309,10 @@ starts_with(Result, Expected) ->
     case string:str(Result, Expected) of
         1 -> ok;
         _ ->  {Expected, Expected}= {Result, Expected}
+    end.
+
+matches_regex(Result, Regex) ->
+    case re:run(Result, Regex) of
+        {match, _} -> true;
+        nomatch -> false
     end.
