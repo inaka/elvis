@@ -2,14 +2,22 @@
 
 -export([
          src/2,
+
+         %% Files
          find_files/1,
          find_files/2,
-         check_lines/3,
-         check_nodes/3,
-         erlang_halt/1,
-         to_str/1,
          is_erlang_file/1,
-         filter_files/1
+         filter_files/1,
+
+         %% Rules
+         check_lines/3,
+         check_lines_with_context/4,
+         indentation/3,
+         check_nodes/3,
+
+         %% General
+         erlang_halt/1,
+         to_str/1
         ]).
 
 -export_type([file/0]).
@@ -57,6 +65,13 @@ check_lines(Src, Fun, Args) ->
     Lines = binary:split(Src, <<"\n">>, [global]),
     check_lines(Lines, Fun, Args, [], 1).
 
+-spec check_lines_with_context(binary(), fun(), [term()], {integer(), integer()}) ->
+    [elvis_result:item()].
+check_lines_with_context(Src, Fun, Args, Ctx) ->
+    Lines = binary:split(Src, <<"\n">>, [global]),
+    LinesContext = context(Lines, Ctx),
+    check_lines(LinesContext, Fun, Args, [], 1).
+
 %% @private
 check_lines([], _Fun, _Args, Results, _Num) ->
     lists:reverse(Results);
@@ -67,6 +82,18 @@ check_lines([Line | Lines], Fun, Args, Results, Num) ->
         no_result ->
             check_lines(Lines, Fun, Args, Results, Num + 1)
     end.
+
+%% @private
+context(List, CtxCount) ->
+    context(List, [], CtxCount, []).
+
+context([], _Past, _CtxCount, Results) ->
+    lists:reverse(Results);
+context([Current | Future], Past, CtxCount = {PrevCount, NextCount}, Results) ->
+    Prev = lists:sublist(Past, PrevCount),
+    Next = lists:sublist(Future, NextCount),
+    Item = {Current, lists:reverse(Prev), Next},
+    context(Future, [Current | Past], CtxCount, [Item | Results]).
 
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line
@@ -114,3 +141,16 @@ is_erlang_file(Path) ->
 filter_files(Files) ->
     [File || File = #{path := Path} <- Files,
              is_erlang_file(Path)].
+
+%% @doc Takes a line, a character and a count, returning the indentation level
+%%      invalid if the number of character is not a multiple of count.
+-spec indentation(binary() | string(), char(), integer()) ->
+    invalid | integer().
+indentation(Line, Char, Count) ->
+    LineStr = to_str(Line),
+    Regex = "^" ++ [Char] ++ "*",
+    {match, [{0, Len} | _]} = re:run(LineStr, Regex),
+    case Len rem Count of
+        0 -> Len div Count;
+        _ -> invalid
+    end.

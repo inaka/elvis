@@ -124,7 +124,7 @@ exceed_with_receive() ->
         3 -> 3
     end.
 
-exceed_with_receive_after() ->
+dont_exceed_with_receive_after() ->
     case 1 of
         1 -> ok;
         2 -> receive
@@ -137,6 +137,36 @@ exceed_with_receive_after() ->
                          true -> true;
                          false -> false
                      end
+             end;
+        3 -> 3
+    end.
+
+dont_exceed_with_list_compr() ->
+    case 1 of
+        1 -> ok;
+        2 -> receive
+                 1 -> ok;
+                 2 -> ok;
+                 3 -> ok
+             after
+                 1000 ->
+                     [X || X <- [1, 2, 3]]
+             end;
+        3 -> 3
+    end.
+
+exceed_with_list_compr() ->
+    case 1 of
+        1 -> ok;
+        2 -> receive
+                 1 -> ok;
+                 2 -> ok;
+                 3 -> [case X of
+                           1 -> ok;
+                           _ -> not_ok
+                       end
+                       || X <- [1, 2, 3]];
+                 4 -> ok
              end;
         3 -> 3
     end.
