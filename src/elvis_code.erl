@@ -2,7 +2,9 @@
 
 -export([
          parse_tree/1,
-         past_nesting_limit/2
+         past_nesting_limit/2,
+         print_node/1,
+         print_node/2
         ]).
 
 -export([
@@ -74,6 +76,18 @@ past_nesting_limit(#{content := Content},
     lists:flatmap(Fun, Content);
 past_nesting_limit(_Node, _CurrentLeve, _MaxLevel) ->
     [].
+
+%% @doc Debugging utility function.
+-spec print_node(tree_node()) -> ok.
+print_node(Node) ->
+    print_node(Node, 0).
+
+-spec print_node(tree_node(), integer()) -> ok.
+print_node(Node = #{type := Type}, CurrentLevel) ->
+    Indentation = lists:duplicate(CurrentLevel * 4, 32),
+    {Line, _} = elvis_code:attr(location, Node),
+    lager:info("~s - [~p] ~p : ~p~n",
+               [Indentation, CurrentLevel, Type, Line]).
 
 %% @private
 %% @doc Takes a node type and determines its nesting level increment.
@@ -206,9 +220,19 @@ to_map({remote, Location, Module, Function}) ->
 %% case
 
 to_map({'case', Location, Expr, Clauses}) ->
+    CaseExpr = to_map({case_expr, Location, Expr}),
+    CaseClauses = to_map({case_clauses, Location, Clauses}),
     #{type => 'case',
       attrs => #{location => Location,
                  expression => to_map(Expr)},
+      content => [CaseExpr, CaseClauses]};
+to_map({case_expr, Location, Expr}) ->
+    #{type => case_expr,
+      attrs => #{location => Location},
+      content => [to_map(Expr)]};
+to_map({case_clauses, Location, Clauses}) ->
+    #{type => case_clauses,
+      attrs => #{location => Location},
       content => to_map(Clauses)};
 
 %% fun
@@ -359,15 +383,21 @@ to_map({Type, Location, Key, Value}) when
 %% List Comprehension
 
 to_map({lc, Location, Expr, GeneratorsFilters}) ->
+    LcExpr = to_map({lc_expr, Location, Expr}),
+    LcGenerators = to_map(GeneratorsFilters),
     #{type => lc,
-      attrs => #{location => Location,
-                 expression => to_map(Expr)},
-      content => to_map(GeneratorsFilters)};
+      attrs => #{location => Location},
+      content => [LcExpr | LcGenerators]};
+
 to_map({generate, Location, Pattern, Expr}) ->
     #{type => generate,
       attrs => #{location => Location,
                  pattern => to_map(Pattern),
                  expression => to_map(Expr)}};
+to_map({lc_expr, Location, Expr}) ->
+    #{type => lc_expr,
+      attrs => #{location => Location},
+      content => [to_map(Expr)]};
 
 %% Operation
 

@@ -126,4 +126,5 @@ verify_nesting_level(_Config) ->
      #{line_num := 28},
      #{line_num := 43},
      #{line_num := 76},
-     #{line_num := 118}] = elvis_style:nesting_level(ElvisConfig, File, [3]).
+     #{line_num := 118},
+     #{line_num := 164}] = elvis_style:nesting_level(ElvisConfig, File, [3]).
