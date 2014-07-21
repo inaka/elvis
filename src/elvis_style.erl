@@ -6,7 +6,8 @@
          macro_names/3,
          macro_module_names/3,
          operator_spaces/3,
-         nesting_level/3
+         nesting_level/3,
+         god_modules/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -21,6 +22,9 @@
 -define(NESTING_LEVEL_MSG,
         "The expression on line ~p and column ~p is nested "
         "beyond the maximum level of ~p.").
+-define(GOD_MODULES_MSG,
+        "This module has too many functions (~p). "
+        "Considering breaking it into a number of modules.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -47,7 +51,7 @@ macro_names(Config, Target, []) ->
     elvis_utils:check_lines(Src, fun check_macro_names/3, []).
 
 -spec macro_module_names(elvis_config:config(), elvis_utils:file(), []) ->
-    [elvis_result:item_result()].
+    [elvis_result:item()].
 macro_module_names(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_macro_module_names/3, []).
@@ -55,17 +59,31 @@ macro_module_names(Config, Target, []) ->
 -spec operator_spaces(elvis_config:config(),
                       elvis_utils:file(),
                       [{right|left, string()}]) ->
-    [elvis_result:item_result()].
+    [elvis_result:item()].
 operator_spaces(Config, Target, Rules) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     elvis_utils:check_lines(Src, fun check_operator_spaces/3, Rules).
 
 -spec nesting_level(elvis_config:config(), elvis_utils:file(), [integer()]) ->
-    [elvis_result:item_result()].
+    [elvis_result:item()].
 nesting_level(Config, Target, [Level]) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     Root = elvis_code:parse_tree(Src),
     elvis_utils:check_nodes(Root, fun check_nesting_level/2, [Level]).
+
+-spec god_modules(elvis_config:config(), elvis_utils:file(), [integer()]) ->
+    [elvis_result:item()].
+god_modules(Config, Target, [Limit]) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    Root = elvis_code:parse_tree(Src),
+    Exported = elvis_code:exported_functions(Root),
+    case length(Exported) of
+        Count when Count > Limit ->
+            Msg = ?GOD_MODULES_MSG,
+            Result = elvis_result:new(item, Msg, [Count], 1),
+            [Result];
+        _ -> []
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private

@@ -3,6 +3,7 @@
 -export([
          parse_tree/1,
          past_nesting_limit/2,
+         exported_functions/1,
          print_node/1,
          print_node/2
         ]).
@@ -105,6 +106,15 @@ level_increment(Type) ->
         true -> 1;
         false -> 0
     end.
+
+-spec exported_functions(tree_node()) -> [{atom(), integer()}].
+exported_functions(#{type := root, content := Content}) ->
+    Fun = fun
+              (Node = #{type := export}) ->
+                  attr(value, Node);
+              (_) -> []
+          end,
+    lists:flatmap(Fun, Content).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
