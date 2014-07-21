@@ -114,10 +114,17 @@ print_node(Node) ->
 
 -spec print_node(tree_node(), integer()) -> ok.
 print_node(Node = #{type := Type}, CurrentLevel) ->
-    Indentation = lists:duplicate(CurrentLevel * 4, 32),
-    {Line, _} = elvis_code:attr(location, Node),
-    lager:info("~s - [~p] ~p : ~p~n",
-               [Indentation, CurrentLevel, Type, Line]).
+    Type = type(Node),
+    Indentation = lists:duplicate(CurrentLevel * 4, $ ),
+    Content = content(Node),
+    % {Line, _} = elvis_code:attr(location, Node),
+    lager:info(
+      "~s - [~p] ~p~n",
+      [Indentation, CurrentLevel, Type]
+     ),
+    lists:map(fun(Child) -> print_node(Child, CurrentLevel + 1) end, Content),
+    ok.
+
 
 %% @private
 %% @doc Takes a node type and determines its nesting level increment.
@@ -245,13 +252,13 @@ to_map({var, Location, Name}) ->
 %% Function call
 
 to_map({call, Location, Function, Arguments}) ->
-    #{type => var,
+    #{type => call,
       attrs => #{location => Location,
                  function => to_map(Function),
                  arguments => to_map(Arguments)}};
 
 to_map({remote, Location, Module, Function}) ->
-    #{type => var,
+    #{type => remote,
       attrs => #{location => Location,
                  module => to_map(Module),
                  function => to_map(Function)}};

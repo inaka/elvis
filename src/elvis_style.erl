@@ -8,7 +8,8 @@
          operator_spaces/3,
          nesting_level/3,
          god_modules/3,
-         no_if_expression/3
+         no_if_expression/3,
+         invalid_dynamic_call/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -29,6 +30,9 @@
 -define(NO_IF_EXPRESSION_MSG,
         "Replace the 'if' expression on line ~p with a 'case' "
         "expression or function clauses.").
+-define (INVALID_DYNAMIC_CALL_MSG,
+         "Remove the dynamic function call on line ~p. "
+         "Only modules that define callbacks should make dynamic calls.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -107,6 +111,19 @@ no_if_expression(Config, Target, []) ->
                         elvis_result:new(item, Msg, Info, LineNum)
                 end,
             lists:map(ResultFun, IfExprs)
+    end.
+
+-spec invalid_dynamic_call(elvis_config:config(), elvis_utils:file(), []) ->
+    [elvis_result:item()].
+invalid_dynamic_call(Config, Target, []) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    Root = elvis_code:parse_tree(Src),
+    Predicate = fun(Node) -> elvis_code:type(Node) == 'callback' end,
+    case elvis_code:find(Predicate, Root) of
+        [] ->
+            check_invalid_dynamic_calls(Root);
+        _Callbacks ->
+            []
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -231,3 +248,33 @@ check_nesting_level(ParentNode, [MaxLevel]) ->
 
             lists:map(Fun, NestedNodes)
     end.
+
+-spec check_invalid_dynamic_calls(elvis_code:tree_node()) ->
+    [elvis_result:item_result()].
+check_invalid_dynamic_calls(Root) ->
+    case elvis_code:find(fun is_dynamic_call/1, Root) of
+        [] -> [];
+        InvalidCalls ->
+            ResultFun =
+                fun (Node) ->
+                        {LineNum, _} = elvis_code:attr(location, Node),
+                        Msg = ?INVALID_DYNAMIC_CALL_MSG,
+                        Info = [LineNum],
+                        elvis_result:new(item, Msg, Info, LineNum)
+                end,
+            lists:map(ResultFun, InvalidCalls)
+    end.
+
+-spec is_dynamic_call(elvis_code:tree_node()) ->
+    boolean().
+is_dynamic_call(Node = #{type := call}) ->
+    FunctionSpec = elvis_code:attr(function, Node),
+    case elvis_code:type(FunctionSpec) of
+        remote ->
+            ModuleName = elvis_code:attr(module, FunctionSpec),
+            var == elvis_code:type(ModuleName);
+        _Other ->
+            false
+    end;
+is_dynamic_call(_Node) ->
+    false.
