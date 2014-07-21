@@ -16,7 +16,8 @@
          verify_god_modules/1,
          verify_no_if_expression/1,
          verify_invalid_dynamic_call/1,
-         verify_used_ignored_variable/1
+         verify_used_ignored_variable/1,
+         verify_no_behavior_info/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -153,6 +154,10 @@ verify_invalid_dynamic_call(_Config) ->
     ElvisConfig = elvis_config:default(),
     #{src_dirs := SrcDirs} = ElvisConfig,
 
+    PathPass = "pass_invalid_dynamic_call.erl",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] = elvis_style:invalid_dynamic_call(ElvisConfig, FilePass, []),
+
     PathFail = "fail_invalid_dynamic_call.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
     [
@@ -160,11 +165,7 @@ verify_invalid_dynamic_call(_Config) ->
      #{line_num := 25},
      #{line_num := 26},
      #{line_num := 34}
-    ] = elvis_style:invalid_dynamic_call(ElvisConfig, FileFail, []),
-
-    PathPass = "pass_invalid_dynamic_call.erl",
-    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
-    [] = elvis_style:invalid_dynamic_call(ElvisConfig, FilePass, []).
+    ] = elvis_style:invalid_dynamic_call(ElvisConfig, FileFail, []).
 
 -spec verify_used_ignored_variable(config()) -> any().
 verify_used_ignored_variable(_Config) ->
@@ -178,3 +179,14 @@ verify_used_ignored_variable(_Config) ->
      #{line_num := 16},
      #{line_num := 16}
     ] = elvis_style:used_ignored_variable(ElvisConfig, File, []).
+
+-spec verify_no_behavior_info(config()) -> any().
+verify_no_behavior_info(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
+    Path = "fail_no_behavior_info.erl",
+    {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
+    [
+     #{line_num := 14},
+     #{line_num := 17}
+    ] = elvis_style:no_behavior_info(ElvisConfig, File, []).
