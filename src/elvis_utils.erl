@@ -65,7 +65,9 @@ check_lines(Src, Fun, Args) ->
     Lines = binary:split(Src, <<"\n">>, [global]),
     check_lines(Lines, Fun, Args, [], 1).
 
--spec check_lines_with_context(binary(), fun(), [term()], {integer(), integer()}) ->
+-type line_content() :: {integer(), integer()}.
+
+-spec check_lines_with_context(binary(), fun(), [term()], line_content()) ->
     [elvis_result:item()].
 check_lines_with_context(Src, Fun, Args, Ctx) ->
     Lines = binary:split(Src, <<"\n">>, [global]),

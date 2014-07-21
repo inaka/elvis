@@ -7,7 +7,8 @@
          macro_module_names/3,
          operator_spaces/3,
          nesting_level/3,
-         god_modules/3
+         god_modules/3,
+         no_if_expression/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -25,6 +26,9 @@
 -define(GOD_MODULES_MSG,
         "This module has too many functions (~p). "
         "Considering breaking it into a number of modules.").
+-define(NO_IF_EXPRESSION_MSG,
+        "Replace the 'if' expression on line ~p with a 'case' "
+        "expression or function clauses.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -83,6 +87,26 @@ god_modules(Config, Target, [Limit]) ->
             Result = elvis_result:new(item, Msg, [Count], 1),
             [Result];
         _ -> []
+    end.
+
+-spec no_if_expression(elvis_config:config(), elvis_utils:file(), []) ->
+    [elvis_result:item()].
+no_if_expression(Config, Target, []) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    Root = elvis_code:parse_tree(Src),
+    Predicate = fun(Node) -> elvis_code:type(Node) == 'if' end,
+    case elvis_code:find(Predicate, Root) of
+        [] ->
+            [];
+        IfExprs ->
+            ResultFun =
+                fun (Node) ->
+                        {LineNum, _} = elvis_code:attr(location, Node),
+                        Msg = ?NO_IF_EXPRESSION_MSG,
+                        Info = [LineNum],
+                        elvis_result:new(item, Msg, Info, LineNum)
+                end,
+            lists:map(ResultFun, IfExprs)
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,17 +1,25 @@
 -module(elvis_code).
 
+%% General
 -export([
          parse_tree/1,
-         past_nesting_limit/2,
-         exported_functions/1,
-         print_node/1,
-         print_node/2
+         find/2
         ]).
 
+%% Getters
 -export([
          type/1,
          attr/2,
          content/1
+        ]).
+
+
+%% Specific
+-export([
+         past_nesting_limit/2,
+         exported_functions/1,
+         print_node/1,
+         print_node/2
         ]).
 
 -type tree_node() ::
@@ -37,6 +45,24 @@ parse_tree(Source) ->
     #{type => root,
       content => Children}.
 
+-spec find(fun(), tree_node()) -> [tree_node()].
+find(Pred, Node) ->
+    Results = find(Pred, Node, []),
+    lists:flatten(Results).
+
+find(_Pred, [], Results) ->
+    Results;
+find(Pred, [Node | Nodes], Results) ->
+    [find(Pred, Node, Results) | find(Pred, Nodes, [])];
+find(Pred, Node, Results) ->
+    Content = elvis_code:content(Node),
+    case Pred(Node) of
+        true ->
+            find(Pred, Content, [Node | Results]);
+        false ->
+            find(Pred, Content, Results)
+    end.
+
 %% Getters
 
 -spec type(tree_node()) -> atom().
@@ -52,7 +78,10 @@ attr(Key, #{attrs := Attrs}) ->
 
 -spec content(tree_node()) -> [tree_node()].
 content(#{content := Content}) ->
-    Content.
+    Content;
+content(_Node) ->
+    [].
+
 
 %%% Processing functions
 
