@@ -67,14 +67,20 @@ find(Pred, Node, Results) ->
 
 -spec type(tree_node()) -> atom().
 type(#{type := Type}) ->
-    Type.
+    Type;
+type(undefined) ->
+    undefined.
 
 -spec attr(term(), tree_node()) -> term() | undefined.
 attr(Key, #{attrs := Attrs}) ->
     case maps:is_key(Key, Attrs) of
         true -> maps:get(Key, Attrs);
         false -> undefined
-    end.
+    end;
+attr(_Key, Node) when is_map(Node) ->
+    undefined;
+attr(_Key, undefined) ->
+    undefined.
 
 -spec content(tree_node()) -> [tree_node()].
 content(#{content := Content}) ->
