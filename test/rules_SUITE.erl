@@ -13,7 +13,8 @@
          verify_macro_module_names/1,
          verify_operator_spaces/1,
          verify_nesting_level/1,
-         verify_god_modules/1
+         verify_god_modules/1,
+         verify_no_if_expression/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -130,7 +131,17 @@ verify_nesting_level(_Config) ->
 -spec verify_god_modules(config()) -> any().
 verify_god_modules(_Config) ->
     ElvisConfig = elvis_config:default(),
-        #{src_dirs := SrcDirs} = ElvisConfig,
+    #{src_dirs := SrcDirs} = ElvisConfig,
     Path = "fail_god_modules.erl",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
     [_] = elvis_style:god_modules(ElvisConfig, File, [25]).
+
+-spec verify_no_if_expression(config()) -> any().
+verify_no_if_expression(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
+    Path = "fail_no_if_expression.erl",
+    {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
+    [#{line_num := 9},
+     #{line_num := 20},
+     #{line_num := 29}] = elvis_style:no_if_expression(ElvisConfig, File, []).
