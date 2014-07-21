@@ -14,7 +14,8 @@
          verify_operator_spaces/1,
          verify_nesting_level/1,
          verify_god_modules/1,
-         verify_no_if_expression/1
+         verify_no_if_expression/1,
+         verify_invalid_dynamic_call/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -145,3 +146,21 @@ verify_no_if_expression(_Config) ->
     [#{line_num := 9},
      #{line_num := 20},
      #{line_num := 29}] = elvis_style:no_if_expression(ElvisConfig, File, []).
+
+-spec verify_invalid_dynamic_call(config()) -> any().
+verify_invalid_dynamic_call(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
+
+    PathFail = "fail_invalid_dynamic_call.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    [
+     #{line_num := 13},
+     #{line_num := 25},
+     #{line_num := 26},
+     #{line_num := 34}
+    ] = elvis_style:invalid_dynamic_call(ElvisConfig, FileFail, []),
+
+    PathPass = "pass_invalid_dynamic_call.erl",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] = elvis_style:invalid_dynamic_call(ElvisConfig, FilePass, []).
