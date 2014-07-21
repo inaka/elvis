@@ -10,7 +10,8 @@
          god_modules/3,
          no_if_expression/3,
          invalid_dynamic_call/3,
-         used_ignored_variable/3
+         used_ignored_variable/3,
+         no_behavior_info/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -37,6 +38,9 @@
 -define(USED_IGNORED_VAR_MSG,
         "Ignored variable is being used on line ~p and "
         "column ~p.").
+-define(NO_BEHAVIOR_INFO,
+        "Use the '-callback' attribute instead of 'behavior_info/1' "
+        "on line ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -103,18 +107,11 @@ no_if_expression(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     Root = elvis_code:parse_tree(Src),
     Predicate = fun(Node) -> elvis_code:type(Node) == 'if' end,
+    ResultFun = result_node_line_fun(?NO_IF_EXPRESSION_MSG),
     case elvis_code:find(Predicate, Root) of
         [] ->
             [];
         IfExprs ->
-            ResultFun =
-                fun
-                    (Node) ->
-                        {LineNum, _} = elvis_code:attr(location, Node),
-                        Msg = ?NO_IF_EXPRESSION_MSG,
-                        Info = [LineNum],
-                        elvis_result:new(item, Msg, Info, LineNum)
-                end,
             lists:map(ResultFun, IfExprs)
     end.
 
@@ -136,24 +133,65 @@ invalid_dynamic_call(Config, Target, []) ->
 used_ignored_variable(Config, Target, []) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     Root = elvis_code:parse_tree(Src),
+    ResultFun = result_node_line_col_fun(?USED_IGNORED_VAR_MSG),
     case elvis_code:find(fun is_used_ignored_var/1, Root) of
         [] ->
             [];
         UsedIgnoredVars ->
-            ResultFun =
-                fun
-                    (Node) ->
-                        {Line, Col} = elvis_code:attr(location, Node),
-                        Msg = ?USED_IGNORED_VAR_MSG,
-                        Info = [Line, Col],
-                        elvis_result:new(item, Msg, Info, Line)
-                end,
             lists:map(ResultFun, UsedIgnoredVars)
+    end.
+
+-spec no_behavior_info(elvis_config:config(), elvis_utils:file(), []) ->
+    [elvis_result:item()].
+no_behavior_info(Config, Target, []) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    Root = elvis_code:parse_tree(Src),
+    Children = elvis_code:content(Root),
+
+    FilterFun =
+        fun
+            (Node) ->
+                case elvis_code:type(Node) of
+                    function ->
+                        Name = elvis_code:attr(name, Node),
+                        lists:member(Name,
+                                     [behavior_info, behaviour_info]);
+                    _ -> false
+                end
+        end,
+
+    ResultFun = result_node_line_fun(?NO_BEHAVIOR_INFO),
+
+    case lists:filter(FilterFun, Children) of
+        [] ->
+            [];
+        BehaviorInfos ->
+            lists:map(ResultFun, BehaviorInfos)
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Result building
+
+result_node_line_fun(Msg) ->
+    fun
+        (Node) ->
+            {Line, _} = elvis_code:attr(location, Node),
+            Info = [Line],
+            elvis_result:new(item, Msg, Info, Line)
+    end.
+
+result_node_line_col_fun(Msg) ->
+    fun
+        (Node) ->
+            {Line, Col} = elvis_code:attr(location, Node),
+            Info = [Line, Col],
+            elvis_result:new(item, Msg, Info, Line)
+    end.
+
+%% Rule checking
 
 -spec check_line_length(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
@@ -280,13 +318,7 @@ check_invalid_dynamic_calls(Root) ->
     case elvis_code:find(fun is_dynamic_call/1, Root) of
         [] -> [];
         InvalidCalls ->
-            ResultFun =
-                fun (Node) ->
-                        {LineNum, _} = elvis_code:attr(location, Node),
-                        Msg = ?INVALID_DYNAMIC_CALL_MSG,
-                        Info = [LineNum],
-                        elvis_result:new(item, Msg, Info, LineNum)
-                end,
+            ResultFun = result_node_line_fun(?INVALID_DYNAMIC_CALL_MSG),
             lists:map(ResultFun, InvalidCalls)
     end.
 
