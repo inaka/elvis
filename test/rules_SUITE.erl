@@ -17,7 +17,8 @@
          verify_no_if_expression/1,
          verify_invalid_dynamic_call/1,
          verify_used_ignored_variable/1,
-         verify_no_behavior_info/1
+         verify_no_behavior_info/1,
+         verify_module_naming_convention/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -190,3 +191,20 @@ verify_no_behavior_info(_Config) ->
      #{line_num := 14},
      #{line_num := 17}
     ] = elvis_style:no_behavior_info(ElvisConfig, File, []).
+
+-spec verify_module_naming_convention(config()) -> any().
+verify_module_naming_convention(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
+
+    RuleConfig = ["^([a-z][a-z0-9]*_?)*$", []],
+
+    PathPass = "pass_module_naming_convention.erl",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] =
+        elvis_style:module_naming_convention(ElvisConfig, FilePass, RuleConfig),
+
+    PathFail = "fail_module_naming_1_convention_1.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    [_] =
+        elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfig).

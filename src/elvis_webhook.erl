@@ -124,7 +124,7 @@ comment_lines(GithubInfo, [Item | Items], File) ->
             Args = [Text, Path, LineNum],
             lager:info("Comment '~p' for ~p on line ~p exists", Args);
         not_exists ->
-            {ok, _Response} =
+            {ok, _} =
                 elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
                                                    Path, LineNum, Text)
     end,
