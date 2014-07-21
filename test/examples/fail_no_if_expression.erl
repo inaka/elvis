@@ -8,7 +8,7 @@
 uses_if(Arg) ->
     if
         Arg -> ok;
-        false -> not_ok
+        Arg == false -> not_ok
     end,
     case 1 of
         1 -> ok;
@@ -19,7 +19,7 @@ uses_if(Arg) ->
 uses_if_twice(Arg) ->
     if
         Arg -> ok;
-        false -> not_ok
+        Arg == false -> not_ok
     end,
     case 1 of
         1 -> ok;
@@ -28,5 +28,5 @@ uses_if_twice(Arg) ->
     end,
     if
         Arg -> ok;
-        false -> not_ok
+        Arg == false -> not_ok
     end.

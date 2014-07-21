@@ -9,7 +9,8 @@
          nesting_level/3,
          god_modules/3,
          no_if_expression/3,
-         invalid_dynamic_call/3
+         invalid_dynamic_call/3,
+         used_ignored_variable/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -33,6 +34,9 @@
 -define (INVALID_DYNAMIC_CALL_MSG,
          "Remove the dynamic function call on line ~p. "
          "Only modules that define callbacks should make dynamic calls.").
+-define(USED_IGNORED_VAR_MSG,
+        "Ignored variable is being used on line ~p and "
+        "column ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -104,7 +108,8 @@ no_if_expression(Config, Target, []) ->
             [];
         IfExprs ->
             ResultFun =
-                fun (Node) ->
+                fun
+                    (Node) ->
                         {LineNum, _} = elvis_code:attr(location, Node),
                         Msg = ?NO_IF_EXPRESSION_MSG,
                         Info = [LineNum],
@@ -124,6 +129,26 @@ invalid_dynamic_call(Config, Target, []) ->
             check_invalid_dynamic_calls(Root);
         _Callbacks ->
             []
+    end.
+
+-spec used_ignored_variable(elvis_config:config(), elvis_utils:file(), []) ->
+    [elvis_result:item()].
+used_ignored_variable(Config, Target, []) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    Root = elvis_code:parse_tree(Src),
+    case elvis_code:find(fun is_used_ignored_var/1, Root) of
+        [] ->
+            [];
+        UsedIgnoredVars ->
+            ResultFun =
+                fun
+                    (Node) ->
+                        {Line, Col} = elvis_code:attr(location, Node),
+                        Msg = ?USED_IGNORED_VAR_MSG,
+                        Info = [Line, Col],
+                        elvis_result:new(item, Msg, Info, Line)
+                end,
+            lists:map(ResultFun, UsedIgnoredVars)
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -267,14 +292,28 @@ check_invalid_dynamic_calls(Root) ->
 
 -spec is_dynamic_call(elvis_code:tree_node()) ->
     boolean().
-is_dynamic_call(Node = #{type := call}) ->
-    FunctionSpec = elvis_code:attr(function, Node),
-    case elvis_code:type(FunctionSpec) of
-        remote ->
-            ModuleName = elvis_code:attr(module, FunctionSpec),
-            var == elvis_code:type(ModuleName);
-        _Other ->
+is_dynamic_call(Node) ->
+    case elvis_code:type(Node) of
+        call ->
+            FunctionSpec = elvis_code:attr(function, Node),
+            case elvis_code:type(FunctionSpec) of
+                remote ->
+                    ModuleName = elvis_code:attr(module, FunctionSpec),
+                    var == elvis_code:type(ModuleName);
+                _Other ->
+                    false
+            end;
+        _ ->
             false
-    end;
-is_dynamic_call(_Node) ->
-    false.
+    end.
+
+-spec is_used_ignored_var(elvis_code:tree_node()) ->
+    boolean().
+is_used_ignored_var(Node) ->
+    case elvis_code:type(Node) of
+        var ->
+            Name = elvis_code:attr(name, Node),
+            [FirstChar | _] = atom_to_list(Name),
+            FirstChar == $_;
+        _OtherType -> false
+    end.
