@@ -48,7 +48,8 @@ rock() ->
 
 -spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file()}.
 rock(Config = #{files := Files, rules := _Rules}) ->
-    Results = [apply_rules(Config, File) || File <- Files],
+    LoadedFiles = lists:map(fun elvis_utils:load_file_data/1, Files),
+    Results = [apply_rules(Config, File) || File <- LoadedFiles],
 
     elvis_result:print(Results),
     case elvis_result:status(Results) of
@@ -93,11 +94,11 @@ apply_rules(Config = #{rules := Rules}, File) ->
 
     elvis_result:new(file, File, RulesResults).
 
-apply_rule({Module, Function, Args}, {Result, Config, FilePath}) ->
-    Results = Module:Function(Config, FilePath, Args),
+apply_rule({Module, Function, Args}, {Result, Config, File}) ->
+    Results = Module:Function(Config, File, Args),
     RuleResult = elvis_result:new(rule, Function, Results),
 
-    {[RuleResult | Result], Config, FilePath}.
+    {[RuleResult | Result], Config, File}.
 
 %%% Command Line Interface
 
