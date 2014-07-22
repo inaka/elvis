@@ -45,8 +45,12 @@ relative_position(Patch, LineNum) ->
 relative_position([], _Num, _Positions) ->
     not_found;
 relative_position([Line | Lines], Num, Positions) ->
-    case position_increment(Line, Positions) of
-        {NewLocal, NewGlobal} when NewGlobal == Num ->
+    Type = patch_line_type(Line),
+    case new_position(Line, Positions) of
+        {NewLocal, NewGlobal} when
+              NewGlobal == Num,
+              Type =/= patch,
+              Type =/= deletion ->
             {ok, NewLocal};
         NewPositions ->
             relative_position(Lines, Num, NewPositions)
@@ -59,7 +63,7 @@ relative_position([Line | Lines], Num, Positions) ->
 %% @private
 %% @doc Return the corresponding local and global line increments based
 %%      on the line's type.
-position_increment(Line, {Local, Global}) ->
+new_position(Line, {Local, Global}) ->
     case patch_line_type(Line) of
         patch ->
             NewGlobal = patch_position(Line),

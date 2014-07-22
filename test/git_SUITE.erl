@@ -48,5 +48,16 @@ relative_position_from_patch(_Config) ->
               "\n+\n+%% Another dummy change to check how patches are built "
               "with changes wide apart.">>,
 
+    {ok, 1} = elvis_git:relative_position(Patch, 109),
     {ok, 5} = elvis_git:relative_position(Patch, 112),
-    {ok, 14} = elvis_git:relative_position(Patch, 179).
+    {ok, 8} = elvis_git:relative_position(Patch, 115),
+
+    {ok, 10} = elvis_git:relative_position(Patch, 175),
+    {ok, 12} = elvis_git:relative_position(Patch, 177),
+    {ok, 14} = elvis_git:relative_position(Patch, 179),
+
+    not_found = elvis_git:relative_position(Patch, 108),
+    not_found = elvis_git:relative_position(Patch, 116),
+
+    not_found = elvis_git:relative_position(Patch, 174),
+    not_found = elvis_git:relative_position(Patch, 180).
