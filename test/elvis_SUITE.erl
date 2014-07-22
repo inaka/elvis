@@ -13,6 +13,7 @@
          rock_with_file_config/1,
          %% Webhook
          run_webhook/1,
+         run_webhook_ping/1,
          %% Utill & Config
          throw_configuration/1,
          find_file_and_check_src/1,
@@ -114,6 +115,13 @@ run_webhook(_Config) ->
     after
         meck:unload(elvis_github)
     end.
+
+-spec run_webhook_ping(config()) -> any().
+run_webhook_ping(_Config) ->
+    Headers = #{<<"x-github-event">> => <<"ping">>},
+    Body = <<"[]">>,
+    Request = #{headers => Headers, body => Body},
+    ok = elvis:webhook(Request).
 
 %%%%%%%%%%%%%%%
 %%% Utils

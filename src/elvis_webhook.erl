@@ -60,6 +60,9 @@ event(Config,
         ok -> ok
     end;
 
+event(_Config, <<"ping">>, _Data) ->
+    ok;
+
 event(_Config, Event, _Data) ->
     {error, io_lib:format("Nothing to do for event: ~p.~n", [Event])}.
 
