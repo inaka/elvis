@@ -144,15 +144,15 @@ find_file_and_check_src(_Config) ->
     Dirs = ["../../test/examples"],
 
     [] = elvis_utils:find_files(Dirs, "doesnt_exist.erl"),
-    [Path] = elvis_utils:find_files(Dirs, "small.erl"),
+    [File] = elvis_utils:find_files(Dirs, "small.erl"),
 
-    {ok, <<"-module(small).\n">>} = elvis_utils:src([], Path),
-    {error, enoent} = elvis_utils:src([], #{path => "doesnt_exist.erl"}).
+    {<<"-module(small).\n">>, _} = elvis_utils:src(File),
+    {error, enoent} = elvis_utils:src(#{path => "doesnt_exist.erl"}).
 
 -spec invalid_file(config()) -> any().
 invalid_file(_Config) ->
     ok = try
-             elvis_utils:src(#{}, #{}),
+             elvis_utils:src(#{}),
              fail
          catch
              throw:{invalid_file, #{}} -> ok
