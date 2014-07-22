@@ -83,9 +83,9 @@ macro_module_names(_Config, Target, []) ->
                       elvis_utils:file(),
                       [{right|left, string()}]) ->
     [elvis_result:item()].
-operator_spaces(Config, Target, Rules) ->
-    {Src, _} = elvis_utils:src(Config, Target),
-    {Root, _} = elvis_utils:parse_tree(Src),
+operator_spaces(_Config, Target, Rules) ->
+    {Src, _} = elvis_utils:src(Target),
+    {Root, _} = elvis_utils:parse_tree(Target),
     elvis_utils:check_lines(Src, fun check_operator_spaces/3, {Root, Rules}).
 
 -spec nesting_level(elvis_config:config(), elvis_utils:file(), [integer()]) ->
