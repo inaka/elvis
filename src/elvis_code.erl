@@ -18,6 +18,7 @@
 -export([
          past_nesting_limit/2,
          exported_functions/1,
+         module_name/1,
          print_node/1,
          print_node/2
         ]).
@@ -131,6 +132,15 @@ print_node(Node = #{type := Type}, CurrentLevel) ->
     lists:map(fun(Child) -> print_node(Child, CurrentLevel + 1) end, Content),
     ok.
 
+%% @doc Takes the root node and returns the module's name.
+-spec module_name(tree_node()) -> atom().
+module_name(#{type := root, content := Content}) ->
+    Fun = fun (#{type := Type}) -> Type == module end,
+    case lists:filter(Fun, Content) of
+        [ModuleNode | _] ->
+            attr(value, ModuleNode);
+        [] -> undefined
+    end.
 
 %% @private
 %% @doc Takes a node type and determines its nesting level increment.

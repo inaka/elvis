@@ -138,7 +138,7 @@ process_options([], Cmds, Config) ->
 
 -spec process_commands([string()], elvis_config:config()) -> ok.
 process_commands([rock | Cmds], Config) ->
-    _Result = rock(Config),
+    _ = rock(Config),
     process_commands(Cmds, Config);
 process_commands([help | Cmds], Config) ->
     Config = help(Config),

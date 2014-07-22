@@ -11,7 +11,8 @@
          no_if_expression/3,
          invalid_dynamic_call/3,
          used_ignored_variable/3,
-         no_behavior_info/3
+         no_behavior_info/3,
+         module_naming_convention/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -41,6 +42,9 @@
 -define(NO_BEHAVIOR_INFO,
         "Use the '-callback' attribute instead of 'behavior_info/1' "
         "on line ~p.").
+-define(MODULE_NAMING_CONVENTION_MSG,
+        "The module ~p does not respect the format defined by the "
+        "regular expression '~p'.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -117,15 +121,21 @@ no_if_expression(Config, Target, []) ->
 
 -spec invalid_dynamic_call(elvis_config:config(), elvis_utils:file(), []) ->
     [elvis_result:item()].
-invalid_dynamic_call(Config, Target, []) ->
+invalid_dynamic_call(Config, Target, IgnoreModules) ->
     {ok, Src} = elvis_utils:src(Config, Target),
     Root = elvis_code:parse_tree(Src),
-    Predicate = fun(Node) -> elvis_code:type(Node) == 'callback' end,
-    case elvis_code:find(Predicate, Root) of
-        [] ->
-            check_invalid_dynamic_calls(Root);
-        _Callbacks ->
-            []
+    ModuleName = elvis_code:module_name(Root),
+
+    case lists:member(ModuleName, IgnoreModules) of
+        false ->
+            Predicate = fun(Node) -> elvis_code:type(Node) == 'callback' end,
+            case elvis_code:find(Predicate, Root) of
+                [] ->
+                    check_invalid_dynamic_calls(Root);
+                _Callbacks ->
+                    []
+            end;
+        true -> []
     end.
 
 -spec used_ignored_variable(elvis_config:config(), elvis_utils:file(), []) ->
@@ -167,6 +177,29 @@ no_behavior_info(Config, Target, []) ->
             [];
         BehaviorInfos ->
             lists:map(ResultFun, BehaviorInfos)
+    end.
+
+
+-spec module_naming_convention(elvis_config:config(),
+                               elvis_utils:file(),
+                               [list()]) ->
+    [elvis_result:item()].
+module_naming_convention(Config, Target, [Regex, IgnoreModules]) ->
+    {ok, Src} = elvis_utils:src(Config, Target),
+    Root = elvis_code:parse_tree(Src),
+    ModuleName = elvis_code:module_name(Root),
+
+    case lists:member(ModuleName, IgnoreModules) of
+        false ->
+            ModuleNameStr = atom_to_list(ModuleName),
+            case re:run(ModuleNameStr, Regex) of
+                nomatch ->
+                    Msg = ?MODULE_NAMING_CONVENTION_MSG,
+                    Info = [ModuleNameStr, Regex],
+                    Result = elvis_result:new(item, Msg, Info, 1),
+                    [Result];
+                {match, _} -> []
+            end
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -346,6 +379,6 @@ is_used_ignored_var(Node) ->
         var ->
             Name = elvis_code:attr(name, Node),
             [FirstChar | _] = atom_to_list(Name),
-            FirstChar == $_;
+            (FirstChar == $_) and (Name =/= '_');
         _OtherType -> false
     end.
