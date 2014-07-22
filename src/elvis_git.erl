@@ -2,7 +2,8 @@
 
 -export([
          staged_files/0,
-         staged_content/1
+         staged_content/1,
+         relative_position/2
         ]).
 
 -define(LIST_STAGED,
@@ -32,3 +33,63 @@ staged_content(Path) ->
        path => Path,
        content => list_to_binary(Content)
      }.
+
+%% @doc Takes a git patch and an absolute file line number and returns a
+%%      relative position for that line in the patch.
+-spec relative_position(binary(), integer()) ->
+    {ok, integer()} | not_found.
+relative_position(Patch, LineNum) ->
+    Lines = binary:split(Patch, <<"\n">>, [global]),
+    relative_position(Lines, LineNum, {0, undefined}).
+
+relative_position([], _Num, _Positions) ->
+    not_found;
+relative_position([Line | Lines], Num, Positions) ->
+    case position_increment(Line, Positions) of
+        {NewLocal, NewGlobal} when NewGlobal == Num ->
+            {ok, NewLocal};
+        NewPositions ->
+            relative_position(Lines, Num, NewPositions)
+    end.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Private
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% @private
+%% @doc Return the corresponding local and global line increments based
+%%      on the line's type.
+position_increment(Line, {Local, Global}) ->
+    case patch_line_type(Line) of
+        patch ->
+            NewGlobal = patch_position(Line),
+            {Local, NewGlobal - 1};
+        deletion ->
+            {Local + 1, Global};
+        addition ->
+            {Local + 1, Global + 1};
+        same ->
+            {Local + 1, Global + 1}
+    end.
+
+%% @private
+%% @doc Takes a line form a git patch and returns its type.
+-spec patch_line_type(binary()) -> patch | addition | deletion | same.
+patch_line_type(Line) ->
+    [Head | _] = elvis_utils:to_str(Line),
+    case Head of
+        $@ -> patch;
+        $+ -> addition;
+        $- -> deletion;
+        $  -> same
+    end.
+
+%% @private
+%% @doc Takes a patch type line and returns the line number after the +.
+-spec patch_position(binary()) -> integer().
+patch_position(Line) ->
+    Regex = "^@@ .*? \\+(\\d+),.*$",
+    {match, [_, {Position, Len} | _ ]} = re:run(Line, Regex),
+    LineStr = elvis_utils:to_str(Line),
+    PositionStr = string:substr(LineStr, Position + 1, Len),
+    list_to_integer(PositionStr).
