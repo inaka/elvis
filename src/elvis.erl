@@ -175,3 +175,5 @@ git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
                                       files.
 ">>,
    io:put_chars(Commands).
+
+%% Another dummy change to check how patches are built with changes wide apart.
