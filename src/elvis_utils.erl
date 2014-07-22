@@ -1,7 +1,9 @@
 -module(elvis_utils).
 
 -export([
-         src/2,
+         src/1,
+         parse_tree/1,
+         load_file_data/1,
 
          %% Files
          find_files/1,
@@ -31,16 +33,39 @@
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% @doc Returns the source for the file.
--spec src(elvis_config:config(), file()) ->
-    {ok, binary()} | {error, enoent}.
-src(_Config, #{content := Content}) ->
-    {ok, Content};
-src(_Config, #{path := Path}) ->
-    file:read_file(Path);
-src(_Config, File) ->
+%% @doc Returns a tuple with the contents of the file and the file itself.
+-spec src(file()) ->
+    {binary(), file()} | {error, enoent}.
+src(File = #{content := Content}) ->
+    {Content, File};
+src(File = #{path := Path}) ->
+    case file:read_file(Path) of
+        {ok, Content} ->
+            src(File#{content => Content});
+        Error -> Error
+    end;
+src(File) ->
     throw({invalid_file, File}).
 
+%% @doc Add the root node of the parse tree to the file data. 
+-spec parse_tree(file()) -> {elvis_code:tree_node(), file()}.
+parse_tree(File = #{parse_tree := ParseTree}) ->
+    {ParseTree, File};
+parse_tree(File = #{content := Content}) ->
+    ParseTree = elvis_code:parse_tree(Content),
+    parse_tree(File#{parse_tree => ParseTree});
+parse_tree(File0 = #{path := _Path}) ->
+    {_, File} = src(File0),
+    parse_tree(File);
+parse_tree(File) ->
+    throw({invalid_file, File}).
+
+%% @doc Loads and adds all related file data.
+-spec load_file_data(file()) -> file().
+load_file_data(File0 = #{path := _Path}) ->
+    {_, File1} = src(File0),
+    {_, File2} = parse_tree(File1),
+    File2.
 
 %% @doc Returns all files under the specified Path
 %% that match the pattern Name.
