@@ -40,7 +40,7 @@ staged_content(Path) ->
     {ok, integer()} | not_found.
 relative_position(Patch, LineNum) ->
     Lines = binary:split(Patch, <<"\n">>, [global]),
-    relative_position(Lines, LineNum, {0, undefined}).
+    relative_position(Lines, LineNum, {-1, undefined}).
 
 relative_position([], _Num, _Positions) ->
     not_found;
@@ -63,7 +63,7 @@ position_increment(Line, {Local, Global}) ->
     case patch_line_type(Line) of
         patch ->
             NewGlobal = patch_position(Line),
-            {Local, NewGlobal - 1};
+            {Local + 1, NewGlobal - 1};
         deletion ->
             {Local + 1, Global};
         addition ->

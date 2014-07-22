@@ -469,6 +469,12 @@ to_map({op, Location, Operation, Left, Right}) ->
                  operation => Operation},
       content => to_map([Left, Right])};
 
+to_map({op, Location, Operation, Single}) ->
+    #{type => op,
+      attrs => #{location => Location,
+                 operation => Operation},
+      content => to_map([Single])};
+
 %% Attributes
 
 
