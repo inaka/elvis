@@ -19,7 +19,7 @@
          past_nesting_limit/2,
          exported_functions/1,
          module_name/1,
-         paths_longer_than/2,
+         longest_path/1,
          print_node/1,
          print_node/2
         ]).
@@ -141,36 +141,57 @@ module_name(#{type := root, content := Content}) ->
 
 %% @doc Return all the children where the path from the supplied node
 %%      is longer than MaxLength.
--spec paths_longer_than(tree_node(), integer()) -> [[tree_node]].
-paths_longer_than(Node = #{type := Type}, MaxLength) ->
-    Inc = length_increment(Type),
-    Result = paths_longer_than(Node, MaxLength, Inc, []),
-    lists:flatten(Result).
+-spec longest_path(tree_node()) -> {integer(), tree_node()}.
+longest_path(Node = #{type := Type}) ->
+    Length = length_increment(Type),
+    longest_path(Node, Length).
 
-paths_longer_than(Node, MaxLength, Length, Path)
-  when Length > MaxLength ->
-    Result = [Node | Path],
-    [Result];
-paths_longer_than(Node = #{type := Type},
-                  MaxLength,
-                  Length,
-                  Path) ->
+longest_path(Node, Length) ->
     Content = elvis_code:content(Node),
-    NewPath = [Node | Path],
-    Fun = fun ({Index, Child}) ->
-             Inc = length_increment(Type),
-             paths_longer_than(Child, MaxLength, Length + Index * Inc + Inc, NewPath)
-          end,
-    elvis_utils:map_indexed(Fun, Content).
+    Fun = fun longest_path_foldl/2,
+    Acc = {Length, {Length, Node}},
+    {_, Result} = lists:foldl(Fun, Acc, Content),
+    Result.
 
+-spec longest_path_foldl([tree_node()],
+                         {integer(), {integer(), tree_node()}}) ->
+     [{integer(), tree_node()}].
+longest_path_foldl(Node = #{type := Type},
+                   {Length,  CurrentMax = {MaxLength, _}}) ->
+    Increment = length_increment(Type),
+    %% lager:info("~p => ~p", [Type, Increment]),
+    ChildMax = longest_path(Node, Length + Increment),
+    {ChildLength, _} = ChildMax,
+    NewLength =
+        case is_branch(Type) of
+            true -> Length;
+            false -> ChildLength
+        end,
+    NewMax =
+        case ChildLength > MaxLength of
+            true -> ChildMax;
+            false -> CurrentMax
+        end,
+    {NewLength, NewMax}.
+
+%% @private
+is_branch(Type) ->
+    Branch = [clause,
+              case_clauses,
+              catch_clauses,
+              recieve_case,
+              case_expr,
+              try_case
+             ],
+    lists:member(Type, Branch).
 
 %% @private
 %% @doc Takes a node type and determines its nesting level increment.
 length_increment(Type) ->
-    Increment =
+        Increment =
         [
          function,
-         'case',
+        'case',
          'if',
          'try',
          'catch',

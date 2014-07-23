@@ -46,8 +46,9 @@
 -define(MODULE_NAMING_CONVENTION_MSG,
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
--define(FUNCTION_LENGTH_MSG,
-        "The function on line ~p has too many expressions.").
+-define(EXEC_PATH_LENGTH_MSG,
+        "The function ~p is too long, having more than ~p expressions before "
+        "it gets to the one on line ~p and column ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -398,15 +399,14 @@ is_used_ignored_var(Node) ->
 -spec check_exec_path_length(elvis_code:tree_node(), [integer()]) ->
     [elvis_result:item_result()].
 check_exec_path_length(Node, [MaxLength, _]) ->
-    Fun = result_node_line_fun(?FUNCTION_LENGTH_MSG),
-    case elvis_code:type(Node) of
-        function ->
-            case elvis_code:paths_longer_than(Node, MaxLength) of
-                [] ->
-                    [];
-                _Paths ->
-                    Fun(Node)
-            end;
+    case elvis_code:longest_path(Node) of
+        {Length, MaxNode} when Length > MaxLength ->
+            {Line, Col} = elvis_code:attr(location, MaxNode),
+            Name = elvis_code:attr(name, Node),
+            Msg = ?EXEC_PATH_LENGTH_MSG,
+            Info = [Name, MaxLength, Line, Col],
+            Result = elvis_result:new(item, Msg, Info, Line),
+            [Result];
         _Other ->
             []
     end.
