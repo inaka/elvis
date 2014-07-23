@@ -21,7 +21,7 @@ ERLC_OPTS += +warn_export_vars +warn_exported_vars +warn_missing_spec +warn_unty
 # Commont Test Config
 
 TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
-CT_SUITES = elvis rules
+CT_SUITES = elvis rules git
 CT_OPTS = -cover test/elvis.coverspec  -erl_args -config config/test.config
 
 # Builds the elvis escript.

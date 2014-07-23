@@ -70,10 +70,15 @@ event(_Config, Event, _Data) ->
 %%% Helper functions
 
 file_info(Cred, Repo,
-          #{<<"filename">> := Filename, <<"raw_url">> := RawUrl}) ->
+          #{<<"filename">> := Filename,
+            <<"raw_url">> := RawUrl,
+            <<"patch">> := Patch}) ->
     CommitId = commit_id_from_raw_url(RawUrl, Filename),
     {ok, Content} = elvis_github:file_content(Cred, Repo, CommitId, Filename),
-    #{path => Filename, content => Content, commit_id => CommitId}.
+    #{path => Filename,
+      content => Content,
+      commit_id => CommitId,
+      patch => Patch}.
 
 %% @doc Gets the github
 -spec github_credentials() -> elvis_github:credentials().
@@ -115,33 +120,43 @@ comment_lines(_GithubInfo, [], _File) ->
     ok;
 comment_lines(GithubInfo, [Item | Items], File) ->
     {Cred, Repo, PR, Comments} = GithubInfo,
-    #{path := Path, commit_id := CommitId} = File,
+    #{path := Path,
+      commit_id := CommitId,
+      patch := Patch} = File,
     Message = elvis_result:get_message(Item),
     Info = elvis_result:get_info(Item),
-    LineNum = elvis_result:get_line_num(Item),
+    Line = elvis_result:get_line_num(Item),
 
-    Text = list_to_binary(io_lib:format(Message, Info)),
+    case elvis_git:relative_position(Patch, Line) of
+        {ok, Position} ->
+            Text = list_to_binary(io_lib:format(Message, Info)),
 
-    case comment_exists(Comments, Path, LineNum, Text) of
-        exists ->
-            Args = [Text, Path, LineNum],
-            lager:info("Comment '~p' for ~p on line ~p exists", Args);
-        not_exists ->
-            {ok, _} =
-                elvis_github:pull_req_comment_line(Cred, Repo, PR, CommitId,
-                                                   Path, LineNum, Text)
+            case comment_exists(Comments, Path, Position, Text) of
+                exists ->
+                    Args = [Text, Path, Line],
+                    lager:info("Comment '~p' for ~p on line ~p exists", Args);
+                not_exists ->
+                    {ok, _} =
+                        elvis_github:pull_req_comment_line(
+                          Cred, Repo, PR, CommitId, Path, Position, Text
+                        )
+            end;
+        not_found ->
+            Args = [Line],
+            lager:info("Line ~p does not belong to file's diff.", Args)
     end,
+
     comment_lines(GithubInfo, Items, File).
 
 comment_exists([], _Path, _Line, _Body) ->
     not_exists;
-comment_exists([Comment | Comments], Path, Line, Body) ->
+comment_exists([Comment | Comments], Path, Position, Body) ->
     try
         #{<<"path">> := Path,
-          <<"position">> := Line,
+          <<"position">> := Position,
           <<"body">> := Body} = Comment,
         exists
     catch
         error:{badmatch, _} ->
-            comment_exists(Comments, Path, Line, Body)
+            comment_exists(Comments, Path, Position, Body)
     end.
