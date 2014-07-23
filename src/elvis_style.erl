@@ -12,7 +12,8 @@
          invalid_dynamic_call/3,
          used_ignored_variable/3,
          no_behavior_info/3,
-         module_naming_convention/3
+         module_naming_convention/3,
+         exec_path_length/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -45,6 +46,8 @@
 -define(MODULE_NAMING_CONVENTION_MSG,
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
+-define(FUNCTION_LENGTH_MSG,
+        "The function on line ~p has too many expressions.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -193,7 +196,23 @@ module_naming_convention(_Config, Target, [Regex, IgnoreModules]) ->
                     Result = elvis_result:new(item, Msg, Info, 1),
                     [Result];
                 {match, _} -> []
-            end
+            end;
+        true ->
+            []
+    end.
+
+-spec exec_path_length(elvis_config:config(),
+                               elvis_utils:file(),
+                               [list()]) ->
+    [elvis_result:item()].
+exec_path_length(_Config, Target, Args = [_MaxCount, IgnoreModules]) ->
+    {Root, _} = elvis_utils:parse_tree(Target),
+    ModuleName = elvis_code:module_name(Root),
+    case lists:member(ModuleName, IgnoreModules) of
+        false ->
+            elvis_utils:check_nodes(Root, fun check_exec_path_length/2, Args);
+        true ->
+            []
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -379,4 +398,20 @@ is_used_ignored_var(Node) ->
             [FirstChar | _] = atom_to_list(Name),
             (FirstChar == $_) and (Name =/= '_');
         _OtherType -> false
+    end.
+
+-spec check_exec_path_length(elvis_code:tree_node(), [integer()]) ->
+    [elvis_result:item_result()].
+check_exec_path_length(Node, [MaxLength, _]) ->
+    Fun = result_node_line_fun(?FUNCTION_LENGTH_MSG),
+    case elvis_code:type(Node) of
+        function ->
+            case elvis_code:paths_longer_than(Node, MaxLength) of
+                [] ->
+                    [];
+                _Paths ->
+                    Fun(Node)
+            end;
+        _Other ->
+            []
     end.

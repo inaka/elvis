@@ -18,7 +18,8 @@
          verify_invalid_dynamic_call/1,
          verify_used_ignored_variable/1,
          verify_no_behavior_info/1,
-         verify_module_naming_convention/1
+         verify_module_naming_convention/1,
+         verify_exec_path_length/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -208,3 +209,19 @@ verify_module_naming_convention(_Config) ->
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
     [_] =
         elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfig).
+
+-spec verify_exec_path_length(config()) -> any().
+verify_exec_path_length(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    #{src_dirs := SrcDirs} = ElvisConfig,
+
+    RuleConfig = [10, [ignore_function_length]],
+
+    PathIgnore = "ignore_exec_path_length.erl",
+    {ok, FileIgnore} = elvis_test_utils:find_file(SrcDirs, PathIgnore),
+    [] = elvis_style:exec_path_length(ElvisConfig, FileIgnore, RuleConfig),
+
+    PathFail = "fail_exec_path_length.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    [#{line_num := 7}] =
+        elvis_style:exec_path_length(ElvisConfig, FileFail, RuleConfig).
