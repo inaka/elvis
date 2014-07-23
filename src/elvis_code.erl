@@ -19,6 +19,7 @@
          past_nesting_limit/2,
          exported_functions/1,
          module_name/1,
+         paths_longer_than/2,
          print_node/1,
          print_node/2
         ]).
@@ -64,7 +65,7 @@ find(Pred, Node, Results) ->
             find(Pred, Content, Results)
     end.
 
-%% Getters
+%%% Getters
 
 -spec type(tree_node()) -> atom().
 type(#{type := Type}) ->
@@ -88,7 +89,6 @@ content(#{content := Content}) ->
     Content;
 content(_Node) ->
     [].
-
 
 %%% Processing functions
 
@@ -124,11 +124,8 @@ print_node(Node = #{type := Type}, CurrentLevel) ->
     Type = type(Node),
     Indentation = lists:duplicate(CurrentLevel * 4, $ ),
     Content = content(Node),
-    % {Line, _} = elvis_code:attr(location, Node),
-    lager:info(
-      "~s - [~p] ~p~n",
-      [Indentation, CurrentLevel, Type]
-     ),
+    lager:info("~s - [~p] ~p~n",
+               [Indentation, CurrentLevel, Type]),
     lists:map(fun(Child) -> print_node(Child, CurrentLevel + 1) end, Content),
     ok.
 
@@ -142,19 +139,77 @@ module_name(#{type := root, content := Content}) ->
         [] -> undefined
     end.
 
+%% @doc Return all the children where the path from the supplied node
+%%      is longer than MaxLength.
+-spec paths_longer_than(tree_node(), integer()) -> [[tree_node]].
+paths_longer_than(Node = #{type := Type}, MaxLength) ->
+    Inc = length_increment(Type),
+    Result = paths_longer_than(Node, MaxLength, Inc, []),
+    lists:flatten(Result).
+
+paths_longer_than(Node, MaxLength, Length, Path)
+  when Length > MaxLength ->
+    Result = [Node | Path],
+    [Result];
+paths_longer_than(Node = #{type := Type},
+                  MaxLength,
+                  Length,
+                  Path) ->
+    Content = elvis_code:content(Node),
+    NewPath = [Node | Path],
+    Fun = fun ({Index, Child}) ->
+             Inc = length_increment(Type),
+             paths_longer_than(Child, MaxLength, Length + Index * Inc + Inc, NewPath)
+          end,
+    elvis_utils:map_indexed(Fun, Content).
+
+
+%% @private
+%% @doc Takes a node type and determines its nesting level increment.
+length_increment(Type) ->
+    Increment =
+        [
+         function,
+         'case',
+         'if',
+         'try',
+         'catch',
+         'fun',
+         named_fun,
+         'receive',
+         match,
+         nil,
+         cons,
+         map,
+         lc,
+         var,
+         atom,
+         integer,
+         float,
+         string,
+         char,
+         call
+        ],
+    case lists:member(Type, Increment) of
+        true -> 1;
+        false -> 0
+    end.
+
 %% @private
 %% @doc Takes a node type and determines its nesting level increment.
 level_increment(Type) ->
-    IncrementOne = [function,
-                    'case',
-                    'if',
-                    try_case,
-                    try_catch,
-                    'fun',
-                    named_fun,
-                    receive_case
-                   ],
-    case lists:member(Type, IncrementOne) of
+    Increment =
+        [
+         function,
+         'case',
+         'if',
+         try_case,
+         try_catch,
+         'fun',
+         named_fun,
+         receive_case
+        ],
+    case lists:member(Type, Increment) of
         true -> 1;
         false -> 0
     end.
