@@ -109,7 +109,7 @@ option_spec_list() ->
     [
      {help, $h, "help", undefined, "Show this help information."},
      {config, $c, "config", string, Commands},
-     {commands, undefined, "commands", undefined, "Show available commands."}
+     {commands, undefined, "commands", undefined, "Show available commands."} %% Long Line
     ].
 
 -spec process_options([atom()], [string()]) -> ok.
@@ -175,3 +175,5 @@ git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
                                       files.
 ">>,
    io:put_chars(Commands).
+
+%% Another dummy change to check how patches are built with changes wide apart.
