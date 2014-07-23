@@ -215,7 +215,7 @@ verify_exec_path_length(_Config) ->
     ElvisConfig = elvis_config:default(),
     #{src_dirs := SrcDirs} = ElvisConfig,
 
-    RuleConfig = [10, [ignore_function_length]],
+    RuleConfig = [10, [ignore_exec_path_length]],
 
     PathIgnore = "ignore_exec_path_length.erl",
     {ok, FileIgnore} = elvis_test_utils:find_file(SrcDirs, PathIgnore),
@@ -223,5 +223,11 @@ verify_exec_path_length(_Config) ->
 
     PathFail = "fail_exec_path_length.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
-    [#{line_num := 7}] =
-        elvis_style:exec_path_length(ElvisConfig, FileFail, RuleConfig).
+    [
+     #{line_num := 26},
+     #{line_num := 46},
+     #{line_num := 65},
+     #{line_num := 98},
+     #{line_num := 125},
+     #{line_num := 173}
+    ] = elvis_style:exec_path_length(ElvisConfig, FileFail, RuleConfig).
