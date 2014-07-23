@@ -475,8 +475,43 @@ to_map({op, Location, Operation, Single}) ->
                  operation => Operation},
       content => to_map([Single])};
 
-%% Attributes
+%% Record
 
+to_map({record, Location, Name, Fields}) ->
+    #{type => record,
+      attrs => #{location => Location,
+                 name => Name},
+      content => to_map(Fields)};
+to_map({record, Location, Var, Name, Fields}) ->
+    #{type => record,
+      attrs => #{location => Location,
+                 variable => to_map(Var),
+                 name => Name},
+      content => to_map(Fields)};
+
+to_map({record_index, Location, Name, Field}) ->
+    #{type => record_index,
+      attrs => #{location => Location,
+                 name => Name},
+      content => [to_map(Field)]};
+
+to_map({record_field, Location, Name}) ->
+    #{type => record_field,
+      attrs => #{location => Location,
+                 name => to_map(Name)}};
+to_map({record_field, Location, Name, Default}) ->
+    #{type => record_field,
+      attrs => #{location => Location,
+                 default => to_map(Default),
+                 name => to_map(Name)}};
+to_map({record_field, Location, Var, Name, Field}) ->
+    #{type => record_field,
+      attrs => #{location => Location,
+                 variable => to_map(Var),
+                 name => Name},
+      content => [to_map(Field)]};
+
+%% Attributes
 
 to_map({attribute, Location, Type, Value}) ->
     #{type => Type,
