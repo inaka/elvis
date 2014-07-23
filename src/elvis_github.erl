@@ -26,7 +26,6 @@
     {pull_req, comments | files}
     | raw_contents.
 
--define(GITHUB, "https://github.com").
 -define(GITHUB_API, "https://api.github.com").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -67,8 +66,15 @@ pull_req_comments(Cred, Repo, PR) ->
     {ok, binary()}.
 file_content(Cred, Repo, CommitId, Filename) ->
     Url = make_url(raw_contents, {Repo, CommitId, Filename}),
-    {ok, Content} = auth_req(Cred, Url),
-    {ok, list_to_binary(Content)}.
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            ContentBase64 = maps:get(<<"content">>, JsonResult),
+            Content = base64:decode(ContentBase64),
+            {ok, Content};
+        {error, Reason} ->
+            throw(Reason)
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private Functions
@@ -80,8 +86,8 @@ make_url({pull_req, Subentity}, {Repo, PR}) ->
     Url = ?GITHUB_API ++ "/repos/~s/pulls/~p/" ++ SubentityStr,
     io_lib:format(Url, [Repo, PR]);
 make_url(raw_contents, {Repo, CommitId, Filename}) ->
-    Url = ?GITHUB ++ "/~s/raw/~s/~s",
-    io_lib:format(Url, [Repo, CommitId, Filename]).
+    Url = ?GITHUB_API ++ "/repos/~s/contents/~s?ref=~s",
+    io_lib:format(Url, [Repo, Filename, CommitId]).
 
 -spec auth_req(credentials(), string()) -> string() | {error, term()}.
 auth_req(Credentials, Url) ->
