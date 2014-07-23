@@ -93,7 +93,6 @@ patch_line_type(Line) ->
 -spec patch_position(binary()) -> integer().
 patch_position(Line) ->
     Regex = "^@@ .*? \\+(\\d+),.*$",
-    {match, [_, {Position, Len} | _ ]} = re:run(Line, Regex),
-    LineStr = elvis_utils:to_str(Line),
-    PositionStr = string:substr(LineStr, Position + 1, Len),
+    Opts = [{capture, all_but_first, list}],
+    {match, [PositionStr | _ ]} = re:run(Line, Regex, Opts),
     list_to_integer(PositionStr).
