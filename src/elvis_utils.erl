@@ -19,7 +19,10 @@
 
          %% General
          erlang_halt/1,
-         to_str/1
+         to_str/1,
+
+         %% Lists
+         map_indexed/2
         ]).
 
 -export_type([file/0]).
@@ -47,7 +50,7 @@ src(File = #{path := Path}) ->
 src(File) ->
     throw({invalid_file, File}).
 
-%% @doc Add the root node of the parse tree to the file data. 
+%% @doc Add the root node of the parse tree to the file data.
 -spec parse_tree(file()) -> {elvis_code:tree_node(), file()}.
 parse_tree(File = #{parse_tree := ParseTree}) ->
     {ParseTree, File};
@@ -181,3 +184,17 @@ indentation(Line, Char, Count) ->
         0 -> Len div Count;
         _ -> invalid
     end.
+
+-type fun_indexed() :: fun(({integer(), term()}) -> term()).
+
+%% @doc Takes a function, a list and applies the function with an tuple argument
+%%      where the first element is the item's index and the second is the item.
+-spec map_indexed(fun_indexed(), list()) -> list().
+map_indexed(Fun, List) ->
+    map_indexed(Fun, List, 1, []).
+
+map_indexed(_Fun, [], _Index, Results) ->
+    lists:reverse(Results);
+map_indexed(Fun, [Head | Tail], Index, Results) ->
+    Result = Fun({Index, Head}),
+    map_indexed(Fun, Tail, Index + 1, [Result | Results]).
