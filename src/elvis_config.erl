@@ -2,7 +2,8 @@
 
 -export([
          default/0,
-         load_file/1
+         load_file/1,
+         load/1
         ]).
 
 -export_type([
@@ -37,10 +38,7 @@ load_file(Path) ->
             throw(Reason)
     end.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Private
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+-spec load(term()) -> config().
 load(AppConfig) ->
     ElvisConfig = proplists:get_value(elvis, AppConfig, []),
     proplists:get_value(config, ElvisConfig, #{}).
