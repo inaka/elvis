@@ -146,8 +146,8 @@ longest_path(Node) ->
     longest_path(Node, 0).
 
 longest_path(Node = #{type := Type}, Length) ->
-    {Line, _} = attr(location, Node),
     NewLength = Length + length_increment(Type),
+    %% {Line, _} = attr(location, Node),
     %% lager:info("Line: ~p\t~p\t~p", [Line, NewLength, Type]),
     Content = elvis_code:content(Node),
     Fun = fun longest_path_foldl/2,
@@ -190,10 +190,10 @@ is_branch(Type) ->
 %% @private
 %% @doc Takes a node type and determines its nesting level increment.
 length_increment(Type) ->
-        Increment =
+    Increment =
         [
          function,
-        'case',
+         'case',
          'if',
          'try',
          'catch',
