@@ -3,6 +3,8 @@
  -define (bad_name,   "(no)").
 -define(GOOD_NAME,  "(megusta)").
 -define(wtf_NAME,   "(yuno)").
+-define(GOOD_NAME(Arg), "(megusta)").
+-define(GOOD_NAME_TOO (Arg), "(megusta)").
 
 -export([
          define/1,

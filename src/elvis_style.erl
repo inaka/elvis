@@ -255,7 +255,7 @@ check_no_tabs(Line, Num, _Args) ->
 -spec check_macro_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
 check_macro_names(Line, Num, _Args) ->
-    {ok, Regex} = re:compile("^ *[-]define *[(]([^,]+)"),
+    {ok, Regex} = re:compile("^ *[-]define *[(]([^,(]+)"),
     case re:run(Line, Regex, [{capture, all_but_first, list}]) of
         nomatch ->
             no_result;

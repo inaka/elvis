@@ -187,3 +187,4 @@ Inspired on [HoundCI][houndci]
   [git]: http://git-scm.com/
   [pre-commit]: http://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks
   [config]: http://www.erlang.org/doc/man/config.html
+  [webhooks]: https://developer.github.com/v3/repos/hooks/
