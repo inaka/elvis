@@ -82,7 +82,8 @@ macro_module_names(Config, Target, []) ->
     [elvis_result:item()].
 operator_spaces(Config, Target, Rules) ->
     {ok, Src} = elvis_utils:src(Config, Target),
-    elvis_utils:check_lines(Src, fun check_operator_spaces/3, Rules).
+    Root = elvis_code:parse_tree(Src),
+    elvis_utils:check_lines(Src, fun check_operator_spaces/3, {Root, Rules}).
 
 -spec nesting_level(elvis_config:config(), elvis_utils:file(), [integer()]) ->
     [elvis_result:item()].
@@ -296,36 +297,40 @@ check_macro_module_names(Line, Num, _Args) ->
 
 -spec check_operator_spaces(binary(), integer(), [{right|left, string()}]) ->
     no_result | {ok, elvis_result:item_result()}.
-check_operator_spaces(Line, Num, Rules) ->
+check_operator_spaces(Line, Num, {Root, Rules}) ->
     AllResults =
-        [check_operator_spaces_rule(Line, Num, Rule) || Rule <- Rules],
+        [check_operator_spaces_rule(Line, Num, Rule, Root) || Rule <- Rules],
     case [Result || {ok, Result} <- AllResults] of
         [] -> no_result;
         [Result|_] -> {ok, Result}
     end.
-check_operator_spaces_rule(Line, Num, {right, Operator}) ->
+check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
     Escaped = [[$[, Char, $]] || Char <- Operator],
-    {ok, Regex} = re:compile(Escaped ++ "[^ ]"),
-    case re:run(<<Line/binary, " ">>, Regex) of
+    {Subject, Regex, Label} =
+        case Position of
+            right ->
+                {<<Line/binary, " ">>, Escaped ++ "[^ ]", "after"};
+            left ->
+                {<<" ", Line/binary>>, "[^ ]" ++ Escaped, "before"}
+        end,
+    case re:run(Subject, Regex) of
         nomatch ->
             no_result;
-        {match, _} ->
-            Msg = ?OPERATOR_SPACE_MSG,
-            Info = ["after", Operator, Num],
-            Result = elvis_result:new(item, Msg, Info, Num),
-            {ok, Result}
-    end;
-check_operator_spaces_rule(Line, Num, {left, Operator}) ->
-    Escaped = [[$[, Char, $]] || Char <- Operator],
-    {ok, Regex} = re:compile("[^ ]" ++ Escaped),
-    case re:run(<<" ", Line/binary>>, Regex) of
-        nomatch ->
-            no_result;
-        {match, _} ->
-            Msg = ?OPERATOR_SPACE_MSG,
-            Info = ["before", Operator, Num],
-            Result = elvis_result:new(item, Msg, Info, Num),
-            {ok, Result}
+        {match, [{Col, _} | _]} ->
+            Type = case elvis_code:find_by_location(Root, {Num, Col}) of
+                       not_found -> undefined;
+                       {ok, Node} -> elvis_code:type(Node)
+                   end,
+            case Type of
+                atom -> [];
+                binary_element -> [];
+                string -> [];
+                _ ->
+                    Msg = ?OPERATOR_SPACE_MSG,
+                    Info = [Label, Operator, Num],
+                    Result = elvis_result:new(item, Msg, Info, Num),
+                    {ok, Result}
+            end
     end.
 
 -spec check_nesting_level(elvis_code:tree_node(), [integer()]) ->
