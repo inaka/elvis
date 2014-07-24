@@ -47,8 +47,8 @@
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
 -define(EXEC_PATH_LENGTH_MSG,
-        "The function ~p is too long, having more than ~p expressions before "
-        "it gets to the one on line ~p and column ~p.").
+        "The function ~p is too big, being ~p expressions long "
+        "when it gets to the one on line ~p and column ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -404,7 +404,7 @@ check_exec_path_length(Node, [MaxLength, _]) ->
             {Line, Col} = elvis_code:attr(location, MaxNode),
             Name = elvis_code:attr(name, Node),
             Msg = ?EXEC_PATH_LENGTH_MSG,
-            Info = [Name, MaxLength, Line, Col],
+            Info = [Name, Length, Line, Col],
             Result = elvis_result:new(item, Msg, Info, Line),
             [Result];
         _Other ->
