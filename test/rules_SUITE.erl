@@ -108,12 +108,12 @@ verify_operator_spaces(_Config) ->
 
     [] = elvis_style:operator_spaces(ElvisConfig, Path, []),
 
-    [_, _, _] = elvis_style:operator_spaces(ElvisConfig, Path, [{right, [","]}]),
+    [_, _, _] = elvis_style:operator_spaces(ElvisConfig, Path, [{right, ","}]),
 
-    AppendOptions = [{right, ["++"]}, {left, ["++"]}],
+    AppendOptions = [{right, "++"}, {left, "++"}],
     [_] = elvis_style:operator_spaces(ElvisConfig, Path, AppendOptions),
 
-    AllOptions = [{right, ","}, {right, "++"}, {left, ["++"]}],
+    AllOptions = [{right, ","}, {right, "++"}, {left, "++"}],
     [_, _, _, _] = elvis_style:operator_spaces(ElvisConfig, Path, AllOptions).
 
 -spec verify_nesting_level(config()) -> any().
