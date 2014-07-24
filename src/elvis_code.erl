@@ -185,14 +185,16 @@ module_name(#{type := root, content := Content}) ->
 %% @doc Return all the children where the path from the supplied node
 %%      is longer than MaxLength.
 -spec longest_path(tree_node()) -> {integer(), tree_node()}.
-longest_path(Node = #{type := Type}) ->
-    Length = length_increment(Type),
-    longest_path(Node, Length).
+longest_path(Node) ->
+    longest_path(Node, 0).
 
-longest_path(Node, Length) ->
+longest_path(Node = #{type := Type}, Length) ->
+    {Line, _} = attr(location, Node),
+    NewLength = Length + length_increment(Type),
+    %% lager:info("Line: ~p\t~p\t~p", [Line, NewLength, Type]),
     Content = elvis_code:content(Node),
     Fun = fun longest_path_foldl/2,
-    Acc = {Length, {Length, Node}},
+    Acc = {NewLength, {NewLength, Node}},
     {_, Result} = lists:foldl(Fun, Acc, Content),
     Result.
 
@@ -201,17 +203,15 @@ longest_path(Node, Length) ->
      [{integer(), tree_node()}].
 longest_path_foldl(Node = #{type := Type},
                    {Length,  CurrentMax = {MaxLength, _}}) ->
-    Increment = length_increment(Type),
-    %% lager:info("~p => ~p", [Type, Increment]),
-    ChildMax = longest_path(Node, Length + Increment),
-    {ChildLength, _} = ChildMax,
+    ChildMax = longest_path(Node, Length),
+    {ChildMaxLength, _} = ChildMax,
     NewLength =
         case is_branch(Type) of
             true -> Length;
-            false -> ChildLength
+            false -> ChildMaxLength
         end,
     NewMax =
-        case ChildLength > MaxLength of
+        case ChildMaxLength > MaxLength of
             true -> ChildMax;
             false -> CurrentMax
         end,
@@ -224,7 +224,9 @@ is_branch(Type) ->
               catch_clauses,
               recieve_case,
               case_expr,
-              try_case
+              try_case,
+              match,
+              op
              ],
     lists:member(Type, Branch).
 
@@ -241,11 +243,9 @@ length_increment(Type) ->
          'fun',
          named_fun,
          'receive',
-         match,
          nil,
          cons,
          map,
-         lc,
          var,
          atom,
          integer,
@@ -364,12 +364,6 @@ to_map({match, Attrs, Left, Right}) ->
       attrs => #{location => get_location(Attrs),
                  text => get_text(Attrs)},
       content => to_map([Left, Right])};
-
-to_map({tuple, Attrs, Elements}) ->
-    #{type => tuple,
-      attrs => #{location => get_location(Attrs),
-                 text => get_text(Attrs)},
-      content => to_map(Elements)};
 
 %% Literals
 
@@ -585,6 +579,13 @@ to_map({cons, Attrs, Head, Tail}) ->
                  text => get_text(Attrs),
                  head => to_map(Head),
                  tail => to_map(Tail)}};
+
+%% Tuple
+
+to_map({tuple, Location, Elements}) ->
+    #{type => tuple,
+      attrs => #{location => Location},
+      content => to_map(Elements)};
 
 %% Map
 
