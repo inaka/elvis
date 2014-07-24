@@ -24,7 +24,26 @@
         ]).
 
 -type tree_node_type() ::
-    function | clause | 'fun'.
+        function | clause | match | tuple
+      | atom | integer | float | string | char
+      | binary | binary_element | var
+      | call | remote
+      | 'case' | case_expr | case_clauses
+      | 'fun' | named_fun
+      | 'query'
+      | 'try' | try_catch | try_case | try_after
+      | 'if' | 'catch'
+      | 'receive' | receive_after | receive_case
+      | nil | cons
+      | map | map_field_assoc | map_field_exact
+      | lc | lc_expr | generate
+      | op
+      | record | record_field | record_index
+      | block
+        %% Attributes
+      | module
+      | type | callback
+      | export | export_type.
 
 -type tree_node() ::
     #{type => tree_node_type(),
@@ -508,7 +527,7 @@ to_map({map, Attrs, Var, Pairs}) ->
 to_map({Type, Attrs, Key, Value}) when
       map_field_exact == Type;
       map_field_assoc == Type ->
-    #{type => map_field_exact,
+    #{type => Type,
       attrs => #{location => get_location(Attrs),
                  text => get_text(Attrs),
                  key => to_map(Key),
