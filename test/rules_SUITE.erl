@@ -223,6 +223,7 @@ verify_exec_path_length(_Config) ->
 
     PathFail = "fail_exec_path_length.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+
     [
      #{line_num := 26},
      #{line_num := 46},
