@@ -3,6 +3,7 @@
 
 %% Pull Requests
 -export([
+         basic_auth_credentials/0,
          pull_req_files/3,
          pull_req_comment_line/7,
          pull_req_comments/3
@@ -18,7 +19,9 @@
               repository/0
              ]).
 
--type credentials() :: {Username :: string(), Password :: string()}.
+-type credentials() ::
+    {basic, Username :: string(), Password :: string()}
+    | {oauth, Token :: string()}.
 -type repository() :: string(). %% "username/reponame"
 -type result() :: ok | {ok, any()} | {error, term()}.
 
@@ -31,6 +34,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% @doc Gets the github basic auth credentials form the elvis app environment.
+-spec basic_auth_credentials() -> credentials().
+basic_auth_credentials() ->
+    User = application:get_env(elvis, github_user, ""),
+    Password = application:get_env(elvis, github_password, ""),
+    {basic, User, Password}.
 
 -spec pull_req_files(credentials(), repository(), integer()) ->
     result().
@@ -65,7 +75,7 @@ pull_req_comments(Cred, Repo, PR) ->
 -spec file_content(credentials(), repository(), string(), string()) ->
     {ok, binary()}.
 file_content(Cred, Repo, CommitId, Filename) ->
-    Url = make_url(raw_contents, {Repo, CommitId, Filename}),
+    Url = make_url(file_content, {Repo, CommitId, Filename}),
     case auth_req(Cred, Url) of
         {ok, Result} ->
             JsonResult = jiffy:decode(Result, [return_maps]),
@@ -85,7 +95,7 @@ make_url({pull_req, Subentity}, {Repo, PR}) ->
     SubentityStr = elvis_utils:to_str(Subentity),
     Url = ?GITHUB_API ++ "/repos/~s/pulls/~p/" ++ SubentityStr,
     io_lib:format(Url, [Repo, PR]);
-make_url(raw_contents, {Repo, CommitId, Filename}) ->
+make_url(file_content, {Repo, CommitId, Filename}) ->
     Url = ?GITHUB_API ++ "/repos/~s/contents/~s?ref=~s",
     io_lib:format(Url, [Repo, Filename, CommitId]).
 
@@ -95,10 +105,10 @@ auth_req(Credentials, Url) ->
 
 -spec auth_req(credentials(), string(), ibrowse:method(), ibrowse:body()) ->
     {ok, string()} | {error, term()}.
-auth_req({Username, Password}, Url, Method, Body) ->
-    Options = [{basic_auth, {Username, Password}},
-               {ssl_options, [{depth, 0}]}],
-    Headers = [{"User-Agent", "Elvis-Webhook"}],
+auth_req(Cred, Url, Method, Body) ->
+    Options0 = [{ssl_options, [{depth, 0}]}],
+    Headers0 = [{"User-Agent", "Elvis-Webhook"}],
+    {Options, Headers} = authorization(Cred, Options0, Headers0),
     lager:info("[Github API] ~s", [Url]),
     case ibrowse:send_req(Url, Headers, Method, Body, Options) of
         {ok, "200", _RespHeaders, RespBody} ->
@@ -107,7 +117,14 @@ auth_req({Username, Password}, Url, Method, Body) ->
             {ok, RespBody};
         {ok, "302", RespHeaders, _} ->
             RedirectUrl = proplists:get_value("Location", RespHeaders),
-            auth_req({Username, Password}, RedirectUrl, Method, Body);
+            auth_req(Cred, RedirectUrl, Method, Body);
         {ok, Status, RespHeaders, RespBody} ->
             {error, {Status, RespHeaders, RespBody}}
         end.
+
+authorization({basic, Username, Password}, Options0, Headers) ->
+    Options = [{basic_auth, {Username, Password}} | Options0],
+    {Options, Headers};
+authorization({oauth, Token}, Options, Headers0) ->
+    Headers = [{"Authorization", "token " ++ Token} | Headers0],
+    {Options, Headers}.

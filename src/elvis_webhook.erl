@@ -1,6 +1,6 @@
 -module(elvis_webhook).
 
--export([event/1]).
+-export([event/2]).
 
 -export_type([request/0]).
 
@@ -19,8 +19,8 @@
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec event(request()) -> ok | {error, term()}.
-event(#{headers := Headers, body := Body}) ->
+-spec event(elvis_github:credentials(), request()) -> ok | {error, term()}.
+event(Cred, #{headers := Headers, body := Body}) ->
     HeaderName = <<"x-github-event">>,
     case maps:is_key(HeaderName, Headers) of
         false ->
@@ -29,7 +29,7 @@ event(#{headers := Headers, body := Body}) ->
             EventName = maps:get(HeaderName, Headers),
             EventData = jiffy:decode(Body, [return_maps]),
             Config = elvis_config:default(),
-            event(Config, EventName, EventData)
+            event(Config, Cred, EventName, EventData)
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -39,12 +39,15 @@ event(#{headers := Headers, body := Body}) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Events
 
--spec event(elvis_config:config(), event(), map()) -> ok | {error, term()}.
+-spec event(elvis_config:config(),
+            elvis_github:credentials(),
+            event(),
+            map()) -> ok | {error, term()}.
 event(LocalConfig,
+      Cred,
       <<"pull_request">>,
       #{<<"number">> := PR, <<"repository">> := Repository}) ->
     Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
-    Cred = github_credentials(),
     Config = repo_config(Cred, Repo, LocalConfig),
 
     {ok, GithubFiles} = elvis_github:pull_req_files(Cred, Repo, PR),
@@ -61,10 +64,10 @@ event(LocalConfig,
         ok -> ok
     end;
 
-event(_Config, <<"ping">>, _Data) ->
+event(_Config, _Cred, <<"ping">>, _Data) ->
     ok;
 
-event(_Config, Event, _Data) ->
+event(_Config, _Cred, Event, _Data) ->
     {error, io_lib:format("Nothing to do for event: ~p.~n", [Event])}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -90,13 +93,6 @@ repo_config(Cred, Repo, LocalConfig) ->
         {error, _} ->
             LocalConfig
     end.
-
-%% @doc Gets the github
--spec github_credentials() -> elvis_github:credentials().
-github_credentials() ->
-    User = application:get_env(elvis, github_user, ""),
-    Password = application:get_env(elvis, github_password, ""),
-    {User, Password}.
 
 %% @doc Gets a raw_url for a file and extracts the commit id from it.
 -spec commit_id_from_raw_url(string(), string()) -> string().
