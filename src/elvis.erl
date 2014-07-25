@@ -9,7 +9,8 @@
 -export([
          rock/0,
          rock/1,
-         webhook/1
+         webhook/1,
+         webhook/2
         ]).
 
 -export([start/0]).
@@ -80,7 +81,15 @@ git_hook(Config) ->
 %% @doc Should receive the payload of a Github event and act accordingly.
 -spec webhook(webhook:request()) -> ok | {error, term()}.
 webhook(Request) ->
-    elvis_webhook:event(Request).
+    Credentials = elvis_github:basic_auth_credentials(),
+    elvis_webhook:event(Credentials, Request).
+
+%% @doc Receives github credentials (basic or OAuth) and the payload
+%%      from an event, acting accordingly.
+-spec webhook(elvis_github:credentials(), webhook:request()) ->
+    ok | {error, term()}.
+webhook(Credentials, Request) ->
+    elvis_webhook:event(Credentials, Request).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
