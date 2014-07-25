@@ -190,43 +190,58 @@ longest_path(Node) ->
 
 longest_path(Node = #{type := Type}, Length) ->
     {Line, _} = attr(location, Node),
+
     NewLength = Length + length_increment(Type),
-    %% lager:info("Line: ~p\t~p\t~p", [Line, NewLength, Type]),
     Content = elvis_code:content(Node),
-    Fun = fun longest_path_foldl/2,
-    Acc = {NewLength, {NewLength, Node}},
-    {_, Result} = lists:foldl(Fun, Acc, Content),
-    Result.
+
+    lager:info("Line: ~p\t~p\t~p", [Line, NewLength, Type]),
+
+    FoldType =
+        case is_branch(Type) of
+            true  -> branch;
+            false -> accumulate
+        end,
+
+    Acc = {FoldType, NewLength, {NewLength, Node}},
+    {_, _, MaxNode} =
+        lists:foldl(fun longest_path_foldl/2, Acc, Content),
+
+    lager:info("Line: ~p - Max ~p => ~p", [Line, Type, element(1, MaxNode)]),
+
+    MaxNode.
 
 -spec longest_path_foldl([tree_node()],
-                         {integer(), {integer(), tree_node()}}) ->
-     [{integer(), tree_node()}].
-longest_path_foldl(Node = #{type := Type},
-                   {Length,  CurrentMax = {MaxLength, _}}) ->
+                         {branch | accumulate,
+                          integer(),
+                          {integer(), tree_node()}}) ->
+     {integer(), tree_node()}.
+longest_path_foldl(Node,
+                   {FoldType,
+                    Length,
+                    CurrentMax = {MaxLength, _}}) ->
     ChildMax = longest_path(Node, Length),
-    {ChildMaxLength, _} = ChildMax,
+    {ChildLength, _} = ChildMax,
     NewLength =
-        case is_branch(Type) of
-            true -> Length;
-            false -> ChildMaxLength
+        case FoldType of
+            branch -> Length;
+            accumulate -> ChildLength
         end,
     NewMax =
-        case ChildMaxLength > MaxLength of
+        case ChildLength > MaxLength of
             true -> ChildMax;
             false -> CurrentMax
         end,
-    {NewLength, NewMax}.
+    {FoldType, NewLength, NewMax}.
 
 %% @private
 is_branch(Type) ->
-    Branch = [clause,
+    Branch = [function,
               case_clauses,
-              catch_clauses,
+              'if',
+              'receive',
               recieve_case,
-              case_expr,
               try_case,
-              match,
-              op
+              match
              ],
     lists:member(Type, Branch).
 
@@ -236,7 +251,6 @@ length_increment(Type) ->
         Increment =
         [
          function,
-        'case',
          'if',
          'try',
          'catch',
