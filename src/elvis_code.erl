@@ -3,6 +3,8 @@
 %% General
 -export([
          parse_tree/1,
+         eval/1,
+         eval/2,
          find/2,
          find_by_location/2
         ]).
@@ -69,6 +71,19 @@ parse_tree(Source) ->
     #{type => root,
       attrs => #{},
       content => Children}.
+
+%% @doc Evaluates the erlang expression in the string provided.
+-spec eval(string() | binary()) -> term().
+eval(Source) ->
+    eval(Source, []).
+
+-spec eval(string() | binary(), orddict:orddict()) -> term().
+eval(Source, Bindings) ->
+    SourceStr = elvis_utils:to_str(Source),
+    {ok, Tokens, _} = erl_scan:string(SourceStr),
+    {ok, Parsed} = erl_parse:parse_exprs(Tokens),
+    {value, Result, _} = erl_eval:exprs(Parsed, Bindings),
+    Result.
 
 %% @doc Finds all nodes that comply with the predicate function.
 -spec find(fun(), tree_node()) -> [tree_node()].

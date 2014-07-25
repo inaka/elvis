@@ -40,11 +40,12 @@ event(#{headers := Headers, body := Body}) ->
 %%% Events
 
 -spec event(elvis_config:config(), event(), map()) -> ok | {error, term()}.
-event(Config,
+event(LocalConfig,
       <<"pull_request">>,
       #{<<"number">> := PR, <<"repository">> := Repository}) ->
     Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
     Cred = github_credentials(),
+    Config = repo_config(Cred, Repo, LocalConfig),
 
     {ok, GithubFiles} = elvis_github:pull_req_files(Cred, Repo, PR),
     ErlFiles = [file_info(Cred, Repo, F)
@@ -79,6 +80,16 @@ file_info(Cred, Repo,
       content => Content,
       commit_id => CommitId,
       patch => Patch}.
+
+repo_config(Cred, Repo, LocalConfig) ->
+    case elvis_github:file_content(Cred, Repo, "master", "elvis.config") of
+        {ok, ConfigContent} ->
+            ConfigEval = elvis_code:eval(ConfigContent),
+            RepoConfig = elvis_config:load(ConfigEval),
+            RepoConfig;
+        {error, _} ->
+            LocalConfig
+    end.
 
 %% @doc Gets the github
 -spec github_credentials() -> elvis_github:credentials().

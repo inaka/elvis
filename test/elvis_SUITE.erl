@@ -107,9 +107,11 @@ run_webhook(_Config) ->
         elvis:start(),
 
         meck:new(elvis_github, [passthrough]),
-        FakeFun = fun(_, _, _) -> {ok, []} end,
-        meck:expect(elvis_github, pull_req_files, FakeFun),
-        meck:expect(elvis_github, pull_req_comments, FakeFun),
+        FakeFun1 = fun(_, _, _) -> {ok, []} end,
+        meck:expect(elvis_github, pull_req_files, FakeFun1),
+        meck:expect(elvis_github, pull_req_comments, FakeFun1),
+        FakeFun2 = fun(_, _, _, _) -> {error, error} end,
+        meck:expect(elvis_github, file_content, FakeFun2),
 
         ok = elvis:webhook(Request)
     after
