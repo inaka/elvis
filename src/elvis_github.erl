@@ -148,9 +148,8 @@ add_collaborator(Cred, Repo, Collaborator) ->
     Url = make_url(collaborators, {Repo, Collaborator}),
     Body = [],
     case auth_req(Cred, Url, put, Body) of
-        {ok, Result} ->
-            JsonResult = jiffy:decode(Result, [return_maps]),
-            {ok, JsonResult};
+        {ok, _Result} ->
+            ok;
         {error, Reason} ->
             throw(Reason)
     end.
@@ -196,6 +195,8 @@ auth_req(Cred, Url, Method, Body) ->
         {ok, "200", _RespHeaders, RespBody} ->
             {ok, RespBody};
         {ok, "201", _RespHeaders, RespBody} ->
+            {ok, RespBody};
+        {ok, "204", _RespHeaders, RespBody} ->
             {ok, RespBody};
         {ok, "302", RespHeaders, _} ->
             RedirectUrl = proplists:get_value("Location", RespHeaders),
