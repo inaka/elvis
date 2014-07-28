@@ -8,7 +8,10 @@
          pull_req_comment_line/7,
          pull_req_comments/3,
          user/1,
-         repos/2
+         repos/2,
+         hooks/2,
+         create_webhook/4,
+         add_collaborator/3
         ]).
 
 %% Files
@@ -102,7 +105,7 @@ user(Cred) ->
 -spec repos(credentials(), string()) -> result().
 repos(Cred, User) ->
     UserStr = elvis_utils:to_str(User),
-    Url = make_url(repos, UserStr),
+    Url = make_url(repos, {UserStr}),
     case auth_req(Cred, Url) of
         {ok, Result} ->
             JsonResult = jiffy:decode(Result, [return_maps]),
@@ -110,6 +113,48 @@ repos(Cred, User) ->
         {error, Reason} ->
             throw(Reason)
     end.
+
+-spec hooks(credentials(), repository()) -> result().
+hooks(Cred, Repo) ->
+    Url = make_url(hooks, {Repo}),
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec create_webhook(credentials(), repository(), string(), [string()]) -> result().
+create_webhook(Cred, Repo, WebhookUrl, Events) ->
+    Url = make_url(hooks, {Repo}),
+    BinEvents = [list_to_binary(E) || E <- Events],
+    Data = #{<<"name">> => <<"web">>,
+             <<"active">> => true,
+             <<"events">> => BinEvents,
+             <<"config">> => #{<<"url">> => list_to_binary(WebhookUrl),
+                               <<"content_type">> => <<"json">>}},
+    Body = jiffy:encode(Data),
+    case auth_req(Cred, Url, post, Body) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec add_collaborator(credentials(), repository(), string()) -> result().
+add_collaborator(Cred, Repo, Collaborator) ->
+    Url = make_url(collaborators, {Repo, Collaborator}),
+    Body = [],
+    case auth_req(Cred, Url, put, Body) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private Functions
@@ -126,9 +171,15 @@ make_url(file_content, {Repo, CommitId, Filename}) ->
 make_url(user, {}) ->
     Url = ?GITHUB_API ++ "/user",
     io_lib:format(Url, []);
-make_url(repos, User) ->
+make_url(repos, {User}) ->
     Url = ?GITHUB_API ++ "/users/~s/repos",
-    io_lib:format(Url, [User]).
+    io_lib:format(Url, [User]);
+make_url(hooks, {Repo}) ->
+    Url = ?GITHUB_API ++ "/repos/~s/hooks",
+    io_lib:format(Url, [Repo]);
+make_url(collaborators, {Repo, Username}) ->
+    Url = ?GITHUB_API ++ "/repos/~s/collaborators/~s",
+    io_lib:format(Url, [Repo, Username]).
 
 -spec auth_req(credentials(), string()) -> string() | {error, term()}.
 auth_req(Credentials, Url) ->
