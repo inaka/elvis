@@ -6,7 +6,9 @@
          basic_auth_credentials/0,
          pull_req_files/3,
          pull_req_comment_line/7,
-         pull_req_comments/3
+         pull_req_comments/3,
+         user/1,
+         repos/2
         ]).
 
 %% Files
@@ -86,6 +88,29 @@ file_content(Cred, Repo, CommitId, Filename) ->
             throw(Reason)
     end.
 
+-spec user(credentials()) -> result().
+user(Cred) ->
+    Url = make_url(user, {}),
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec repos(credentials(), string()) -> result().
+repos(Cred, User) ->
+    UserStr = elvis_utils:to_str(User),
+    Url = make_url(repos, UserStr),
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,7 +122,13 @@ make_url({pull_req, Subentity}, {Repo, PR}) ->
     io_lib:format(Url, [Repo, PR]);
 make_url(file_content, {Repo, CommitId, Filename}) ->
     Url = ?GITHUB_API ++ "/repos/~s/contents/~s?ref=~s",
-    io_lib:format(Url, [Repo, Filename, CommitId]).
+    io_lib:format(Url, [Repo, Filename, CommitId]);
+make_url(user, {}) ->
+    Url = ?GITHUB_API ++ "/user",
+    io_lib:format(Url, []);
+make_url(repos, User) ->
+    Url = ?GITHUB_API ++ "/users/~s/repos",
+    io_lib:format(Url, [User]).
 
 -spec auth_req(credentials(), string()) -> string() | {error, term()}.
 auth_req(Credentials, Url) ->
