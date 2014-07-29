@@ -4,9 +4,21 @@
 %% Pull Requests
 -export([
          basic_auth_credentials/0,
+         %% Pull Requests
          pull_req_files/3,
          pull_req_comment_line/7,
-         pull_req_comments/3
+         pull_req_comments/3,
+         %% Users
+         user/1,
+         repos/2,
+         %% Hooks
+         hooks/2,
+         create_webhook/4,
+         delete_webhook/3,
+         %% Collaborators
+         collaborators/2,
+         add_collaborator/3,
+         remove_collaborator/3
         ]).
 
 %% Files
@@ -86,6 +98,103 @@ file_content(Cred, Repo, CommitId, Filename) ->
             throw(Reason)
     end.
 
+-spec user(credentials()) -> result().
+user(Cred) ->
+    Url = make_url(user, {}),
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec repos(credentials(), string()) -> result().
+repos(Cred, User) ->
+    UserStr = elvis_utils:to_str(User),
+    Url = make_url(repos, {UserStr}),
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec hooks(credentials(), repository()) -> result().
+hooks(Cred, Repo) ->
+    Url = make_url(hooks, {Repo}),
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec create_webhook(credentials(), repository(), string(), [string()]) -> result().
+create_webhook(Cred, Repo, WebhookUrl, Events) ->
+    Url = make_url(hooks, {Repo}),
+    BinEvents = [list_to_binary(E) || E <- Events],
+    Data = #{<<"name">> => <<"web">>,
+             <<"active">> => true,
+             <<"events">> => BinEvents,
+             <<"config">> => #{<<"url">> => list_to_binary(WebhookUrl),
+                               <<"content_type">> => <<"json">>}},
+    Body = jiffy:encode(Data),
+    case auth_req(Cred, Url, post, Body) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec delete_webhook(credentials(), repository(), string()) -> result().
+delete_webhook(Cred, Repo, Id) ->
+    IdStr = elvis_utils:to_str(Id),
+    Url = make_url(hooks, {Repo, IdStr}),
+    Body = [],
+    case auth_req(Cred, Url, delete, Body) of
+        {ok, _Result} ->
+            ok;
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec collaborators(credentials(), repository()) -> result().
+collaborators(Cred, Repo) ->
+    Url = make_url(collaborators, {Repo}),
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec add_collaborator(credentials(), repository(), string()) -> result().
+add_collaborator(Cred, Repo, Collaborator) ->
+    Url = make_url(collaborators, {Repo, Collaborator}),
+    Body = [],
+    case auth_req(Cred, Url, put, Body) of
+        {ok, _Result} ->
+            ok;
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
+-spec remove_collaborator(credentials(), repository(), string()) -> result().
+remove_collaborator(Cred, Repo, Collaborator) ->
+    Url = make_url(collaborators, {Repo, Collaborator}),
+    Body = [],
+    case auth_req(Cred, Url, delete, Body) of
+        {ok, _Result} ->
+            ok;
+        {error, Reason} ->
+            throw(Reason)
+    end.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,7 +206,25 @@ make_url({pull_req, Subentity}, {Repo, PR}) ->
     io_lib:format(Url, [Repo, PR]);
 make_url(file_content, {Repo, CommitId, Filename}) ->
     Url = ?GITHUB_API ++ "/repos/~s/contents/~s?ref=~s",
-    io_lib:format(Url, [Repo, Filename, CommitId]).
+    io_lib:format(Url, [Repo, Filename, CommitId]);
+make_url(user, {}) ->
+    Url = ?GITHUB_API ++ "/user",
+    io_lib:format(Url, []);
+make_url(repos, {User}) ->
+    Url = ?GITHUB_API ++ "/users/~s/repos",
+    io_lib:format(Url, [User]);
+make_url(hooks, {Repo}) ->
+    Url = ?GITHUB_API ++ "/repos/~s/hooks",
+    io_lib:format(Url, [Repo]);
+make_url(hooks, {Repo, Id}) ->
+    Url = ?GITHUB_API ++ "/repos/~s/hooks/~s",
+    io_lib:format(Url, [Repo, Id]);
+make_url(collaborators, {Repo}) ->
+    Url = ?GITHUB_API ++ "/repos/~s/collaborators",
+    io_lib:format(Url, [Repo]);
+make_url(collaborators, {Repo, Username}) ->
+    Url = ?GITHUB_API ++ "/repos/~s/collaborators/~s",
+    io_lib:format(Url, [Repo, Username]).
 
 -spec auth_req(credentials(), string()) -> string() | {error, term()}.
 auth_req(Credentials, Url) ->
@@ -114,6 +241,8 @@ auth_req(Cred, Url, Method, Body) ->
         {ok, "200", _RespHeaders, RespBody} ->
             {ok, RespBody};
         {ok, "201", _RespHeaders, RespBody} ->
+            {ok, RespBody};
+        {ok, "204", _RespHeaders, RespBody} ->
             {ok, RespBody};
         {ok, "302", RespHeaders, _} ->
             RedirectUrl = proplists:get_value("Location", RespHeaders),
