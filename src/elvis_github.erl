@@ -242,7 +242,7 @@ auth_req(Cred, Url, Method, Body) ->
             {ok, RespBody};
         {ok, "201", _RespHeaders, RespBody} ->
             {ok, RespBody};
-        {ok, "204", _, RespBody} ->
+        {ok, "204", _RespHeaders, RespBody} ->
             {ok, RespBody};
         {ok, "302", RespHeaders, _} ->
             RedirectUrl = proplists:get_value("Location", RespHeaders),
