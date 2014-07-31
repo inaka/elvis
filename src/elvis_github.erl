@@ -84,8 +84,7 @@ pull_req_comments(Cred, Repo, PR) ->
     Comments = jiffy:decode(Result, [return_maps]),
     {ok, Comments}.
 
--spec file_content(credentials(), repository(), string(), string()) ->
-    {ok, binary()}.
+-spec file_content(credentials(), repository(), string(), string()) -> result().
 file_content(Cred, Repo, CommitId, Filename) ->
     Url = make_url(file_content, {Repo, CommitId, Filename}),
     case auth_req(Cred, Url) of
@@ -95,7 +94,7 @@ file_content(Cred, Repo, CommitId, Filename) ->
             Content = base64:decode(ContentBase64),
             {ok, Content};
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 -spec user(credentials()) -> result().
@@ -106,7 +105,7 @@ user(Cred) ->
             JsonResult = jiffy:decode(Result, [return_maps]),
             {ok, JsonResult};
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 -spec repos(credentials(), string()) -> result().
@@ -129,7 +128,7 @@ hooks(Cred, Repo) ->
             JsonResult = jiffy:decode(Result, [return_maps]),
             {ok, JsonResult};
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 -spec create_webhook(credentials(), repository(), string(), [string()]) -> result().
@@ -147,7 +146,7 @@ create_webhook(Cred, Repo, WebhookUrl, Events) ->
             JsonResult = jiffy:decode(Result, [return_maps]),
             {ok, JsonResult};
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 -spec delete_webhook(credentials(), repository(), string()) -> result().
@@ -159,7 +158,7 @@ delete_webhook(Cred, Repo, Id) ->
         {ok, _Result} ->
             ok;
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 -spec collaborators(credentials(), repository()) -> result().
@@ -170,7 +169,7 @@ collaborators(Cred, Repo) ->
             JsonResult = jiffy:decode(Result, [return_maps]),
             {ok, JsonResult};
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 -spec add_collaborator(credentials(), repository(), string()) -> result().
@@ -181,7 +180,7 @@ add_collaborator(Cred, Repo, Collaborator) ->
         {ok, _Result} ->
             ok;
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 -spec remove_collaborator(credentials(), repository(), string()) -> result().
@@ -192,7 +191,7 @@ remove_collaborator(Cred, Repo, Collaborator) ->
         {ok, _Result} ->
             ok;
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
