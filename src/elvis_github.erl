@@ -11,6 +11,13 @@
          %% Users
          user/1,
          repos/2,
+         repos/3,
+         all_repos/2,
+         all_repos/3,
+         orgs/1,
+         orgs/2,
+         org_repos/3,
+         all_org_repos/3,
          %% Hooks
          hooks/2,
          create_webhook/4,
@@ -36,10 +43,6 @@
     | {oauth, Token :: string()}.
 -type repository() :: string(). %% "username/reponame"
 -type result() :: ok | {ok, any()} | {error, term()}.
-
--type endpoint() ::
-    {pull_req, comments | files}
-    | raw_contents.
 
 -define(GITHUB_API, "https://api.github.com").
 
@@ -100,38 +103,72 @@ file_content(Cred, Repo, CommitId, Filename) ->
 -spec user(credentials()) -> result().
 user(Cred) ->
     Url = make_url(user, {}),
-    case auth_req(Cred, Url) of
-        {ok, Result} ->
-            JsonResult = jiffy:decode(Result, [return_maps]),
-            {ok, JsonResult};
+    api_call_json_result(Cred, Url).
+
+-spec orgs(credentials()) -> string().
+orgs(Cred) ->
+    orgs(Cred, undefined).
+
+-spec orgs(credentials(), string()) -> string().
+orgs(Cred, User) ->
+    Url = make_url(orgs, {User}),
+    api_call_json_result(Cred, Url).
+
+-spec repos(credentials(), map()) -> result().
+repos(Cred, Opts) ->
+    repos(Cred, undefined, Opts).
+
+-spec repos(credentials(), string(), map()) -> result().
+repos(Cred, User, Opts) ->
+    Url = make_url(repos, {User, Opts}),
+    api_call_json_result(Cred, Url).
+
+-spec all_repos(credentials(), map()) -> result().
+all_repos(Cred, Opts) ->
+    all_repos(Cred, undefined, Opts#{page => 1}, []).
+
+-spec all_repos(credentials(), string(), map()) -> result().
+all_repos(Cred, User, Opts) ->
+    all_repos(Cred, User, Opts#{page => 1}, []).
+
+all_repos(Cred, User, Opts = #{page := Page}, Results) ->
+    case repos(Cred, User, Opts) of
+        {ok, []} ->
+            {ok, lists:flatten(Results)};
+        {ok, Repos} ->
+            all_repos(Cred, User, Opts#{page => Page + 1}, [Repos | Results]);
         {error, Reason} ->
             {error, Reason}
     end.
 
--spec repos(credentials(), string()) -> result().
-repos(Cred, User) ->
-    UserStr = elvis_utils:to_str(User),
-    Url = make_url(repos, {UserStr}),
-    case auth_req(Cred, Url) of
-        {ok, Result} ->
-            JsonResult = jiffy:decode(Result, [return_maps]),
-            {ok, JsonResult};
+-spec org_repos(credentials(), string(), map()) -> result().
+org_repos(Cred, Org, Opts) ->
+    Url = make_url(org_repos, {Org, Opts}),
+    api_call_json_result(Cred, Url).
+
+-spec all_org_repos(credentials(), string(), map()) -> result().
+all_org_repos(Cred, Org, Opts) ->
+    all_org_repos(Cred, Org, Opts#{page => 1}, []).
+
+all_org_repos(Cred, Org, Opts = #{page := Page}, Results) ->
+    case org_repos(Cred, Org, Opts) of
+        {ok, []} ->
+            {ok, lists:flatten(Results)};
+        {ok, Repos} ->
+            NewResults = [Repos | Results],
+            NewOpts = Opts#{page => Page + 1},
+            all_org_repos(Cred, Org, NewOpts, NewResults);
         {error, Reason} ->
-            throw(Reason)
+            {error, Reason}
     end.
 
 -spec hooks(credentials(), repository()) -> result().
 hooks(Cred, Repo) ->
     Url = make_url(hooks, {Repo}),
-    case auth_req(Cred, Url) of
-        {ok, Result} ->
-            JsonResult = jiffy:decode(Result, [return_maps]),
-            {ok, JsonResult};
-        {error, Reason} ->
-            {error, Reason}
-    end.
+    api_call_json_result(Cred, Url).
 
--spec create_webhook(credentials(), repository(), string(), [string()]) -> result().
+-spec create_webhook(credentials(), repository(), string(), [string()]) ->
+    result().
 create_webhook(Cred, Repo, WebhookUrl, Events) ->
     Url = make_url(hooks, {Repo}),
     BinEvents = [list_to_binary(E) || E <- Events],
@@ -198,26 +235,59 @@ remove_collaborator(Cred, Repo, Collaborator) ->
 %% Private Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec make_url(endpoint(), any()) -> string().
+%% Pull Resquest
 make_url({pull_req, Subentity}, {Repo, PR}) ->
     SubentityStr = elvis_utils:to_str(Subentity),
     Url = ?GITHUB_API ++ "/repos/~s/pulls/~p/" ++ SubentityStr,
     io_lib:format(Url, [Repo, PR]);
+
+%% Files
 make_url(file_content, {Repo, CommitId, Filename}) ->
     Url = ?GITHUB_API ++ "/repos/~s/contents/~s?ref=~s",
     io_lib:format(Url, [Repo, Filename, CommitId]);
+
+%% User
 make_url(user, {}) ->
     Url = ?GITHUB_API ++ "/user",
     io_lib:format(Url, []);
-make_url(repos, {User}) ->
-    Url = ?GITHUB_API ++ "/users/~s/repos",
+
+%% Organizations
+make_url(orgs, {undefined}) ->
+    Url = ?GITHUB_API ++ "/user/orgs",
+    io_lib:format(Url, []);
+make_url(orgs, {User}) ->
+    Url = ?GITHUB_API ++ "/users/~s/orgs",
     io_lib:format(Url, [User]);
+
+%% Repositories
+make_url(repos, {User, Opts}) ->
+    Type = elvis_utils:maps_get(type, Opts, "all"),
+    Sort = elvis_utils:maps_get(sort, Opts, "full_name"),
+    Direction = elvis_utils:maps_get(direction, Opts, "asc"),
+    Page = elvis_utils:maps_get(page, Opts, 1),
+    case User of
+        undefined ->
+            Url = ?GITHUB_API
+                ++ "/user/repos?type=~s&sort=~s&direction=~s&page=~p",
+            io_lib:format(Url, [Type, Sort, Direction, Page]);
+        User ->
+            Url = ?GITHUB_API ++ "/users/~s/repos?page=~p",
+            io_lib:format(Url, [User, Page])
+    end;
+make_url(org_repos, {User, Opts}) ->
+    Page = elvis_utils:maps_get(page, Opts, 1),
+    Url = ?GITHUB_API ++ "/orgs/~s/repos?page=~p",
+    io_lib:format(Url, [User, Page]);
+
+%% Hooks
 make_url(hooks, {Repo}) ->
     Url = ?GITHUB_API ++ "/repos/~s/hooks",
     io_lib:format(Url, [Repo]);
 make_url(hooks, {Repo, Id}) ->
     Url = ?GITHUB_API ++ "/repos/~s/hooks/~s",
     io_lib:format(Url, [Repo, Id]);
+
+%% Colaborators
 make_url(collaborators, {Repo}) ->
     Url = ?GITHUB_API ++ "/repos/~s/collaborators",
     io_lib:format(Url, [Repo]);
@@ -256,3 +326,12 @@ authorization({basic, Username, Password}, Options0, Headers) ->
 authorization({oauth, Token}, Options, Headers0) ->
     Headers = [{"Authorization", "token " ++ Token} | Headers0],
     {Options, Headers}.
+
+api_call_json_result(Cred, Url) ->
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            {error, Reason}
+    end.
