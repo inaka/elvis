@@ -222,7 +222,7 @@ make_url(repos, {User}) ->
     Url = ?GITHUB_API ++ "/users/~s/repos",
     io_lib:format(Url, [User]);
 make_url(org_repos, {User}) ->
-    Url = ?GITHUB_API ++ "/users/~s/repos",
+    Url = ?GITHUB_API ++ "/orgs/~s/repos",
     io_lib:format(Url, [User]);
 make_url(hooks, {Repo}) ->
     Url = ?GITHUB_API ++ "/repos/~s/hooks",

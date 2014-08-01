@@ -190,4 +190,3 @@ maps_get(Key, Map, Default) ->
         true -> maps:get(Key, Map);
         false -> Default
     end.
-             
