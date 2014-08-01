@@ -12,9 +12,12 @@
          user/1,
          repos/2,
          repos/3,
+         all_repos/2,
+         all_repos/3,
          orgs/1,
          orgs/2,
          org_repos/3,
+         all_org_repos/3,
          %% Hooks
          hooks/2,
          create_webhook/4,
@@ -120,10 +123,44 @@ repos(Cred, User, Opts) ->
     Url = make_url(repos, {User, Opts}),
     api_call_json_result(Cred, Url).
 
+-spec all_repos(credentials(), map()) -> result().
+all_repos(Cred, Opts) ->
+    all_repos(Cred, undefined, Opts#{page => 1}, []).
+
+-spec all_repos(credentials(), string(), map()) -> result().
+all_repos(Cred, User, Opts) ->
+    all_repos(Cred, User, Opts#{page => 1}, []).
+
+all_repos(Cred, User, Opts = #{page := Page}, Results) ->
+    case repos(Cred, User, Opts) of
+        {ok, []} ->
+            {ok, lists:flatten(Results)};
+        {ok, Repos} ->
+            all_repos(Cred, User, Opts#{page => Page + 1}, [Repos | Results]);
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
 -spec org_repos(credentials(), string(), map()) -> result().
 org_repos(Cred, Org, Opts) ->
     Url = make_url(org_repos, {Org, Opts}),
     api_call_json_result(Cred, Url).
+
+-spec all_org_repos(credentials(), string(), map()) -> result().
+all_org_repos(Cred, Org, Opts) ->
+    all_org_repos(Cred, Org, Opts#{page => 1}, []).
+
+all_org_repos(Cred, Org, Opts = #{page := Page}, Results) ->
+    case org_repos(Cred, Org, Opts) of
+        {ok, []} ->
+            {ok, lists:flatten(Results)};
+        {ok, Repos} ->
+            NewResults = [Repos | Results],
+            NewOpts = Opts#{page => Page + 1},
+            all_org_repos(Cred, Org, NewOpts, NewResults);
+        {error, Reason} ->
+            {error, Reason}
+    end.
 
 -spec hooks(credentials(), repository()) -> result().
 hooks(Cred, Repo) ->
