@@ -10,10 +10,11 @@
          pull_req_comments/3,
          %% Users
          user/1,
-         current_user_repos/2,
-         current_user_orgs/1,
          repos/2,
-         org_repos/2,
+         repos/3,
+         orgs/1,
+         orgs/2,
+         org_repos/3,
          %% Hooks
          hooks/2,
          create_webhook/4,
@@ -39,10 +40,6 @@
     | {oauth, Token :: string()}.
 -type repository() :: string(). %% "username/reponame"
 -type result() :: ok | {ok, any()} | {error, term()}.
-
--type endpoint() ::
-    {pull_req, comments | files}
-    | raw_contents.
 
 -define(GITHUB_API, "https://api.github.com").
 
@@ -105,24 +102,27 @@ user(Cred) ->
     Url = make_url(user, {}),
     api_call_json_result(Cred, Url).
 
--spec current_user_repos(credentials(), map()) -> string().
-current_user_repos(Cred, Opts) ->
-    Url = make_url(user_repos, {Opts}),
+-spec orgs(credentials()) -> string().
+orgs(Cred) ->
+    orgs(Cred, undefined).
+
+-spec orgs(credentials(), string()) -> string().
+orgs(Cred, User) ->
+    Url = make_url(orgs, {User}),
     api_call_json_result(Cred, Url).
 
--spec current_user_orgs(credentials()) -> string().
-current_user_orgs(Cred) ->
-    Url = make_url(user_orgs, {}),
+-spec repos(credentials(), map()) -> result().
+repos(Cred, Opts) ->
+    repos(Cred, undefined, Opts).
+
+-spec repos(credentials(), string(), map()) -> result().
+repos(Cred, User, Opts) ->
+    Url = make_url(repos, {User, Opts}),
     api_call_json_result(Cred, Url).
 
--spec repos(credentials(), string()) -> result().
-repos(Cred, User) ->
-    Url = make_url(repos, {User}),
-    api_call_json_result(Cred, Url).
-
--spec org_repos(credentials(), string()) -> result().
-org_repos(Cred, Org) ->
-    Url = make_url(org_repos, {Org}),
+-spec org_repos(credentials(), string(), map()) -> result().
+org_repos(Cred, Org, Opts) ->
+    Url = make_url(org_repos, {Org, Opts}),
     api_call_json_result(Cred, Url).
 
 -spec hooks(credentials(), repository()) -> result().
@@ -198,38 +198,59 @@ remove_collaborator(Cred, Repo, Collaborator) ->
 %% Private Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec make_url(endpoint(), any()) -> string().
+%% Pull Resquest
 make_url({pull_req, Subentity}, {Repo, PR}) ->
     SubentityStr = elvis_utils:to_str(Subentity),
     Url = ?GITHUB_API ++ "/repos/~s/pulls/~p/" ++ SubentityStr,
     io_lib:format(Url, [Repo, PR]);
+
+%% Files
 make_url(file_content, {Repo, CommitId, Filename}) ->
     Url = ?GITHUB_API ++ "/repos/~s/contents/~s?ref=~s",
     io_lib:format(Url, [Repo, Filename, CommitId]);
+
+%% User
 make_url(user, {}) ->
     Url = ?GITHUB_API ++ "/user",
     io_lib:format(Url, []);
-make_url(user_repos, {Opts}) ->
+
+%% Organizations
+make_url(orgs, {undefined}) ->
+    Url = ?GITHUB_API ++ "/user/orgs",
+    io_lib:format(Url, []);
+make_url(orgs, {User}) ->
+    Url = ?GITHUB_API ++ "/users/~s/orgs",
+    io_lib:format(Url, [User]);
+
+%% Repositories
+make_url(repos, {User, Opts}) ->
     Type = elvis_utils:maps_get(type, Opts, "all"),
     Sort = elvis_utils:maps_get(sort, Opts, "full_name"),
     Direction = elvis_utils:maps_get(direction, Opts, "asc"),
-    Url = ?GITHUB_API ++ "/user/repos?type=~s&sort=~s&direction=~s",
-    io_lib:format(Url, [Type, Sort, Direction]);
-make_url(user_orgs, {}) ->
-    Url = ?GITHUB_API ++ "/user/orgs",
-    io_lib:format(Url, []);
-make_url(repos, {User}) ->
-    Url = ?GITHUB_API ++ "/users/~s/repos",
-    io_lib:format(Url, [User]);
-make_url(org_repos, {User}) ->
-    Url = ?GITHUB_API ++ "/orgs/~s/repos",
-    io_lib:format(Url, [User]);
+    Page = elvis_utils:maps_get(page, Opts, 1),
+    case User of
+        undefined ->
+            Url = ?GITHUB_API
+                ++ "/user/repos?type=~s&sort=~s&direction=~s&page=~p",
+            io_lib:format(Url, [Type, Sort, Direction, Page]);
+        User ->
+            Url = ?GITHUB_API ++ "/users/~s/repos?page=~p",
+            io_lib:format(Url, [User, Page])
+    end;
+make_url(org_repos, {User, Opts}) ->
+    Page = elvis_utils:maps_get(page, Opts, 1),
+    Url = ?GITHUB_API ++ "/orgs/~s/repos?page=~p",
+    io_lib:format(Url, [User, Page]);
+
+%% Hooks
 make_url(hooks, {Repo}) ->
     Url = ?GITHUB_API ++ "/repos/~s/hooks",
     io_lib:format(Url, [Repo]);
 make_url(hooks, {Repo, Id}) ->
     Url = ?GITHUB_API ++ "/repos/~s/hooks/~s",
     io_lib:format(Url, [Repo, Id]);
+
+%% Colaborators
 make_url(collaborators, {Repo}) ->
     Url = ?GITHUB_API ++ "/repos/~s/collaborators",
     io_lib:format(Url, [Repo]);
