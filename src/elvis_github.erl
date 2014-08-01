@@ -10,7 +10,10 @@
          pull_req_comments/3,
          %% Users
          user/1,
+         current_user_repos/2,
+         current_user_orgs/1,
          repos/2,
+         org_repos/2,
          %% Hooks
          hooks/2,
          create_webhook/4,
@@ -100,38 +103,35 @@ file_content(Cred, Repo, CommitId, Filename) ->
 -spec user(credentials()) -> result().
 user(Cred) ->
     Url = make_url(user, {}),
-    case auth_req(Cred, Url) of
-        {ok, Result} ->
-            JsonResult = jiffy:decode(Result, [return_maps]),
-            {ok, JsonResult};
-        {error, Reason} ->
-            {error, Reason}
-    end.
+    api_call_json_result(Cred, Url).
+
+-spec current_user_repos(credentials(), map()) -> string().
+current_user_repos(Cred, Opts) ->
+    Url = make_url(user_repos, {Opts}),
+    api_call_json_result(Cred, Url).
+
+-spec current_user_orgs(credentials()) -> string().
+current_user_orgs(Cred) ->
+    Url = make_url(user_orgs, {}),
+    api_call_json_result(Cred, Url).
 
 -spec repos(credentials(), string()) -> result().
 repos(Cred, User) ->
-    UserStr = elvis_utils:to_str(User),
-    Url = make_url(repos, {UserStr}),
-    case auth_req(Cred, Url) of
-        {ok, Result} ->
-            JsonResult = jiffy:decode(Result, [return_maps]),
-            {ok, JsonResult};
-        {error, Reason} ->
-            throw(Reason)
-    end.
+    Url = make_url(repos, {User}),
+    api_call_json_result(Cred, Url).
+
+-spec org_repos(credentials(), string()) -> result().
+org_repos(Cred, Org) ->
+    Url = make_url(org_repos, {Org}),
+    api_call_json_result(Cred, Url).
 
 -spec hooks(credentials(), repository()) -> result().
 hooks(Cred, Repo) ->
     Url = make_url(hooks, {Repo}),
-    case auth_req(Cred, Url) of
-        {ok, Result} ->
-            JsonResult = jiffy:decode(Result, [return_maps]),
-            {ok, JsonResult};
-        {error, Reason} ->
-            {error, Reason}
-    end.
+    api_call_json_result(Cred, Url).
 
--spec create_webhook(credentials(), repository(), string(), [string()]) -> result().
+-spec create_webhook(credentials(), repository(), string(), [string()]) ->
+    result().
 create_webhook(Cred, Repo, WebhookUrl, Events) ->
     Url = make_url(hooks, {Repo}),
     BinEvents = [list_to_binary(E) || E <- Events],
@@ -209,7 +209,19 @@ make_url(file_content, {Repo, CommitId, Filename}) ->
 make_url(user, {}) ->
     Url = ?GITHUB_API ++ "/user",
     io_lib:format(Url, []);
+make_url(user_repos, {Opts}) ->
+    Type = elvis_utils:maps_get(type, Opts, "all"),
+    Sort = elvis_utils:maps_get(sort, Opts, "full_name"),
+    Direction = elvis_utils:maps_get(direction, Opts, "asc"),
+    Url = ?GITHUB_API ++ "/user/repos?type=~s&sort=~s&direction=~s",
+    io_lib:format(Url, [Type, Sort, Direction]);
+make_url(user_orgs, {}) ->
+    Url = ?GITHUB_API ++ "/user/orgs",
+    io_lib:format(Url, []);
 make_url(repos, {User}) ->
+    Url = ?GITHUB_API ++ "/users/~s/repos",
+    io_lib:format(Url, [User]);
+make_url(org_repos, {User}) ->
     Url = ?GITHUB_API ++ "/users/~s/repos",
     io_lib:format(Url, [User]);
 make_url(hooks, {Repo}) ->
@@ -256,3 +268,12 @@ authorization({basic, Username, Password}, Options0, Headers) ->
 authorization({oauth, Token}, Options, Headers0) ->
     Headers = [{"Authorization", "token " ++ Token} | Headers0],
     {Options, Headers}.
+
+api_call_json_result(Cred, Url) ->
+    case auth_req(Cred, Url) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, Reason} ->
+            {error, Reason}
+    end.
