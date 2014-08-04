@@ -10,6 +10,8 @@
          pull_req_comments/3,
          %% Users
          user/1,
+         user/2,
+         repo/2,
          repos/2,
          repos/3,
          all_repos/2,
@@ -116,6 +118,11 @@ user(Cred) ->
     Url = make_url(user, {}),
     api_call_json_result(Cred, Url).
 
+-spec user(credentials(), string()) -> result().
+user(Cred, Username) ->
+    Url = make_url(user, {Username}),
+    api_call_json_result(Cred, Url).
+
 %% Orgs
 
 -spec orgs(credentials()) -> string().
@@ -128,6 +135,11 @@ orgs(Cred, User) ->
     api_call_json_result(Cred, Url).
 
 %% Repos
+
+-spec repo(credentials(), string()) -> result().
+repo(Cred, RepoFullName) ->
+    Url = make_url(repo, {RepoFullName}),
+    api_call_json_result(Cred, Url).
 
 -spec repos(credentials(), map()) -> result().
 repos(Cred, Opts) ->
@@ -316,6 +328,9 @@ make_url(file_content, {Repo, CommitId, Filename}) ->
 make_url(user, {}) ->
     Url = ?GITHUB_API ++ "/user",
     io_lib:format(Url, []);
+make_url(user, {Username}) ->
+    Url = ?GITHUB_API ++ "/users/~s",
+    io_lib:format(Url, [Username]);
 
 %% Organizations
 make_url(orgs, {undefined}) ->
@@ -334,6 +349,9 @@ make_url(teams, {TeamId, Username}) ->
     io_lib:format(Url, [TeamId, Username]);
 
 %% Repositories
+make_url(repo, {RepoFullName}) ->
+    Url = ?GITHUB_API ++ "/repos/~s",
+    io_lib:format(Url, [RepoFullName]);
 make_url(repos, {User, Opts}) ->
     Type = elvis_utils:maps_get(type, Opts, "all"),
     Sort = elvis_utils:maps_get(sort, Opts, "full_name"),
