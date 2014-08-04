@@ -10,6 +10,8 @@
          pull_req_comments/3,
          %% Users
          user/1,
+         user/2,
+         repo/2,
          repos/2,
          repos/3,
          all_repos/2,
@@ -18,6 +20,12 @@
          orgs/2,
          org_repos/3,
          all_org_repos/3,
+         %% Teams
+         teams/2,
+         create_team/5,
+         add_team_repository/3,
+         add_team_member/3,
+         delete_team_member/3,
          %% Hooks
          hooks/2,
          create_webhook/4,
@@ -57,6 +65,8 @@ basic_auth_credentials() ->
     Password = application:get_env(elvis, github_password, ""),
     {basic, User, Password}.
 
+%% Pull Requests
+
 -spec pull_req_files(credentials(), repository(), integer()) ->
     result().
 pull_req_files(Credentials, Repo, PR) ->
@@ -87,6 +97,8 @@ pull_req_comments(Cred, Repo, PR) ->
     Comments = jiffy:decode(Result, [return_maps]),
     {ok, Comments}.
 
+%% Files
+
 -spec file_content(credentials(), repository(), string(), string()) -> result().
 file_content(Cred, Repo, CommitId, Filename) ->
     Url = make_url(file_content, {Repo, CommitId, Filename}),
@@ -100,10 +112,19 @@ file_content(Cred, Repo, CommitId, Filename) ->
             {error, Reason}
     end.
 
+%% Users
+
 -spec user(credentials()) -> result().
 user(Cred) ->
     Url = make_url(user, {}),
     api_call_json_result(Cred, Url).
+
+-spec user(credentials(), string()) -> result().
+user(Cred, Username) ->
+    Url = make_url(user, {Username}),
+    api_call_json_result(Cred, Url).
+
+%% Orgs
 
 -spec orgs(credentials()) -> string().
 orgs(Cred) ->
@@ -112,6 +133,13 @@ orgs(Cred) ->
 -spec orgs(credentials(), string()) -> string().
 orgs(Cred, User) ->
     Url = make_url(orgs, {User}),
+    api_call_json_result(Cred, Url).
+
+%% Repos
+
+-spec repo(credentials(), string()) -> result().
+repo(Cred, RepoFullName) ->
+    Url = make_url(repo, {RepoFullName}),
     api_call_json_result(Cred, Url).
 
 -spec repos(credentials(), map()) -> result().
@@ -162,6 +190,66 @@ all_org_repos(Cred, Org, Opts = #{page := Page}, Results) ->
             {error, Reason}
     end.
 
+%% Teams
+
+-spec teams(credentials(), string()) -> result().
+teams(Cred, Org) ->
+    Url = make_url(teams, {Org}),
+    api_call_json_result(Cred, Url).
+
+-spec create_team(credentials(), string(), string(), string(), [string()]) ->
+    result().
+create_team(Cred, Org, Name, Permission, Repos) ->
+    Url = make_url(teams, {Org}),
+    BodyMap = #{name => list_to_binary(Name),
+                 permission => list_to_binary(Permission),
+                 repo_names => list_to_binary(Repos)},
+    Body = jiffy:encode(BodyMap),
+    case auth_req(Cred, Url, post, Body) of
+        {ok, Result} ->
+            JsonResult = jiffy:decode(Result, [return_maps]),
+            {ok, JsonResult};
+        {error, {"422", _, _}} ->
+            {ok, already_exists};
+        Other ->
+            Other
+    end.
+
+-spec add_team_repository(credentials(), integer(), string()) -> result().
+add_team_repository(Cred, TeamId, RepoFullName) ->
+    Url = make_url(teams_repos, {TeamId, RepoFullName}),
+    Body = [],
+    case auth_req(Cred, Url, put, Body) of
+        {ok, _} ->
+            ok;
+        Error ->
+            Error
+    end.
+
+-spec add_team_member(credentials(), integer(), string()) -> result().
+add_team_member(Cred, TeamId, Username) ->
+    Url = make_url(teams, {TeamId, Username}),
+    Body = [],
+    case auth_req(Cred, Url, put, Body) of
+        {ok, _} ->
+            ok;
+        Error ->
+            Error
+    end.
+
+-spec delete_team_member(credentials(), integer(), string()) -> result().
+delete_team_member(Cred, TeamId, Username) ->
+    Url = make_url(teams, {TeamId, Username}),
+    Body = [],
+    case auth_req(Cred, Url, delete, Body) of
+        {ok, _} ->
+            ok;
+        Error ->
+            Error
+    end.
+
+%% Hooks
+
 -spec hooks(credentials(), repository()) -> result().
 hooks(Cred, Repo) ->
     Url = make_url(hooks, {Repo}),
@@ -197,6 +285,8 @@ delete_webhook(Cred, Repo, Id) ->
         {error, Reason} ->
             {error, Reason}
     end.
+
+%% Collaborators
 
 -spec collaborators(credentials(), repository()) -> result().
 collaborators(Cred, Repo) ->
@@ -250,6 +340,9 @@ make_url(file_content, {Repo, CommitId, Filename}) ->
 make_url(user, {}) ->
     Url = ?GITHUB_API ++ "/user",
     io_lib:format(Url, []);
+make_url(user, {Username}) ->
+    Url = ?GITHUB_API ++ "/users/~s",
+    io_lib:format(Url, [Username]);
 
 %% Organizations
 make_url(orgs, {undefined}) ->
@@ -259,7 +352,21 @@ make_url(orgs, {User}) ->
     Url = ?GITHUB_API ++ "/users/~s/orgs",
     io_lib:format(Url, [User]);
 
+%% Teams
+make_url(teams, {Org}) ->
+    Url = ?GITHUB_API ++ "/orgs/~s/teams",
+    io_lib:format(Url, [Org]);
+make_url(teams, {TeamId, Username}) ->
+    Url = ?GITHUB_API ++ "/teams/~p/members/~s",
+    io_lib:format(Url, [TeamId, Username]);
+make_url(teams_repos, {TeamId, RepoFullName}) ->
+    Url = ?GITHUB_API ++ "/teams/~p/repos/~s",
+    io_lib:format(Url, [TeamId, RepoFullName]);
+
 %% Repositories
+make_url(repo, {RepoFullName}) ->
+    Url = ?GITHUB_API ++ "/repos/~s",
+    io_lib:format(Url, [RepoFullName]);
 make_url(repos, {User, Opts}) ->
     Type = elvis_utils:maps_get(type, Opts, "all"),
     Sort = elvis_utils:maps_get(sort, Opts, "full_name"),
