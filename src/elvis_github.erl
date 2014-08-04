@@ -23,6 +23,7 @@
          %% Teams
          teams/2,
          create_team/5,
+         add_team_repository/3,
          add_team_member/3,
          delete_team_member/3,
          %% Hooks
@@ -214,6 +215,17 @@ create_team(Cred, Org, Name, Permission, Repos) ->
             Other
     end.
 
+-spec add_team_repository(credentials(), integer(), string()) -> result().
+add_team_repository(Cred, TeamId, RepoFullName) ->
+    Url = make_url(teams_repos, {TeamId, RepoFullName}),
+    Body = [],
+    case auth_req(Cred, Url, put, Body) of
+        {ok, _} ->
+            ok;
+        Error ->
+            Error
+    end.
+
 -spec add_team_member(credentials(), integer(), string()) -> result().
 add_team_member(Cred, TeamId, Username) ->
     Url = make_url(teams, {TeamId, Username}),
@@ -347,6 +359,9 @@ make_url(teams, {Org}) ->
 make_url(teams, {TeamId, Username}) ->
     Url = ?GITHUB_API ++ "/teams/~p/members/~s",
     io_lib:format(Url, [TeamId, Username]);
+make_url(teams_repos, {TeamId, RepoFullName}) ->
+    Url = ?GITHUB_API ++ "/teams/~p/repos/~s",
+    io_lib:format(Url, [TeamId, RepoFullName]);
 
 %% Repositories
 make_url(repo, {RepoFullName}) ->
