@@ -49,7 +49,8 @@ rock() ->
 
 -spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file()}.
 rock(Config = #{files := Files, rules := _Rules}) ->
-    LoadedFiles = lists:map(fun elvis_utils:load_file_data/1, Files),
+    Fun = fun (File) -> elvis_utils:load_file_data(Config, File) end,
+    LoadedFiles = lists:map(Fun, Files),
     Results = [apply_rules(Config, File) || File <- LoadedFiles],
 
     elvis_result:print(Results),
