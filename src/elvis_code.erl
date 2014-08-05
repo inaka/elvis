@@ -2,7 +2,7 @@
 
 %% General
 -export([
-         parse_tree/1,
+         parse_tree/2,
          eval/1,
          eval/2,
          find/2,
@@ -57,12 +57,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Parses code in a string or binary format and returns the parse tree.
--spec parse_tree(string() | binary()) ->
+-spec parse_tree(elvis_config:config(), string() | binary()) ->
     [{ok | error, erl_parse:abstract_form()}].
-parse_tree(Source) ->
+parse_tree(Config, Source) ->
+    IncludeDirs = elvis_utils:maps_get(src_dirs, Config, []),
     SourceStr = elvis_utils:to_str(Source),
     {ok, Tokens, _} = erl_scan:string(SourceStr, {1, 1}, [text]),
-    {ok, NewTokens} = aleppo:process_tokens(Tokens),
+    Options = [{include, IncludeDirs}],
+    {ok, NewTokens} = aleppo:process_tokens(Tokens, Options),
 
     Forms = split_when(fun is_dot/1, NewTokens),
     ParsedForms = lists:map(fun erl_parse:parse_form/1, Forms),
