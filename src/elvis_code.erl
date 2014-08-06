@@ -120,7 +120,7 @@ find_by_location(Root, {Line, Column}) ->
           end,
     case find(Fun, Root) of
         [] -> not_found;
-        [Node] ->
+        [Node | _] ->
             {ok, Node}
     end.
 
@@ -638,7 +638,37 @@ to_map({block, Attrs, Body}) ->
                  text => get_text(Attrs)},
       content => to_map(Body)};
 
-%% Attributes
+%% Record Attribute
+
+to_map({attribute, Attrs, record, {Name, Fields}}) ->
+    #{type => record_attr,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 name => Name},
+      content => to_map(Fields)};
+to_map({typed_record_field, Field, Type}) ->
+    FieldMap = to_map(Field),
+    #{type => typed_record_field,
+      attrs => #{location => attr(location, FieldMap),
+                 text => attr(text, FieldMap),
+                 field => FieldMap,
+                 type => to_map(Type)}};
+to_map({type, Attrs, Subtype, Types}) ->
+    {Location, Text} =
+        case Attrs of
+            Line when is_integer(Attrs) ->
+                {{Line, Line}, undefined};
+            Attrs ->
+                {get_location(Attrs),
+                 get_text(Attrs)}
+        end,
+    #{type => type,
+      attrs => #{location => Location,
+                 text => Text,
+                 subtype => Subtype},
+      content => to_map(Types)};
+
+%% Other Attributes
 
 to_map({attribute, Attrs, Type, Value}) ->
     #{type => Type,
