@@ -318,6 +318,7 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                 atom -> [];
                 binary_element -> [];
                 string -> [];
+                undefined -> [];
                 _ ->
                     Msg = ?OPERATOR_SPACE_MSG,
                     Info = [Label, Operator, Num],
