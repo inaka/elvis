@@ -39,13 +39,15 @@
       | nil | cons
       | map | map_field_assoc | map_field_exact
       | lc | lc_expr | generate
+      | bc | bc_expr | b_generate
       | op
       | record | record_field | record_index
       | block
         %% Attributes
       | module
       | type | callback
-      | export | export_type.
+      | export | export_type
+      | remote_type | type.
 
 -type tree_node() ::
     #{type => tree_node_type(),
@@ -62,17 +64,24 @@
 parse_tree(Config, Source) ->
     IncludeDirs = elvis_utils:maps_get(src_dirs, Config, []),
     SourceStr = elvis_utils:to_str(Source),
-    {ok, Tokens, _} = erl_scan:string(SourceStr, {1, 1}, [text]),
+    ScanOpts = [text, return_comments],
+    {ok, Tokens, _} = erl_scan:string(SourceStr, {1, 1}, ScanOpts),
     Options = [{include, IncludeDirs}],
     {ok, NewTokens} = aleppo:process_tokens(Tokens, Options),
 
-    Forms = split_when(fun is_dot/1, NewTokens),
+    IsComment = fun
+                    ({comment, _, _}) -> true;
+                    (_) -> false
+                end,
+
+    {Comments, CodeTokens} = lists:partition(IsComment, NewTokens),
+    Forms = split_when(fun is_dot/1, CodeTokens),
     ParsedForms = lists:map(fun erl_parse:parse_form/1, Forms),
     Children = [to_map(Parsed) || {ok, Parsed} <- ParsedForms],
 
     #{type => root,
       attrs => #{},
-      content => Children}.
+      content => to_map(Comments) ++ Children}.
 
 %% @doc Evaluates the erlang expression in the string provided.
 -spec eval(string() | binary()) -> term().
@@ -572,6 +581,27 @@ to_map({lc_expr, Attrs, Expr}) ->
                  text => get_text(Attrs)},
       content => [to_map(Expr)]};
 
+%% Binary Comprehension
+
+to_map({bc, Attrs, Expr, GeneratorsFilters}) ->
+    BcExpr = to_map({bc_expr, Attrs, Expr}),
+    BcGenerators = to_map(GeneratorsFilters),
+    #{type => bc,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs)},
+      content => [BcExpr | BcGenerators]};
+to_map({b_generate, Attrs, Pattern, Expr}) ->
+    #{type => b_generate,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 pattern => to_map(Pattern),
+                 expression => to_map(Expr)}};
+to_map({bc_expr, Attrs, Expr}) ->
+    #{type => bc_expr,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs)},
+      content => [to_map(Expr)]};
+
 %% Operation
 
 to_map({op, Attrs, Operation, Left, Right}) ->
@@ -667,6 +697,11 @@ to_map({type, Attrs, Subtype, Types}) ->
                  text => Text,
                  subtype => Subtype},
       content => to_map(Types)};
+to_map({remote_type, Attrs, ModuleName}) ->
+    #{type => record_field,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs)},
+      content => to_map(ModuleName)};
 
 %% Other Attributes
 
@@ -675,6 +710,13 @@ to_map({attribute, Attrs, Type, Value}) ->
       attrs => #{location => get_location(Attrs),
                  text => get_text(Attrs),
                  value => Value}};
+
+%% Comments
+
+to_map({comment, Attrs, _Text}) ->
+    #{type => comment,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs)}};
 
 %% Unhandled forms
 

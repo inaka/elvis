@@ -29,7 +29,7 @@
         "beyond the maximum level of ~p.").
 -define(GOD_MODULES_MSG,
         "This module has too many functions (~p). "
-        "Considering breaking it into a number of modules.").
+        "Consider breaking it into a number of modules.").
 -define(NO_IF_EXPRESSION_MSG,
         "Replace the 'if' expression on line ~p with a 'case' "
         "expression or function clauses.").
@@ -318,7 +318,7 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                 atom -> [];
                 binary_element -> [];
                 string -> [];
-                undefined -> [];
+                comment -> [];
                 _ ->
                     Msg = ?OPERATOR_SPACE_MSG,
                     Info = [Label, Operator, Num],
