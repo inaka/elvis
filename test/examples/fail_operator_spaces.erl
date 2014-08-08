@@ -2,6 +2,8 @@
 
 -export([function1/2,function2/2, function3/2]).
 
+%% No space before and after coma,on a comment.
+
 function1(Should,Fail) ->
   [Should,Fail].
 
