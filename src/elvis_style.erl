@@ -16,32 +16,46 @@
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
+
 -define(NO_TABS_MSG, "Line ~p has a tab at column ~p.").
+
 -define(INVALID_MACRO_NAME_MSG,
-            "Invalid macro name ~s on line ~p. Use UPPER_CASE.").
+        "Invalid macro name ~s on line ~p. Use UPPER_CASE.").
+
 -define(MACRO_AS_MODULE_NAME_MSG,
-            "Don't use macros (like ~s on line ~p) as module names.").
+        "Don't use macros (like ~s on line ~p) as module names.").
+-define(MACRO_MODULE_NAMES_EXCEPTIONS,
+        ["MODULE"]).
+
 -define(MACRO_AS_FUNCTION_NAME_MSG,
             "Don't use macros (like ~s on line ~p) as function names.").
+
 -define(OPERATOR_SPACE_MSG, "Missing space ~s ~p on line ~p").
+
 -define(NESTING_LEVEL_MSG,
         "The expression on line ~p and column ~p is nested "
         "beyond the maximum level of ~p.").
+
 -define(GOD_MODULES_MSG,
         "This module has too many functions (~p). "
         "Consider breaking it into a number of modules.").
+
 -define(NO_IF_EXPRESSION_MSG,
         "Replace the 'if' expression on line ~p with a 'case' "
         "expression or function clauses.").
+
 -define (INVALID_DYNAMIC_CALL_MSG,
          "Remove the dynamic function call on line ~p. "
          "Only modules that define callbacks should make dynamic calls.").
+
 -define(USED_IGNORED_VAR_MSG,
         "Ignored variable is being used on line ~p and "
         "column ~p.").
+
 -define(NO_BEHAVIOR_INFO,
         "Use the '-callback' attribute instead of 'behavior_info/1' "
         "on line ~p.").
+
 -define(MODULE_NAMING_CONVENTION_MSG,
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
@@ -282,10 +296,15 @@ check_macro_module_names(Line, Num, _Args) ->
                     {ok, Result}
             end;
         {match, [MacroName]} ->
-            Msg = ?MACRO_AS_MODULE_NAME_MSG,
-            Info = [MacroName, Num],
-            Result = elvis_result:new(item, Msg, Info, Num),
-            {ok, Result}
+            case lists:member(MacroName, ?MACRO_MODULE_NAMES_EXCEPTIONS) of
+                true ->
+                    no_result;
+                false ->
+                    Msg = ?MACRO_AS_MODULE_NAME_MSG,
+                    Info = [MacroName, Num],
+                    Result = elvis_result:new(item, Msg, Info, Num),
+                    {ok, Result}
+            end
     end.
 
 -spec check_operator_spaces(binary(), integer(), [{right|left, string()}]) ->
