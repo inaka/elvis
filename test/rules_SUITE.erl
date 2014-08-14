@@ -96,7 +96,7 @@ verify_macro_module_names(_Config) ->
     File = "fail_macro_module_names.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    [_, _, _, _] = elvis_style:macro_module_names(ElvisConfig, Path, []).
+    [_, _, _] = elvis_style:macro_module_names(ElvisConfig, Path, []).
 
 -spec verify_operator_spaces(config()) -> any().
 verify_operator_spaces(_Config) ->
