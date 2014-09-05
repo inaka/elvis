@@ -702,6 +702,12 @@ to_map({remote_type, Attrs, ModuleName}) ->
       attrs => #{location => get_location(Attrs),
                  text => get_text(Attrs)},
       content => to_map(ModuleName)};
+to_map({ann_type, Attrs, [Var, Type]}) ->
+    #{type => record_field,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 var => to_map(Var),
+                 type => to_map(Type)}};
 
 %% Other Attributes
 
