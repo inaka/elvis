@@ -683,6 +683,9 @@ to_map({typed_record_field, Field, Type}) ->
                  text => attr(text, FieldMap),
                  field => FieldMap,
                  type => to_map(Type)}};
+
+%% Type
+
 to_map({type, Attrs, Subtype, Types}) ->
     {Location, Text} =
         case Attrs of
@@ -708,6 +711,8 @@ to_map({ann_type, Attrs, [Var, Type]}) ->
                  text => get_text(Attrs),
                  var => to_map(Var),
                  type => to_map(Type)}};
+to_map(any) -> %% any()
+    #{type => any};
 
 %% Other Attributes
 
