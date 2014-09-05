@@ -7,6 +7,7 @@ ebin
 *.plt
 erl_crash.dump
 log*/
+.erlang.mk.packages.*
 
 # Ignore elvis escript
 elvis
