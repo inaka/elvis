@@ -3,13 +3,13 @@ PROJECT = elvis
 DEPS = lager sync getopt jiffy ibrowse aleppo
 TEST_DEPS = meck
 
-dep_lager = https://github.com/basho/lager.git 2.0.3
-dep_sync = https://github.com/rustyio/sync.git master
-dep_getopt = https://github.com/jcomellas/getopt v0.8.2
-dep_meck = https://github.com/eproxus/meck master
-dep_jiffy = https://github.com/davisp/jiffy 0.11.3
-dep_ibrowse = https://github.com/cmullaparthi/ibrowse v4.1.1
-dep_aleppo = https://github.com/inaka/aleppo master
+dep_lager = git https://github.com/basho/lager.git 2.0.3
+dep_sync = git https://github.com/rustyio/sync.git master
+dep_getopt = git https://github.com/jcomellas/getopt v0.8.2
+dep_meck = git https://github.com/eproxus/meck master
+dep_jiffy = git https://github.com/davisp/jiffy 0.11.3
+dep_ibrowse = git https://github.com/cmullaparthi/ibrowse v4.1.1
+dep_aleppo = git https://github.com/inaka/aleppo master
 
 include erlang.mk
 
