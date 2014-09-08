@@ -6,6 +6,7 @@
          eval/1,
          eval/2,
          find/2,
+         find_zipper/2,
          find_by_location/2
         ]).
 
@@ -47,7 +48,8 @@
       | module
       | type | callback
       | export | export_type
-      | remote_type | type.
+      | remote_type | type | ann_type
+      | any.
 
 -type tree_node() ::
     #{type => tree_node_type(),
@@ -97,7 +99,7 @@ eval(Source, Bindings) ->
     Result.
 
 %% @doc Finds all nodes that comply with the predicate function.
--spec find(fun(), tree_node()) -> [tree_node()].
+-spec find(fun((tree_node()) -> boolean()), tree_node()) -> [tree_node()].
 find(Pred, Node) ->
     Results = find(Pred, Node, []),
     lists:flatten(Results).
@@ -114,6 +116,33 @@ find(Pred, Node, Results) ->
         false ->
             find(Pred, Content, Results)
     end.
+
+-spec find_zipper(fun((zipper:zipper()) -> boolean()), tree_node()) ->
+    [tree_node()].
+find_zipper(Pred, Root) ->
+    IsBranch = fun
+                   (#{content := [_ | _]}) -> true;
+                   (_) -> false
+               end,
+    Children = fun (#{content := Content}) -> Content end,
+    MakeNode = fun(Node, _) -> Node end,
+    Zipper = zipper:new(IsBranch, Children, MakeNode, Root),
+    Results = find_zipper(Pred, Zipper, []),
+    lists:reverse(Results).
+
+find_zipper(Pred, Zipper, Results) ->
+    case zipper:is_end(Zipper) of
+        true ->
+            Results;
+        false ->
+            Node = zipper:node(Zipper),
+            NewResults = case Pred(Zipper) of
+                             true -> [Node | Results];
+                             false -> Results
+                         end,
+            find_zipper(Pred, zipper:next(Zipper), NewResults)
+    end.
+
 
 -spec find_by_location(tree_node(), {integer(), integer()}) ->
     not_found | {ok, tree_node()}.

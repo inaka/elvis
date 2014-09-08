@@ -175,10 +175,10 @@ verify_used_ignored_variable(_Config) ->
     Path = "fail_used_ignored_variable.erl",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
     [
-     #{line_num := 9},
-     #{line_num := 12},
-     #{line_num := 16},
-     #{line_num := 16}
+     #{line_num := 10},
+     #{line_num := 13},
+     #{line_num := 17},
+     #{line_num := 17}
     ] = elvis_style:used_ignored_variable(ElvisConfig, File, []).
 
 -spec verify_no_behavior_info(config()) -> any().
