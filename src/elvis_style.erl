@@ -154,7 +154,7 @@ invalid_dynamic_call(Config, Target, IgnoreModules) ->
 used_ignored_variable(Config, Target, []) ->
     {Root, _} = elvis_utils:parse_tree(Config, Target),
     ResultFun = result_node_line_col_fun(?USED_IGNORED_VAR_MSG),
-    case elvis_code:find(fun is_used_ignored_var/1, Root) of
+    case elvis_code:find_zipper(fun is_ignored_var/1, Root) of
         [] ->
             [];
         UsedIgnoredVars ->
@@ -390,13 +390,28 @@ is_dynamic_call(Node) ->
             false
     end.
 
--spec is_used_ignored_var(elvis_code:tree_node()) ->
+-spec is_ignored_var(elvis_code:tree_node()) ->
     boolean().
-is_used_ignored_var(Node) ->
+is_ignored_var(Zipper) ->
+    Node = zipper:node(Zipper),
     case elvis_code:type(Node) of
         var ->
             Name = elvis_code:attr(name, Node),
             [FirstChar | _] = atom_to_list(Name),
-            (FirstChar == $_) and (Name =/= '_');
+            (FirstChar == $_)
+                and (Name =/= '_')
+                and not check_parent_match(Zipper);
         _OtherType -> false
+    end.
+
+check_parent_match(Zipper) ->
+    case zipper:up(Zipper) of
+        undefined -> false;
+        ParentZipper ->
+            Parent = zipper:node(ParentZipper),
+            case elvis_code:type(Parent) of
+                match ->
+                    zipper:down(ParentZipper) == Zipper;
+                _ -> check_parent_match(ParentZipper)
+            end
     end.
