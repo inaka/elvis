@@ -104,17 +104,17 @@ print(#{file := File, rules := Rules}) ->
                  fail -> "FAIL"
              end,
 
-    io:format("# ~s [~s]~n", [Path, Status]),
+    elvis_utils:info("# ~s [~s]~n", [Path, Status]),
     print(Rules);
 
 print(#{items := []}) ->
     ok;
 print(#{name := Name, items := Items}) ->
-    io:format("  - ~s~n", [atom_to_list(Name)]),
+    elvis_utils:info("  - ~s~n", [atom_to_list(Name)]),
     print(Items);
 
 print(#{message := Msg, info := Info}) ->
-    io:format("    - " ++ Msg ++ "~n", Info).
+    elvis_utils:info("    - " ++ Msg ++ "~n", Info).
 
 -spec status([rule()]) -> ok | fail.
 status([]) ->

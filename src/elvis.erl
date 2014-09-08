@@ -49,18 +49,17 @@ rock() ->
 
 -spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file()}.
 rock(Config = #{files := Files, rules := _Rules}) ->
-    io:format("Loading files...~n"),
+    elvis_utils:info("Loading files...~n"),
     Fun = fun (File) ->
                   Path = elvis_utils:path(File),
-                  io:format("Loading ~s~n", [Path]),
+                  elvis_utils:info("Loading ~s~n", [Path]),
                   elvis_utils:load_file_data(Config, File)
           end,
     LoadedFiles = lists:map(Fun, Files),
 
-    io:format("Applying rules...~n"),
+    elvis_utils:info("Applying rules...~n"),
     Results = [apply_rules(Config, File) || File <- LoadedFiles],
 
-    elvis_result:print(Results),
     case elvis_result:status(Results) of
         fail -> {fail, Results};
         ok -> ok
@@ -109,7 +108,9 @@ apply_rules(Config = #{rules := Rules}, File) ->
     Acc = {[], Config, File},
     {RulesResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
 
-    elvis_result:new(file, File, RulesResults).
+    Results = elvis_result:new(file, File, RulesResults),
+    elvis_result:print(Results),
+    Results.
 
 apply_rule({Module, Function, Args}, {Result, Config, File}) ->
     Results = Module:Function(Config, File, Args),

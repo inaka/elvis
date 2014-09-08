@@ -21,7 +21,11 @@
          %% General
          erlang_halt/1,
          to_str/1,
-         maps_get/3
+         maps_get/3,
+
+         %% Output
+         info/1,
+         info/2
         ]).
 
 -export_type([file/0]).
@@ -198,4 +202,15 @@ maps_get(Key, Map, Default) ->
     case maps:is_key(Key, Map) of
         true -> maps:get(Key, Map);
         false -> Default
+    end.
+
+-spec info(string()) -> ok.
+info(Message) ->
+    info(Message, []).
+
+-spec info(string(), [term()]) -> ok.
+info(Message, Args) ->
+    case application:get_env(elvis, no_output) of
+        {ok, true} -> ok;
+        _ -> io:format(Message, Args)
     end.
