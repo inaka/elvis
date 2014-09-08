@@ -9,6 +9,7 @@
          %% Files
          find_files/1,
          find_files/2,
+         find_files/3,
          is_erlang_file/1,
          filter_files/1,
 
@@ -83,16 +84,24 @@ load_file_data(Config, File0 = #{path := _Path}) ->
 
 %% @doc Returns all files under the specified Path
 %% that match the pattern Name.
--spec find_files([string()], string()) -> [file()].
-find_files(Dirs, Pattern) ->
-    Fun = fun(Dir) ->
-                filelib:wildcard(Dir ++ "/**/" ++ Pattern)
-          end,
-    [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
-
 -spec find_files([string()]) -> [file()].
 find_files(Dirs) ->
     find_files(Dirs, ?FILE_PATTERN).
+
+-spec find_files([string()], string()) -> [file()].
+find_files(Dirs, Pattern) ->
+    find_files(Dirs, Pattern, recursive).
+
+-spec find_files([string()], string(), recursive | local) -> [file()].
+find_files(Dirs, Pattern, Option) ->
+    MiddlePath = case Option of
+                     recursive -> "/**/";
+                     local -> "/"
+                 end,
+    Fun = fun(Dir) ->
+                filelib:wildcard(Dir ++ MiddlePath ++ Pattern)
+          end,
+    [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
 
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line

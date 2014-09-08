@@ -58,7 +58,10 @@ rock(Config = #{files := Files, rules := _Rules}) ->
     LoadedFiles = lists:map(Fun, Files),
 
     elvis_utils:info("Applying rules...~n"),
-    Results = [apply_rules(Config, File) || File <- LoadedFiles],
+    FilesResults = [apply_rules(Config, File) || File <- LoadedFiles],
+    GlobalResults =  apply_global_rules(Config),
+
+    Results = FilesResults ++ GlobalResults,
 
     case elvis_result:status(Results) of
         fail -> {fail, Results};
@@ -117,6 +120,16 @@ apply_rule({Module, Function, Args}, {Result, Config, File}) ->
     RuleResult = elvis_result:new(rule, Function, Results),
 
     {[RuleResult | Result], Config, File}.
+
+apply_global_rules(Config = #{global_rules := GlobalRules}) ->
+    Results = [apply_global_rule(Config, Rule) || Rule <- GlobalRules],
+    elvis_result:print(Results),
+    Results;
+apply_global_rules(_) ->
+    [].
+
+apply_global_rule(Config, {Module, Function, Args}) ->
+    Module:Function(Config, Args).
 
 %%% Command Line Interface
 
