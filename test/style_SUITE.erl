@@ -1,4 +1,4 @@
--module(rules_SUITE).
+-module(style_SUITE).
 
 -export([
          all/0,
