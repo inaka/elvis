@@ -8,8 +8,10 @@
 
 -export([
          %% Rocking
-         rock_with_empty_config/1,
+         rock_with_empty_map_config/1,
+         rock_with_empty_list_config/1,
          rock_with_incomplete_config/1,
+         rock_with_list_config/1,
          rock_with_file_config/1,
          %% Webhook
          run_webhook/1,
@@ -67,10 +69,19 @@ end_per_suite(Config) ->
 %%%%%%%%%%%%%%%
 %%% Rocking
 
--spec rock_with_empty_config(config()) -> any().
-rock_with_empty_config(_Config) ->
+-spec rock_with_empty_map_config(config()) -> any().
+rock_with_empty_map_config(_Config) ->
     ok = try
              elvis:rock(#{}),
+             fail
+         catch
+             throw:{invalid_config, _} -> ok
+         end.
+
+-spec rock_with_empty_list_config(config()) -> any().
+rock_with_empty_list_config(_Config) ->
+    ok = try
+             elvis:rock([#{}, #{}]),
              fail
          catch
              throw:{invalid_config, _} -> ok
@@ -84,6 +95,20 @@ rock_with_incomplete_config(_Config) ->
              fail
          catch
              throw:{invalid_config, _} -> ok
+         end.
+
+-spec rock_with_list_config(config()) -> any().
+rock_with_list_config(_Config) ->
+    ElvisConfig = [#{src_dirs => ["src"],
+                     rules => []},
+                   #{dirs => ["."],
+                     filter => "Makefile",
+                     rules => []}],
+    ok = try
+             elvis:rock(ElvisConfig),
+             ok
+         catch
+             throw:{invalid_config, _} -> fail
          end.
 
 -spec rock_with_file_config(config()) -> ok.
