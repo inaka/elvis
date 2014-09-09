@@ -1,6 +1,9 @@
 -module(elvis_project).
 
--export([no_deps_master/2]).
+-export([
+         no_deps_master_erlang_mk/3,
+         no_deps_master_rebar/3
+        ]).
 
 -define(DEP_MASTER,
         "Dependency '~s' revision is specified 'master', "
@@ -11,46 +14,40 @@
 %% Rules
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec no_deps_master(elvis_config:config(), [term()]) ->
-    [elvis_result:file()].
-no_deps_master(_Config, []) ->
-    RebarResult =
-        case find_file(".", "rebar.config") of
-            {ok, RebarFile} ->
-                RebarRuleResult = [rebar_deps_master(RebarFile)],
-                [elvis_result:new(file, RebarFile, RebarRuleResult)];
-            {error, enoent} ->
-                []
-        end,
+-spec no_deps_master_erlang_mk(elvis_config:config(),
+                               elvis_utils:file(),
+                               [term()]) ->
+    [elvis_result:item()].
+no_deps_master_erlang_mk(_Config, Target, []) ->
+    Deps = get_erlang_mk_deps(Target),
+    DepsInMaster = lists:filter(fun is_erlang_mk_master_dep/1, Deps),
+    DepToResult = fun(Line) ->
+                      Opts = [{capture, all_but_first, binary}],
+                      {match, [Name]} = re:run(Line, "dep_([^ ]*)", Opts),
+                      elvis_result:new(item, ?DEP_MASTER, [Name])
+                  end,
 
-    ErlangMkResult =
-        case find_file(".", "Makefile") of
-            {ok, MakeFile} ->
-                ErlangMkRuleResult = erlang_mk_deps_master(MakeFile),
-                [elvis_result:new(file, MakeFile, ErlangMkRuleResult)];
-            {error, enoent} ->
-                []
-        end,
+    lists:map(DepToResult, DepsInMaster).
 
-    RebarResult ++  ErlangMkResult.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Private
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%% Rebar
-
--spec rebar_deps_master(elvis_utils:file()) -> elvis_result:rule().
-rebar_deps_master(File) ->
-    Deps = get_rebar_deps(File),
+-spec no_deps_master_rebar(elvis_config:config(),
+                           elvis_utils:file(),
+                           [term()]) ->
+    [elvis_result:item()].
+no_deps_master_rebar(_Config, Target, []) ->
+    Deps = get_rebar_deps(Target),
     DepsInMaster = lists:filter(fun is_rebar_master_dep/1, Deps),
 
     DepToResult = fun({AppName, _, _}) ->
                           elvis_result:new(item, ?DEP_MASTER, [AppName])
                   end,
 
-    Results = lists:map(DepToResult, DepsInMaster),
-    elvis_result:new(rule, no_deps_master, Results).
+    lists:map(DepToResult, DepsInMaster).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Private
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Rebar
 
 get_rebar_deps(File) ->
     Path = elvis_utils:path(File),
@@ -73,19 +70,6 @@ is_rebar_master_dep(_) ->
 
 %%% erlang.mk
 
--spec erlang_mk_deps_master(elvis_utils:file()) -> elvis_result:rule().
-erlang_mk_deps_master(File) ->
-    Deps = get_erlang_mk_deps(File),
-    DepsInMaster = lists:filter(fun is_erlang_mk_master_dep/1, Deps),
-    DepToResult = fun(Line) ->
-                      Opts = [{capture, all_but_first, binary}],
-                      {match, [Name]} = re:run(Line, "dep_([^ ]*)", Opts),
-                      elvis_result:new(item, ?DEP_MASTER, [Name])
-                  end,
-
-    Results = lists:map(DepToResult, DepsInMaster),
-    elvis_result:new(rule, no_deps_master, Results).
-
 is_erlang_mk_master_dep(Line) ->
     case re:run(Line, "master *$", []) of
         nomatch -> false;
@@ -97,11 +81,3 @@ get_erlang_mk_deps(File) ->
     Lines = binary:split(Src, <<"\n">>, [global]),
     IsDepsLine = fun(Line) -> re:run(Line, "dep_", []) /= nomatch end,
     lists:filter(IsDepsLine, Lines).
-
-find_file(Dir, Filename) ->
-    case elvis_utils:find_files([Dir], Filename, local) of
-        [] ->
-            {error, enoent};
-        [File] ->
-            {ok, File}
-    end.

@@ -64,7 +64,7 @@
 -spec parse_tree(elvis_config:config(), string() | binary()) ->
     [{ok | error, erl_parse:abstract_form()}].
 parse_tree(Config, Source) ->
-    IncludeDirs = elvis_utils:maps_get(src_dirs, Config, []),
+    IncludeDirs = elvis_config:dirs(Config),
     SourceStr = elvis_utils:to_str(Source),
     ScanOpts = [text, return_comments],
     {ok, Tokens, _} = erl_scan:string(SourceStr, {1, 1}, ScanOpts),

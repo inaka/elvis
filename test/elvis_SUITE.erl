@@ -90,7 +90,7 @@ rock_with_incomplete_config(_Config) ->
 rock_with_file_config(_Config) ->
     Fun = fun() -> elvis:rock() end,
     Expected = "# \\.\\./\\.\\./test/examples/.*\\.erl \\[FAIL\\]\n",
-    check_first_line_output(Fun, Expected, fun matches_regex/2),
+    check_some_line_output(Fun, Expected, fun matches_regex/2),
     ok.
 
 %%%%%%%%%%%%%%%
@@ -207,9 +207,8 @@ main_config(_Config) ->
     OptEnoentFun = fun() -> elvis:main("-c missing") end,
     check_first_line_output(OptEnoentFun, EnoentExpected),
 
-    ConfigFileFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
-    check_first_line_output(ConfigFileFun, ""),
-
+    ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
+    check_emtpy_output(ConfigFun),
     ok.
 
 -spec main_rock(config()) -> any().
@@ -218,13 +217,13 @@ main_rock(_Config) ->
 
     NoConfigArgs = "rock",
     NoConfigFun = fun() -> elvis:main(NoConfigArgs) end,
-    check_first_line_output(NoConfigFun, ExpectedFail, fun matches_regex/2),
+    check_some_line_output(NoConfigFun, ExpectedFail, fun matches_regex/2),
 
     Expected = "# ../../src/elvis.erl [OK]",
 
     ConfigArgs = "rock -c ../../config/elvis-test.config",
     ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-    check_first_line_output(ConfigFun, Expected, fun starts_with/2),
+    check_some_line_output(ConfigFun, Expected, fun starts_with/2),
 
     ok.
 
@@ -248,10 +247,10 @@ main_git_hook_fail(_Config) ->
 
         ConfigArgs = "git-hook -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        check_first_line_output(ConfigFun, Expected, fun starts_with/2),
+        check_some_line_output(ConfigFun, Expected, fun starts_with/2),
 
         meck:expect(elvis_git, staged_files, fun() -> [] end),
-        check_first_line_output(ConfigFun, [])
+        check_emtpy_output(ConfigFun)
     after
         catch
             meck:unload(elvis_utils),
@@ -266,7 +265,7 @@ main_git_hook_ok(_Config) ->
 
         ConfigArgs = "git-hook -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        check_first_line_output(ConfigFun, [])
+        check_emtpy_output(ConfigFun)
     after
         catch meck:unload(elvis_git)
     end.
@@ -279,7 +278,7 @@ main_default_config(_Config) ->
 
     Expected = "# ../../src/elvis.erl [OK]",
     RockFun = fun() -> elvis:main("rock") end,
-    check_first_line_output(RockFun, Expected, fun starts_with/2),
+    check_some_line_output(RockFun, Expected, fun starts_with/2),
 
     file:delete(Dest),
 
@@ -298,27 +297,41 @@ main_unexistent(_Config) ->
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-check_first_line_output(Fun, Expected) ->
-    Equals = fun(Result, Exp) ->
-                 Result = Exp
+check_some_line_output(Fun, Expected) ->
+    IsEqual = fun(Result, Exp) ->
+                     Result == Exp
              end,
-    check_first_line_output(Fun, Expected, Equals).
+    check_some_line_output(Fun, Expected, IsEqual).
 
-check_first_line_output(Fun, Expected, CheckFun) ->
+check_some_line_output(Fun, Expected, FilterFun) ->
     ct:capture_start(),
     Fun(),
     ct:capture_stop(),
-    Result = case ct:capture_get([]) of
-                 [] -> "";
-                 [Head | _] -> Head
-             end,
+    Lines = ct:capture_get([]),
+    ListFun = fun(Line) -> FilterFun(Line, Expected) end,
+    [_ | _] = lists:filter(ListFun, Lines).
 
-    CheckFun(Result, Expected).
+check_first_line_output(Fun, Expected) ->
+    Equals = fun(Result, Exp) ->
+                 Result == Exp
+             end,
+    check_first_line_output(Fun, Expected, Equals).
+
+check_first_line_output(Fun, Expected, FilterFun) ->
+    ct:capture_start(),
+    Fun(),
+    ct:capture_stop(),
+    Lines = case ct:capture_get([]) of
+                 [] -> [];
+                 [Head | _] -> [Head]
+             end,
+    ListFun = fun(Line) -> FilterFun(Line, Expected) end,
+    [_ | _] = lists:filter(ListFun, Lines).
 
 starts_with(Result, Expected) ->
     case string:str(Result, Expected) of
-        1 -> ok;
-        _ ->  {Expected, Expected}= {Result, Expected}
+        1 -> true;
+        _ -> {Expected, Expected} == {Result, Expected}
     end.
 
 matches_regex(Result, Regex) ->
@@ -326,3 +339,7 @@ matches_regex(Result, Regex) ->
         {match, _} -> true;
         nomatch -> false
     end.
+
+check_emtpy_output(Fun) ->
+    Fun(),
+    [] = ct:capture_get([]).

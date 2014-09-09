@@ -47,7 +47,18 @@ rock() ->
     Config = elvis_config:default(),
     rock(Config).
 
--spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file()}.
+-spec rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
+rock(Configs) when is_list(Configs) ->
+    Results = lists:map(fun rock/1, Configs),
+    Unify = fun
+                (ok, Acc) ->
+                    Acc;
+                (Item, ok) ->
+                    Item;
+                ({fail, ItemResults}, {fail, AccResults}) ->
+                    {fail, ItemResults ++ AccResults}
+            end,
+    lists:foldl(Unify, ok, Results);
 rock(Config = #{files := Files, rules := _Rules}) ->
     elvis_utils:info("Loading files...~n"),
     Fun = fun (File) ->
@@ -58,17 +69,26 @@ rock(Config = #{files := Files, rules := _Rules}) ->
     LoadedFiles = lists:map(Fun, Files),
 
     elvis_utils:info("Applying rules...~n"),
-    FilesResults = [apply_rules(Config, File) || File <- LoadedFiles],
-    GlobalResults =  apply_global_rules(Config),
-
-    Results = FilesResults ++ GlobalResults,
+    Results = [apply_rules(Config, File) || File <- LoadedFiles],
 
     case elvis_result:status(Results) of
         fail -> {fail, Results};
         ok -> ok
     end;
-rock(Config = #{src_dirs := SrcDirs, rules := _Rules}) ->
-    Files = elvis_utils:find_files(SrcDirs),
+rock(Config = #{src_dirs := Dirs}) ->
+    %% NOTE: Provided for backwards compatibility.
+    %% Rename 'src_dirs' key to 'dirs'.
+    Config1 = maps:remove(src_dirs, Config),
+    Config2 = Config1#{dirs => Dirs},
+    rock(Config2);
+rock(Config = #{dirs := Dirs, rules := _Rules}) ->
+    Files = case maps:is_key(filter, Config) of
+                false ->
+                    elvis_utils:find_files(Dirs);
+                true ->
+                    Filter = maps:get(filter, Config),
+                    elvis_utils:find_files(Dirs, Filter, local)
+            end,
 
     rock(Config#{files => Files});
 rock(Config) ->

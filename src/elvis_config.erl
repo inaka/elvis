@@ -3,7 +3,8 @@
 -export([
          default/0,
          load_file/1,
-         load/1
+         load/1,
+         dirs/1
         ]).
 
 -export_type([
@@ -42,3 +43,9 @@ load_file(Path) ->
 load(AppConfig) ->
     ElvisConfig = proplists:get_value(elvis, AppConfig, []),
     proplists:get_value(config, ElvisConfig, #{}).
+
+-spec dirs(config()) -> [string()].
+dirs(#{dirs := Dirs}) ->
+    Dirs;
+dirs(#{}) ->
+    [].
