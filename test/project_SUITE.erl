@@ -48,7 +48,7 @@ end_per_suite(Config) ->
 -spec verify_no_deps_master_erlang_mk(config()) -> any().
 verify_no_deps_master_erlang_mk(_Config) ->
     ElvisConfig = elvis_config:default(),
-    #{src_dirs := SrcDirs} = ElvisConfig,
+    SrcDirs = elvis_config:dirs(ElvisConfig),
 
     Filename = "Makefile.fail",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Filename),
@@ -58,7 +58,7 @@ verify_no_deps_master_erlang_mk(_Config) ->
 -spec verify_no_deps_master_rebar(config()) -> any().
 verify_no_deps_master_rebar(_Config) ->
     ElvisConfig = elvis_config:default(),
-    #{src_dirs := SrcDirs} = ElvisConfig,
+    SrcDirs = elvis_config:dirs(ElvisConfig),
 
     Filename = "rebar.config.fail",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Filename),
