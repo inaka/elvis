@@ -1,16 +1,15 @@
 -module(elvis_utils).
 
 -export([
+         %% Files
          src/1,
          path/1,
          parse_tree/2,
          load_file_data/2,
 
-         %% Files
-         find_files/1,
          find_files/2,
-         is_erlang_file/1,
-         filter_files/1,
+         find_files/3,
+         filter_files/2,
 
          %% Rules
          check_lines/3,
@@ -29,9 +28,6 @@
         ]).
 
 -export_type([file/0]).
-
--define(FILE_PATTERN, "*.erl").
--define(FILE_EXTENSIONS, [".erl"]).
 
 -type file() :: #{path => string(), content => binary()}.
 
@@ -85,14 +81,18 @@ load_file_data(Config, File0 = #{path := _Path}) ->
 %% that match the pattern Name.
 -spec find_files([string()], string()) -> [file()].
 find_files(Dirs, Pattern) ->
+    find_files(Dirs, Pattern, recursive).
+
+-spec find_files([string()], string(), recursive | local) -> [file()].
+find_files(Dirs, Pattern, Option) ->
+    MiddlePath = case Option of
+                     recursive -> "/**/";
+                     local -> "/"
+                 end,
     Fun = fun(Dir) ->
-                filelib:wildcard(Dir ++ "/**/" ++ Pattern)
+                filelib:wildcard(Dir ++ MiddlePath ++ Pattern)
           end,
     [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
-
--spec find_files([string()]) -> [file()].
-find_files(Dirs) ->
-    find_files(Dirs, ?FILE_PATTERN).
 
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line
@@ -173,15 +173,19 @@ to_str(Arg) when is_integer(Arg) ->
 to_str(Arg) when is_list(Arg) ->
     Arg.
 
--spec is_erlang_file(string()) -> true | false.
-is_erlang_file(Path) ->
-    Path1 = to_str(Path),
-    lists:member(filename:extension(Path1), ?FILE_EXTENSIONS).
+-spec filter_files([elvis_utils:file()], string()) -> [elvis_utils:file()].
+filter_files(Files, Filter) ->
+    Regex = glob_to_regex(Filter),
+    FilterFun = fun(#{path := Path}) ->
+                        match == re:run(Path, Regex, [{capture, none}])
+                end,
+    lists:filter(FilterFun, Files).
 
--spec filter_files([elvis_utils:file()]) -> [elvis_utils:file()].
-filter_files(Files) ->
-    [File || File = #{path := Path} <- Files,
-             is_erlang_file(Path)].
+%% @private
+-spec glob_to_regex(iodata()) -> iodata().
+glob_to_regex(Glob) ->
+    Regex1 = re:replace(Glob, "\\.", "\\\\."),
+    re:replace(Regex1,"\\*", ".*").
 
 %% @doc Takes a line, a character and a count, returning the indentation level
 %%      invalid if the number of character is not a multiple of count.
@@ -195,7 +199,6 @@ indentation(Line, Char, Count) ->
         0 -> Len div Count;
         _ -> invalid
     end.
-
 
 -spec maps_get(term(), map(), term()) -> term().
 maps_get(Key, Map, Default) ->

@@ -98,7 +98,7 @@ print([Result | Results]) ->
     print(Results);
 
 print(#{file := File, rules := Rules}) ->
-    Path = maps:get(path, File),
+    Path = elvis_utils:path(File),
     Status = case status(Rules) of
                  ok -> "OK";
                  fail -> "FAIL"

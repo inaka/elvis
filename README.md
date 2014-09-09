@@ -166,7 +166,7 @@ define rules of your own as long as the functions that implement them respect
 this arity.
 
 There's currently no default configuration for `elvis`, but in the meantime
-you can take the one in `config/app.config` as a starting point.
+you can take the one in `config/elvis.config` as a starting point.
 
 The GitHub configuration parameters `github_user` and `github_password` are
 required only when `elvis` is used as a [webhook](#webhook).

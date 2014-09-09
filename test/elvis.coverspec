@@ -6,6 +6,7 @@
   elvis_result,
   elvis_utils,
   elvis_style,
+  elvis_project,
   elvis_config,
   elvis_github,
   elvis_git,

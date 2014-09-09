@@ -47,7 +47,10 @@ rock() ->
     Config = elvis_config:default(),
     rock(Config).
 
--spec rock(elvis_config:config()) -> ok | {fail, elvis_result:file()}.
+-spec rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
+rock(Config) when is_list(Config) ->
+    Results = lists:map(fun rock/1, Config),
+    lists:foldl(fun combine_results/2, ok, Results);
 rock(Config = #{files := Files, rules := _Rules}) ->
     elvis_utils:info("Loading files...~n"),
     Fun = fun (File) ->
@@ -64,10 +67,15 @@ rock(Config = #{files := Files, rules := _Rules}) ->
         fail -> {fail, Results};
         ok -> ok
     end;
-rock(Config = #{src_dirs := SrcDirs, rules := _Rules}) ->
-    Files = elvis_utils:find_files(SrcDirs),
-
-    rock(Config#{files => Files});
+rock(Config = #{dirs := _Dirs, rules := _Rules}) ->
+    NewConfig = elvis_config:resolve_files(Config),
+    rock(NewConfig);
+rock(Config = #{src_dirs := Dirs}) ->
+    %% NOTE: Provided for backwards compatibility.
+    %% Rename 'src_dirs' key to 'dirs'.
+    Config1 = maps:remove(src_dirs, Config),
+    Config2 = Config1#{dirs => Dirs},
+    rock(Config2);
 rock(Config) ->
     throw({invalid_config, Config}).
 
@@ -76,9 +84,7 @@ rock(Config) ->
 -spec git_hook(elvis_config:config()) -> ok.
 git_hook(Config) ->
     Files = elvis_git:staged_files(),
-    ErlFiles = elvis_utils:filter_files(Files),
-
-    NewConfig = Config#{files => ErlFiles},
+    NewConfig = elvis_config:resolve_files(Config, Files),
 
     case rock(NewConfig) of
         {fail, _} -> elvis_utils:erlang_halt(1);
@@ -101,6 +107,16 @@ webhook(Credentials, Request) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-spec combine_results(ok | {fail, [elvis_result:file()]},
+                      ok | {fail, [elvis_result:file()]}) ->
+    ok | {fail, [elvis_result:file()]}.
+combine_results(ok, Acc) ->
+    Acc;
+combine_results(Item, ok) ->
+    Item;
+combine_results({fail, ItemResults}, {fail, AccResults}) ->
+    {fail, ItemResults ++ AccResults}.
 
 -spec apply_rules(elvis_config:config(), elvis_utils:file()) ->
     elvis_result:file().

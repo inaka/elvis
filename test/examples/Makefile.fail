@@ -1,4 +1,4 @@
-PROJECT = elvis
+PROJECT = example
 
 DEPS = lager sync getopt jiffy ibrowse aleppo zipper
 TEST_DEPS = meck

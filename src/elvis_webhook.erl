@@ -51,12 +51,16 @@ event(LocalConfig,
     Config = repo_config(Cred, Repo, LocalConfig),
 
     {ok, GithubFiles} = elvis_github:pull_req_files(Cred, Repo, PR),
-    ErlFiles = [file_info(Cred, Repo, F)
-                || F = #{<<"filename">> := Path} <- GithubFiles,
-                   elvis_utils:is_erlang_file(Path)],
 
-    Config1 = Config#{files => ErlFiles},
-    case elvis:rock(Config1) of
+    GithubFiles1 = [F#{path => Path}
+                    || F = #{<<"filename">> := Path} <- GithubFiles],
+
+    Config1 = elvis_config:resolve_files(Config, GithubFiles1),
+
+    FileInfoFun = fun (File) -> file_info(Cred, Repo, File) end,
+    Config2 = elvis_config:apply_to_files(FileInfoFun, Config1),
+
+    case elvis:rock(Config2) of
         {fail, Results} ->
             {ok, Comments} = elvis_github:pull_req_comments(Cred, Repo, PR),
             GithubInfo = {Cred, Repo, PR, Comments},
