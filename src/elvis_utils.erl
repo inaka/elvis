@@ -1,12 +1,12 @@
 -module(elvis_utils).
 
 -export([
+         %% Files
          src/1,
          path/1,
          parse_tree/2,
          load_file_data/2,
 
-         %% Files
          find_files/1,
          find_files/2,
          find_files/3,
@@ -204,7 +204,6 @@ indentation(Line, Char, Count) ->
         0 -> Len div Count;
         _ -> invalid
     end.
-
 
 -spec maps_get(term(), map(), term()) -> term().
 maps_get(Key, Map, Default) ->
