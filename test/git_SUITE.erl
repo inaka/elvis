@@ -5,7 +5,8 @@
         ]).
 
 -export([
-         relative_position_from_patch/1
+         relative_position_from_patch/1,
+         check_staged_files/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -61,3 +62,15 @@ relative_position_from_patch(_Config) ->
 
     not_found = elvis_git:relative_position(Patch, 174),
     not_found = elvis_git:relative_position(Patch, 180).
+
+
+-spec check_staged_files(config()) -> any().
+check_staged_files(_Config) ->
+    Filename = "../../temp_file_test",
+    file:write_file(Filename, <<"sdsds">>, [append]),
+
+    os:cmd("git add " ++ Filename),
+    [#{path := "temp_file_test"}] = elvis_git:staged_files(),
+    os:cmd("git reset " ++ Filename),
+
+    file:delete(Filename).
