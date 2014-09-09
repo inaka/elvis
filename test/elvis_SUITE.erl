@@ -13,6 +13,7 @@
          rock_with_incomplete_config/1,
          rock_with_list_config/1,
          rock_with_file_config/1,
+         rock_with_old_config/1,
          %% Webhook
          run_webhook/1,
          run_webhook_ping/1,
@@ -117,6 +118,26 @@ rock_with_file_config(_Config) ->
     Expected = "# \\.\\./\\.\\./test/examples/.*\\.erl \\[FAIL\\]\n",
     check_some_line_output(Fun, Expected, fun matches_regex/2),
     ok.
+
+-spec rock_with_old_config(config()) -> ok.
+rock_with_old_config(_Config) ->
+    ConfigPath = "../../config/old/elvis.config",
+    ElvisConfig = elvis_config:load_file(ConfigPath),
+    ok = try
+             elvis:rock(ElvisConfig),
+             ok
+         catch
+             throw:{invalid_config, _} -> fail
+         end,
+
+    ConfigPath1 = "../../config/old/elvis-test.config",
+    ElvisConfig1 = elvis_config:load_file(ConfigPath1),
+    ok = try
+             elvis:rock(ElvisConfig1),
+             ok
+         catch
+             throw:{invalid_config, _} -> fail
+         end.
 
 %%%%%%%%%%%%%%%
 %%% Webhook

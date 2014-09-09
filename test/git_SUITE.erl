@@ -70,7 +70,9 @@ check_staged_files(_Config) ->
     file:write_file(Filename, <<"sdsds">>, [append]),
 
     os:cmd("git add " ++ Filename),
-    [#{path := "temp_file_test"}] = elvis_git:staged_files(),
+    StagedFiles = elvis_git:staged_files(),
+    FilterFun = fun (#{path := Path}) -> Path == "temp_file_test" end,
+    [_] = lists:filter(FilterFun, StagedFiles),
     os:cmd("git reset " ++ Filename),
 
     file:delete(Filename).

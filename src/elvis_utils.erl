@@ -185,7 +185,7 @@ filter_files(Files, Filter) ->
 -spec glob_to_regex(iodata()) -> iodata().
 glob_to_regex(Glob) ->
     Regex1 = re:replace(Glob, "\\.", "\\\\."),
-    re:replace(Regex1,"\\*",".*").
+    re:replace(Regex1,"\\*", ".*").
 
 %% @doc Takes a line, a character and a count, returning the indentation level
 %%      invalid if the number of character is not a multiple of count.
