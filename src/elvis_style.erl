@@ -13,7 +13,8 @@
          used_ignored_variable/3,
          no_behavior_info/3,
          module_naming_convention/3,
-         state_record_and_type/3
+         state_record_and_type/3,
+         no_spec_with_records/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -69,6 +70,9 @@
         "This module implements an OTP behavior and has a 'state' record "
         "but is missing a 'state()' type.").
 
+-define(NO_SPEC_WITH_RECORDS,
+        "The spec in line ~p uses a record, please define a type for the "
+        "record and use that instead.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -242,6 +246,19 @@ state_record_and_type(Config, Target, []) ->
             end;
         false ->
             []
+    end.
+
+-spec no_spec_with_records(elvis_config:config(),
+                          elvis_utils:file(),
+                          [list()]) ->
+    [elvis_result:item()].
+no_spec_with_records(Config, Target, []) ->
+    {Root, _} = elvis_utils:parse_tree(Config, Target),
+    case elvis_code:find(fun spec_includes_record/1, Root) of
+        [] -> [];
+        SpecNodes ->
+            ResultFun = result_node_line_fun(?NO_SPEC_WITH_RECORDS),
+            lists:map(ResultFun, SpecNodes)
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -490,7 +507,14 @@ has_state_type(Root) ->
                 (type_attr == elvis_code:type(Node))
                     and (state == elvis_code:attr(name, Node))
         end,
-    case elvis_code:find(IsStateType, Root) of
-        [] -> false;
-        _ -> true
-    end.
+    elvis_code:find(IsStateType, Root) /= [].
+
+-spec spec_includes_record(elvis_code:tree_node()) -> boolean().
+spec_includes_record(Node) ->
+    IsTypeRecord = fun(Child) ->
+                           (elvis_code:type(Child) == type)
+                               and (elvis_code:attr(subtype, Child) == record)
+                   end,
+
+    (elvis_code:type(Node) == spec)
+        and (elvis_code:find(IsTypeRecord, Node) /= []).

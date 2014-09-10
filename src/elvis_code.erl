@@ -715,6 +715,8 @@ to_map({typed_record_field, Field, Type}) ->
 
 %% Type
 
+to_map({type, Attrs, Subtype, Types}) when not is_list(Types) ->
+    to_map({type, Attrs, Subtype, [Types]});
 to_map({type, Attrs, Subtype, Types}) ->
     {Location, Text} =
         case Attrs of
@@ -743,11 +745,13 @@ to_map({type, Attrs, map_field_assoc, Name, Type}) ->
                  key => to_map(Name),
                  text => Text,
                  type => to_map(Type)}};
-to_map({remote_type, Attrs, ModuleName}) ->
-    #{type => record_field,
+to_map({remote_type, Attrs, [Module, Function, Args]}) ->
+    #{type => remote_type,
       attrs => #{location => get_location(Attrs),
-                 text => get_text(Attrs)},
-      content => to_map(ModuleName)};
+                 text => get_text(Attrs),
+                 module => to_map(Module),
+                 function => to_map(Function),
+                 args => to_map(Args)}};
 to_map({ann_type, Attrs, [Var, Type]}) ->
     #{type => record_field,
       attrs => #{location => get_location(Attrs),
@@ -766,6 +770,13 @@ to_map({attribute, Attrs, type, {Name, Type, Args}}) ->
                  name => Name,
                  args => to_map(Args),
                  type => to_map(Type)}};
+to_map({attribute, Attrs, spec, {{Name, Arity}, Types}}) ->
+    #{type => spec,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 name => Name,
+                 arity => Arity},
+     content => to_map(Types)};
 to_map({attribute, Attrs, Type, Value}) ->
     #{type => Type,
       attrs => #{location => get_location(Attrs),

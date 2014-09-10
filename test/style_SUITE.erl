@@ -19,7 +19,8 @@
          verify_used_ignored_variable/1,
          verify_no_behavior_info/1,
          verify_module_naming_convention/1,
-         verify_state_record_and_type/1
+         verify_state_record_and_type/1,
+         verify_no_spec_with_records/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -230,3 +231,16 @@ verify_state_record_and_type(_Config) ->
     PathFail1 = "fail_state_type.erl",
     {ok, FileFail1} = elvis_test_utils:find_file(SrcDirs, PathFail1),
     [_] = elvis_style:state_record_and_type(ElvisConfig, FileFail1, []).
+
+-spec verify_no_spec_with_records(config()) -> any().
+verify_no_spec_with_records(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    PathFail = "fail_no_spec_with_records.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    [_, _, _] = elvis_style:no_spec_with_records(ElvisConfig, FileFail, []),
+
+    PathPass = "pass_no_spec_with_records.erl",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] = elvis_style:no_spec_with_records(ElvisConfig, FilePass, []).
