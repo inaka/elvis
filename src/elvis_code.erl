@@ -729,6 +729,20 @@ to_map({type, Attrs, Subtype, Types}) ->
                  text => Text,
                  subtype => Subtype},
       content => to_map(Types)};
+to_map({type, Attrs, map_field_assoc, Name, Type}) ->
+    {Location, Text} =
+        case Attrs of
+            Line when is_integer(Attrs) ->
+                {{Line, Line}, undefined};
+            Attrs ->
+                {get_location(Attrs),
+                 get_text(Attrs)}
+        end,
+    #{type => type_map_field,
+      attrs => #{location => Location,
+                 key => to_map(Name),
+                 text => Text,
+                 type => to_map(Type)}};
 to_map({remote_type, Attrs, ModuleName}) ->
     #{type => record_field,
       attrs => #{location => get_location(Attrs),
@@ -745,6 +759,13 @@ to_map(any) -> %% any()
 
 %% Other Attributes
 
+to_map({attribute, Attrs, type, {Name, Type, Args}}) ->
+    #{type => type_attr,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 name => Name,
+                 args => to_map(Args),
+                 type => to_map(Type)}};
 to_map({attribute, Attrs, Type, Value}) ->
     #{type => Type,
       attrs => #{location => get_location(Attrs),

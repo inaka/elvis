@@ -12,7 +12,8 @@
          invalid_dynamic_call/3,
          used_ignored_variable/3,
          no_behavior_info/3,
-         module_naming_convention/3
+         module_naming_convention/3,
+         state_record_and_type/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
@@ -59,6 +60,15 @@
 -define(MODULE_NAMING_CONVENTION_MSG,
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
+
+-define(STATE_RECORD_MISSING_MSG,
+        "This module implements an OTP behavior but is missing "
+        "a 'state' record.").
+
+-define(STATE_TYPE_MISSING_MSG,
+        "This module implements an OTP behavior and has a 'state' record "
+        "but is missing a 'state()' type.").
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -207,7 +217,31 @@ module_naming_convention(Config, Target, [Regex, IgnoreModules]) ->
                     Result = elvis_result:new(item, Msg, Info, 1),
                     [Result];
                 {match, _} -> []
-            end
+            end;
+        true -> []
+    end.
+
+-spec state_record_and_type(elvis_config:config(),
+                            elvis_utils:file(),
+                            [list()]) ->
+    [elvis_result:item()].
+state_record_and_type(Config, Target, []) ->
+    {Root, _} = elvis_utils:parse_tree(Config, Target),
+    case is_otp_module(Root) of
+        true ->
+            case {has_state_record(Root), has_state_type(Root)} of
+                {true, true} -> [];
+                {false, _} ->
+                    Msg = ?STATE_RECORD_MISSING_MSG,
+                    Result = elvis_result:new(item, Msg, [], 1),
+                    [Result];
+                {true, false} ->
+                    Msg = ?STATE_TYPE_MISSING_MSG,
+                    Result = elvis_result:new(item, Msg, [], 1),
+                    [Result]
+            end;
+        false ->
+            []
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -414,4 +448,49 @@ check_parent_match(Zipper) ->
                     zipper:down(ParentZipper) == Zipper;
                 _ -> check_parent_match(ParentZipper)
             end
+    end.
+
+-spec is_otp_module(elvis_code:tree_node()) -> boolean().
+is_otp_module(Root) ->
+    OtpSet = sets:from_list([gen_server,
+                             gen_event,
+                             gen_fsm,
+                             supervisor_bridge
+                            ]),
+    IsBehaviorAttr = fun(Node) ->  behavior == elvis_code:type(Node) end,
+    case elvis_code:find(IsBehaviorAttr, Root) of
+        [] ->
+            false;
+        Behaviors ->
+            ValueFun = fun(Node) -> elvis_code:attr(value, Node) end,
+            Names = lists:map(ValueFun, Behaviors),
+            BehaviorsSet = sets:from_list(Names),
+            case sets:to_list(sets:intersection(OtpSet, BehaviorsSet)) of
+                [] -> false;
+                _ -> true
+            end
+    end.
+
+-spec has_state_record(elvis_code:node()) -> boolean().
+has_state_record(Root) ->
+    IsStateRecord =
+        fun(Node) ->
+                (record_attr == elvis_code:type(Node))
+                    and (state == elvis_code:attr(name, Node))
+        end,
+    case elvis_code:find(IsStateRecord, Root) of
+        [] -> false;
+        _ -> true
+    end.
+
+-spec has_state_type(elvis_code:node()) -> boolean().
+has_state_type(Root) ->
+    IsStateType =
+        fun(Node) ->
+                (type_attr == elvis_code:type(Node))
+                    and (state == elvis_code:attr(name, Node))
+        end,
+    case elvis_code:find(IsStateType, Root) of
+        [] -> false;
+        _ -> true
     end.
