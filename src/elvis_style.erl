@@ -452,9 +452,7 @@ check_parent_match(Zipper) ->
 
 -spec is_otp_module(elvis_code:tree_node()) -> boolean().
 is_otp_module(Root) ->
-    OtpSet = sets:from_list([application,
-                             supervisor,
-                             gen_server,
+    OtpSet = sets:from_list([gen_server,
                              gen_event,
                              gen_fsm,
                              supervisor_bridge
