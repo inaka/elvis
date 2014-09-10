@@ -1,4 +1,4 @@
--module(test_module).
+-module(pass_state_record_and_type).
 
 -behavior(application).
 
@@ -7,11 +7,10 @@
 -record(state, {}).
 
 -type state() :: #state{}.
--export_type([state/0]).
 
--spec start(term(), term()) -> ok.
+-spec start(term(), state()) -> ok.
 start(_, _) ->
-    #state{}.
+    ok.
 
 -spec stop(term()) -> ok.
 stop(_) ->

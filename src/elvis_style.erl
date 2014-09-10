@@ -61,9 +61,14 @@
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
 
--define(STATE_RECORD_AND_TYPE_MSG,
+-define(STATE_RECORD_MISSING_MSG,
         "This module implements an OTP behavior but is missing "
-        "a 'state' record").
+        "a 'state' record.").
+
+-define(STATE_TYPE_MISSING_MSG,
+        "This module implements an OTP behavior and has a 'state' record "
+        "but is missing a 'state()' type.").
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -224,10 +229,14 @@ state_record_and_type(Config, Target, []) ->
     {Root, _} = elvis_utils:parse_tree(Config, Target),
     case is_otp_module(Root) of
         true ->
-            case has_state_record(Root) and has_state_type(Root) of
-                true -> [];
-                false ->
-                    Msg = ?STATE_RECORD_AND_TYPE_MSG,
+            case {has_state_record(Root), has_state_type(Root)} of
+                {true, true} -> [];
+                {false, _} ->
+                    Msg = ?STATE_RECORD_MISSING_MSG,
+                    Result = elvis_result:new(item, Msg, [], 1),
+                    [Result];
+                {true, false} ->
+                    Msg = ?STATE_TYPE_MISSING_MSG,
                     Result = elvis_result:new(item, Msg, [], 1),
                     [Result]
             end;

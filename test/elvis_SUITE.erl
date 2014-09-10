@@ -343,12 +343,6 @@ main_unexistent(_Config) ->
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-check_some_line_output(Fun, Expected) ->
-    IsEqual = fun(Result, Exp) ->
-                     Result == Exp
-             end,
-    check_some_line_output(Fun, Expected, IsEqual).
-
 check_some_line_output(Fun, Expected, FilterFun) ->
     ct:capture_start(),
     Fun(),
