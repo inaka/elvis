@@ -59,21 +59,10 @@ check_old_configuration_format(_Config, Target, []) ->
     case proplists:get_value(elvis, AllConfig) of
         undefined -> [];
         ElvisConfig ->
-            case proplists:get_value(config, ElvisConfig) of
-                undefined ->
-                    [];
-                Config when is_map(Config) ->
-                    [elvis_result:new(item, ?OLD_CONFIG_FORMAT, [])];
-                Config when is_list(Config) ->
-                    SrcDirsIsKey = fun(RuleGroup) ->
-                                       maps:is_key(src_dirs, RuleGroup)
-                                   end,
-                    case lists:filter(SrcDirsIsKey, Config) of
-                        [] ->
-                            [];
-                        _ ->
-                            [elvis_result:new(item, ?OLD_CONFIG_FORMAT, [])]
-                    end
+            case is_old_config(ElvisConfig) of
+                false -> [];
+                true ->
+                    [elvis_result:new(item, ?OLD_CONFIG_FORMAT, [])]
             end
     end.
 
@@ -115,3 +104,16 @@ get_erlang_mk_deps(File) ->
     Lines = binary:split(Src, <<"\n">>, [global]),
     IsDepsLine = fun(Line) -> re:run(Line, "dep_", []) /= nomatch end,
     lists:filter(IsDepsLine, Lines).
+
+%% Old config
+
+is_old_config(ElvisConfig) ->
+    case proplists:get_value(config, ElvisConfig) of
+        undefined -> false;
+        Config when is_map(Config) -> true;
+        Config when is_list(Config) ->
+            SrcDirsIsKey = fun(RuleGroup) ->
+                                   maps:is_key(src_dirs, RuleGroup)
+                           end,
+            lists:filter(SrcDirsIsKey, Config) /= []
+    end.
