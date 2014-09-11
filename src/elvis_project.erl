@@ -2,13 +2,19 @@
 
 -export([
          no_deps_master_erlang_mk/3,
-         no_deps_master_rebar/3
+         no_deps_master_rebar/3,
+         check_old_configuration_format/3
         ]).
 
 -define(DEP_MASTER,
         "Dependency '~s' revision is specified 'master', "
         "please change this to a tag, branch or specific "
         "commit.").
+
+-define(OLD_CONFIG_FORMAT,
+        "The current Elvis configuration file has an outdated format. "
+        "Please check Elvis's GitHub repository to find out what the "
+        "new format is.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -42,6 +48,34 @@ no_deps_master_rebar(_Config, Target, []) ->
                   end,
 
     lists:map(DepToResult, DepsInMaster).
+
+-spec check_old_configuration_format(elvis_config:config(),
+                                     elvis_utils:file(),
+                                     [term()]) ->
+    [elvis_result:item()].
+check_old_configuration_format(_Config, Target, []) ->
+    Path = elvis_utils:path(Target),
+    {ok, [AllConfig]} = file:consult(Path),
+    case proplists:get_value(elvis, AllConfig) of
+        undefined -> [];
+        ElvisConfig ->
+            case proplists:get_value(config, ElvisConfig) of
+                undefined ->
+                    [];
+                Config when is_map(Config) ->
+                    [elvis_result:new(item, ?OLD_CONFIG_FORMAT, [])];
+                Config when is_list(Config) ->
+                    SrcDirsIsKey = fun(RuleGroup) ->
+                                       maps:is_key(src_dirs, RuleGroup)
+                                   end,
+                    case lists:filter(SrcDirsIsKey, Config) of
+                        [] ->
+                            [];
+                        _ ->
+                            [elvis_result:new(item, ?OLD_CONFIG_FORMAT, [])]
+                    end
+            end
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private

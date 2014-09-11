@@ -294,6 +294,9 @@ is_dot({dot, _}) -> true;
 is_dot(_) -> false.
 
 %% @private
+get_location(Attrs) when is_integer(Attrs) ->
+    Line = Attrs,
+    {Line, 1};
 get_location(Attrs) when is_list(Attrs) ->
     Line = proplists:get_value(line, Attrs),
     Column = proplists:get_value(column, Attrs),
@@ -302,6 +305,8 @@ get_location(_Attrs) ->
     {-1, -1}.
 
 %% @private
+get_text(Attrs) when is_integer(Attrs) ->
+    undefined;
 get_text(Attrs) when is_list(Attrs) ->
     proplists:get_value(text, Attrs, "");
 get_text(_Attrs) ->
@@ -715,22 +720,36 @@ to_map({typed_record_field, Field, Type}) ->
 
 %% Type
 
-to_map({type, Attrs, Subtype, Types}) when not is_list(Types) ->
-    to_map({type, Attrs, Subtype, [Types]});
-to_map({type, Attrs, Subtype, Types}) ->
-    {Location, Text} =
-        case Attrs of
-            Line when is_integer(Attrs) ->
-                {{Line, Line}, undefined};
-            Attrs ->
-                {get_location(Attrs),
-                 get_text(Attrs)}
-        end,
+to_map({type, Attrs, 'fun', Types}) ->
     #{type => type,
-      attrs => #{location => Location,
-                 text => Text,
-                 subtype => Subtype},
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 name => 'fun'},
       content => to_map(Types)};
+to_map({type, Attrs, constraint, [Sub, SubType]}) ->
+    #{type => type,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 name => constraint,
+                 subtype => Sub},
+      content => to_map(SubType)};
+to_map({type, Attrs, bounded_fun, [FunType, Defs]}) ->
+    %% io:format("~p~n", [Defs]),
+    #{type => type,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 name => bounded_fun,
+                 'fun' => to_map(FunType)},
+      content => to_map(Defs)};
+to_map({type, Attrs, Name, any}) ->
+    to_map({type, Attrs, Name, [any]});
+to_map({type, Attrs, Name, Types}) ->
+    #{type => type,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 name => Name},
+      content => to_map(Types)};
+
 to_map({type, Attrs, map_field_assoc, Name, Type}) ->
     {Location, Text} =
         case Attrs of

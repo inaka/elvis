@@ -513,7 +513,7 @@ has_state_type(Root) ->
 spec_includes_record(Node) ->
     IsTypeRecord = fun(Child) ->
                            (elvis_code:type(Child) == type)
-                               and (elvis_code:attr(subtype, Child) == record)
+                               and (elvis_code:attr(name, Child) == record)
                    end,
 
     (elvis_code:type(Node) == spec)
