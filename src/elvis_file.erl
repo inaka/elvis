@@ -45,8 +45,9 @@ path(File) ->
     {elvis_code:tree_node(), file()}.
 parse_tree(_Config, File = #{parse_tree := ParseTree}) ->
     {ParseTree, File};
-parse_tree(Config, File = #{content := Content}) ->
-    ParseTree = elvis_code:parse_tree(Config, Content),
+parse_tree(Config, File = #{path := Path, content := Content}) ->
+    Ext = filename:extension(Path),
+    ParseTree = resolve_parse_tree(Config, Ext, Content),
     parse_tree(Config, File#{parse_tree => ParseTree});
 parse_tree(Config, File0 = #{path := _Path}) ->
     {_, File} = src(File0),
@@ -90,6 +91,13 @@ filter_files(Files, Filter) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-spec resolve_parse_tree(elvis_config:config(), string(), binary()) ->
+    undefined | elvis_code:tree_node().
+resolve_parse_tree(Config, ".erl", Content) ->
+    elvis_code:parse_tree(Config, Content);
+resolve_parse_tree(_, _, _) ->
+    undefined.
 
 -spec glob_to_regex(iodata()) -> iodata().
 glob_to_regex(Glob) ->
