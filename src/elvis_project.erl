@@ -3,7 +3,7 @@
 -export([
          no_deps_master_erlang_mk/3,
          no_deps_master_rebar/3,
-         check_old_configuration_format/3
+         old_configuration_format/3
         ]).
 
 -define(DEP_MASTER,
@@ -49,11 +49,11 @@ no_deps_master_rebar(_Config, Target, []) ->
 
     lists:map(DepToResult, DepsInMaster).
 
--spec check_old_configuration_format(elvis_config:config(),
+-spec old_configuration_format(elvis_config:config(),
                                      elvis_utils:file(),
                                      [term()]) ->
     [elvis_result:item()].
-check_old_configuration_format(_Config, Target, []) ->
+old_configuration_format(_Config, Target, []) ->
     Path = elvis_utils:path(Target),
     {ok, [AllConfig]} = file:consult(Path),
     case proplists:get_value(elvis, AllConfig) of
