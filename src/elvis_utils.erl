@@ -94,6 +94,21 @@ find_files(Dirs, Pattern, Option) ->
           end,
     [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
 
+%% @doc Filter files based on the glob provided.
+-spec filter_files([elvis_utils:file()], string()) -> [elvis_utils:file()].
+filter_files(Files, Filter) ->
+    Regex = glob_to_regex(Filter),
+    FilterFun = fun(#{path := Path}) ->
+                        match == re:run(Path, Regex, [{capture, none}])
+                end,
+    lists:filter(FilterFun, Files).
+
+%% @private
+-spec glob_to_regex(iodata()) -> iodata().
+glob_to_regex(Glob) ->
+    Regex1 = re:replace(Glob, "\\.", "\\\\."),
+    re:replace(Regex1, "\\*", ".*").
+
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line
 %% as a binary, the line number and the supplied Args) and
@@ -172,20 +187,6 @@ to_str(Arg) when is_integer(Arg) ->
     integer_to_list(Arg);
 to_str(Arg) when is_list(Arg) ->
     Arg.
-
--spec filter_files([elvis_utils:file()], string()) -> [elvis_utils:file()].
-filter_files(Files, Filter) ->
-    Regex = glob_to_regex(Filter),
-    FilterFun = fun(#{path := Path}) ->
-                        match == re:run(Path, Regex, [{capture, none}])
-                end,
-    lists:filter(FilterFun, Files).
-
-%% @private
--spec glob_to_regex(iodata()) -> iodata().
-glob_to_regex(Glob) ->
-    Regex1 = re:replace(Glob, "\\.", "\\\\."),
-    re:replace(Regex1, "\\*", ".*").
 
 %% @doc Takes a line, a character and a count, returning the indentation level
 %%      invalid if the number of character is not a multiple of count.

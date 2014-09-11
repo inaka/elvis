@@ -8,7 +8,8 @@
 
 -export([
          verify_no_deps_master_erlang_mk/1,
-         verify_no_deps_master_rebar/1
+         verify_no_deps_master_rebar/1,
+         verify_old_config_format/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -64,3 +65,20 @@ verify_no_deps_master_rebar(_Config) ->
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Filename),
 
     [_, _] = elvis_project:no_deps_master_rebar(ElvisConfig, File, []).
+
+-spec verify_old_config_format(config()) -> any().
+verify_old_config_format(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    PathFail = "fail.elvis.config",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    [_] = elvis_project:old_configuration_format(ElvisConfig, FileFail, []),
+
+    PathFail1 = "fail.1.elvis.config",
+    {ok, FileFail1} = elvis_test_utils:find_file(SrcDirs, PathFail1),
+    [_] = elvis_project:old_configuration_format(ElvisConfig, FileFail1, []),
+
+    PathPass = "pass.elvis.config",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] = elvis_project:old_configuration_format(ElvisConfig, FilePass, []).

@@ -2,13 +2,19 @@
 
 -export([
          no_deps_master_erlang_mk/3,
-         no_deps_master_rebar/3
+         no_deps_master_rebar/3,
+         old_configuration_format/3
         ]).
 
 -define(DEP_MASTER,
         "Dependency '~s' revision is specified 'master', "
         "please change this to a tag, branch or specific "
         "commit.").
+
+-define(OLD_CONFIG_FORMAT,
+        "The current Elvis configuration file has an outdated format. "
+        "Please check Elvis's GitHub repository to find out what the "
+        "new format is.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -42,6 +48,23 @@ no_deps_master_rebar(_Config, Target, []) ->
                   end,
 
     lists:map(DepToResult, DepsInMaster).
+
+-spec old_configuration_format(elvis_config:config(),
+                                     elvis_utils:file(),
+                                     [term()]) ->
+    [elvis_result:item()].
+old_configuration_format(_Config, Target, []) ->
+    Path = elvis_utils:path(Target),
+    {ok, [AllConfig]} = file:consult(Path),
+    case proplists:get_value(elvis, AllConfig) of
+        undefined -> [];
+        ElvisConfig ->
+            case is_old_config(ElvisConfig) of
+                false -> [];
+                true ->
+                    [elvis_result:new(item, ?OLD_CONFIG_FORMAT, [])]
+            end
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
@@ -81,3 +104,16 @@ get_erlang_mk_deps(File) ->
     Lines = binary:split(Src, <<"\n">>, [global]),
     IsDepsLine = fun(Line) -> re:run(Line, "dep_", []) /= nomatch end,
     lists:filter(IsDepsLine, Lines).
+
+%% Old config
+
+is_old_config(ElvisConfig) ->
+    case proplists:get_value(config, ElvisConfig) of
+        undefined -> false;
+        Config when is_map(Config) -> true;
+        Config when is_list(Config) ->
+            SrcDirsIsKey = fun(RuleGroup) ->
+                                   maps:is_key(src_dirs, RuleGroup)
+                           end,
+            lists:filter(SrcDirsIsKey, Config) /= []
+    end.
