@@ -16,7 +16,7 @@
 %%% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec staged_files() -> [elvis_utils:file()].
+-spec staged_files() -> [elvis_file:file()].
 staged_files() ->
     Cmd = ?LIST_STAGED,
     Output = list_to_binary(os:cmd(Cmd)),
@@ -26,7 +26,7 @@ staged_files() ->
 
     lists:map(fun staged_content/1, Paths).
 
--spec staged_content(string()) -> elvis_utils:file().
+-spec staged_content(string()) -> elvis_file:file().
 staged_content(Path) ->
     Content = os:cmd(?STAGED_CONTENT(Path)),
     #{

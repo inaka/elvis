@@ -54,9 +54,9 @@ rock(Config) when is_list(Config) ->
 rock(Config = #{files := Files, rules := _Rules}) ->
     elvis_utils:info("Loading files...~n"),
     Fun = fun (File) ->
-                  Path = elvis_utils:path(File),
+                  Path = elvis_file:path(File),
                   elvis_utils:info("Loading ~s~n", [Path]),
-                  elvis_utils:load_file_data(Config, File)
+                  elvis_file:load_file_data(Config, File)
           end,
     LoadedFiles = lists:map(Fun, Files),
 
@@ -118,7 +118,7 @@ combine_results(Item, ok) ->
 combine_results({fail, ItemResults}, {fail, AccResults}) ->
     {fail, ItemResults ++ AccResults}.
 
--spec apply_rules(elvis_config:config(), elvis_utils:file()) ->
+-spec apply_rules(elvis_config:config(), elvis_file:file()) ->
     elvis_result:file().
 apply_rules(Config = #{rules := Rules}, File) ->
     Acc = {[], Config, File},
