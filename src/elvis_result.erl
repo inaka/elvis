@@ -41,7 +41,7 @@
          }.
 -type file() ::
         #{
-           file => elvis_utils:file(),
+           file => elvis_file:file(),
            rules => list()
          }.
 
@@ -67,7 +67,7 @@ new(item, Msg, Info, LineNum) ->
 
 %% Getters
 
--spec get_file(file()) -> elvis_utils:file().
+-spec get_file(file()) -> elvis_file:file().
 get_file(#{file := File}) -> File.
 
 -spec get_rules(file()) -> [rule()].
@@ -98,7 +98,7 @@ print([Result | Results]) ->
     print(Results);
 
 print(#{file := File, rules := Rules}) ->
-    Path = elvis_utils:path(File),
+    Path = elvis_file:path(File),
     Status = case status(Rules) of
                  ok -> "OK";
                  fail -> "FAIL"

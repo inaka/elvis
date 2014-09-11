@@ -1,16 +1,6 @@
 -module(elvis_utils).
 
 -export([
-         %% Files
-         src/1,
-         path/1,
-         parse_tree/2,
-         load_file_data/2,
-
-         find_files/2,
-         find_files/3,
-         filter_files/2,
-
          %% Rules
          check_lines/3,
          check_lines_with_context/4,
@@ -34,80 +24,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% @doc Returns a tuple with the contents of the file and the file itself.
--spec src(file()) ->
-    {binary(), file()} | {error, enoent}.
-src(File = #{content := Content}) ->
-    {Content, File};
-src(File = #{path := Path}) ->
-    case file:read_file(Path) of
-        {ok, Content} ->
-            src(File#{content => Content});
-        Error -> Error
-    end;
-src(File) ->
-    throw({invalid_file, File}).
-
-%% @doc Given a file() returns its path.
--spec path(file()) -> string().
-path(#{path := Path}) ->
-    Path;
-path(File) ->
-    throw({invalid_file, File}).
-
-%% @doc Add the root node of the parse tree to the file data.
--spec parse_tree(elvis_config:config(), file()) ->
-    {elvis_code:tree_node(), file()}.
-parse_tree(_Config, File = #{parse_tree := ParseTree}) ->
-    {ParseTree, File};
-parse_tree(Config, File = #{content := Content}) ->
-    ParseTree = elvis_code:parse_tree(Config, Content),
-    parse_tree(Config, File#{parse_tree => ParseTree});
-parse_tree(Config, File0 = #{path := _Path}) ->
-    {_, File} = src(File0),
-    parse_tree(Config, File);
-parse_tree(_Config, File) ->
-    throw({invalid_file, File}).
-
-%% @doc Loads and adds all related file data.
--spec load_file_data(elvis_config:config(), file()) -> file().
-load_file_data(Config, File0 = #{path := _Path}) ->
-    {_, File1} = src(File0),
-    {_, File2} = parse_tree(Config, File1),
-    File2.
-
-%% @doc Returns all files under the specified Path
-%% that match the pattern Name.
--spec find_files([string()], string()) -> [file()].
-find_files(Dirs, Pattern) ->
-    find_files(Dirs, Pattern, recursive).
-
--spec find_files([string()], string(), recursive | local) -> [file()].
-find_files(Dirs, Pattern, Option) ->
-    MiddlePath = case Option of
-                     recursive -> "/**/";
-                     local -> "/"
-                 end,
-    Fun = fun(Dir) ->
-                filelib:wildcard(Dir ++ MiddlePath ++ Pattern)
-          end,
-    [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
-
-%% @doc Filter files based on the glob provided.
--spec filter_files([elvis_utils:file()], string()) -> [elvis_utils:file()].
-filter_files(Files, Filter) ->
-    Regex = glob_to_regex(Filter),
-    FilterFun = fun(#{path := Path}) ->
-                        match == re:run(Path, Regex, [{capture, none}])
-                end,
-    lists:filter(FilterFun, Files).
-
-%% @private
--spec glob_to_regex(iodata()) -> iodata().
-glob_to_regex(Glob) ->
-    Regex1 = re:replace(Glob, "\\.", "\\\\."),
-    re:replace(Regex1, "\\*", ".*").
 
 %% @doc Takes a binary that holds source code and applies
 %% Fun to each line. Fun takes 3 arguments (the line

@@ -63,26 +63,26 @@ dirs(_RuleGroup = #{dirs := Dirs}) ->
 dirs(#{}) ->
     [].
 
--spec resolve_files(config(), [elvis_utils:file()]) -> config().
+-spec resolve_files(config(), [elvis_file:file()]) -> config().
 resolve_files(Config, Files) when is_list(Config) ->
     Fun = fun(RuleGroup) -> resolve_files(RuleGroup, Files) end,
     lists:map(Fun, Config);
 resolve_files(RuleGroup = #{filter := Filter}, Files) ->
     Filter = maps:get(filter, RuleGroup),
-    FilteredFiles = elvis_utils:filter_files(Files, Filter),
+    FilteredFiles = elvis_file:filter_files(Files, Filter),
     RuleGroup#{files => FilteredFiles};
 resolve_files(RuleGroup, Files) ->
-    FilteredFiles = elvis_utils:filter_files(Files, ?DEFAULT_FILTER),
+    FilteredFiles = elvis_file:filter_files(Files, ?DEFAULT_FILTER),
     RuleGroup#{files => FilteredFiles}.
 
 -spec resolve_files(config()) -> config().
 resolve_files(Config) when is_list(Config) ->
     lists:map(fun resolve_files/1, Config);
 resolve_files(RuleGroup = #{dirs := Dirs, filter := Filter}) ->
-    Files = elvis_utils:find_files(Dirs, Filter, local),
+    Files = elvis_file:find_files(Dirs, Filter, local),
     RuleGroup#{files => Files};
 resolve_files(RuleGroup = #{dirs := Dirs}) ->
-    Files = elvis_utils:find_files(Dirs, ?DEFAULT_FILTER),
+    Files = elvis_file:find_files(Dirs, ?DEFAULT_FILTER),
     RuleGroup#{files => Files}.
 
 -spec apply_to_files(fun(), config()) -> config().

@@ -116,7 +116,7 @@ comment_files(GithubInfo, Results) ->
           end,
     lists:foreach(Fun, Results).
 
--spec comment_rules(github_info(), [elvis_result:rule()], elvis_utils:file()) ->
+-spec comment_rules(github_info(), [elvis_result:rule()], elvis_file:file()) ->
     ok.
 comment_rules(GithubInfo, Rules, File) ->
     Fun = fun(Rule) ->
@@ -125,7 +125,7 @@ comment_rules(GithubInfo, Rules, File) ->
           end,
     lists:foreach(Fun, Rules).
 
--spec comment_lines(github_info(), [elvis_result:item()], elvis_utils:file()) ->
+-spec comment_lines(github_info(), [elvis_result:item()], elvis_file:file()) ->
     ok.
 comment_lines(_GithubInfo, [], _File) ->
     ok;

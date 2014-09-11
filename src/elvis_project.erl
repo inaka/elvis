@@ -21,7 +21,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -spec no_deps_master_erlang_mk(elvis_config:config(),
-                               elvis_utils:file(),
+                               elvis_file:file(),
                                [term()]) ->
     [elvis_result:item()].
 no_deps_master_erlang_mk(_Config, Target, []) ->
@@ -36,7 +36,7 @@ no_deps_master_erlang_mk(_Config, Target, []) ->
     lists:map(DepToResult, DepsInMaster).
 
 -spec no_deps_master_rebar(elvis_config:config(),
-                           elvis_utils:file(),
+                           elvis_file:file(),
                            [term()]) ->
     [elvis_result:item()].
 no_deps_master_rebar(_Config, Target, []) ->
@@ -50,11 +50,11 @@ no_deps_master_rebar(_Config, Target, []) ->
     lists:map(DepToResult, DepsInMaster).
 
 -spec old_configuration_format(elvis_config:config(),
-                                     elvis_utils:file(),
-                                     [term()]) ->
+                               elvis_file:file(),
+                               [term()]) ->
     [elvis_result:item()].
 old_configuration_format(_Config, Target, []) ->
-    Path = elvis_utils:path(Target),
+    Path = elvis_file:path(Target),
     {ok, [AllConfig]} = file:consult(Path),
     case proplists:get_value(elvis, AllConfig) of
         undefined -> [];
@@ -73,7 +73,7 @@ old_configuration_format(_Config, Target, []) ->
 %%% Rebar
 
 get_rebar_deps(File) ->
-    Path = elvis_utils:path(File),
+    Path = elvis_file:path(File),
     {ok, Terms} = file:consult(Path),
     IsDepsTerm = fun
                      ({deps, _}) -> true;
@@ -100,7 +100,7 @@ is_erlang_mk_master_dep(Line) ->
     end.
 
 get_erlang_mk_deps(File) ->
-    {Src, _} = elvis_utils:src(File),
+    {Src, _} = elvis_file:src(File),
     Lines = binary:split(Src, <<"\n">>, [global]),
     IsDepsLine = fun(Line) -> re:run(Line, "dep_", []) /= nomatch end,
     lists:filter(IsDepsLine, Lines).
