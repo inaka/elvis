@@ -15,7 +15,7 @@ help by typing `elvis help`. A list of available commands can be shown using the
 
 To run `elvis` from the terminal use the `rock` command (i.e. `elvis
 rock`). There's no need to specify a configuration file path if you have an
-`elvis.config` file in the same location where you are executing the soript,
+`elvis.config` file in the same location where you are executing the script,
 otherwise a configuration file can be specified through the use of the
 `--config` (or just `-c`) option.
 
