@@ -17,7 +17,7 @@ To run `elvis` from the terminal use the `rock` command (i.e. `elvis
 rock`). There's no need to specify a configuration file path if you have an
 `elvis.config` file in the same location where you are executing the script,
 otherwise a configuration file can be specified through the use of the
-`--config` option.
+`--config` (or just `-c`) option.
 
 ```bash
 elvis rock --config config/elvis.config
@@ -32,14 +32,15 @@ your pre-commit script:
 ```bash
 #!/bin/sh
 #
-# Runs elvis to all Erlang staged files.
+# Runs elvis rules to staged files where applicable.
 
 elvis git-hook
 ```
 
-As the comment states, `elvis` will search for files with the `.erl` extension
-among the staged files, get their staged content and run the rules specified in
-the configuration. If any rule fails then `elvis` exits with a non-zero code,
+As the comment states, `elvis` will search for files that match the `filter` of
+each rule group (see [configuration](#configuration)) among the staged files,
+get their staged content and run the rules specified in the configuration.
+If any rule fails then `elvis` exits with a non-zero code,
 which signals `git` that the commit shouldn't be made.
 
 Make sure your pre-commit hook script is executable (i.e. by running
@@ -61,9 +62,9 @@ elvis:rock().
 ```
 
 This will try to load the configuration for `elvis` specified in the
-[application's configuration][config], for this to be available, the application
-needs to be started. If no configuration is found `invalid_config` will be
-thrown.
+elvis [application configuration][config], for this to be available, the
+application needs to be started. If no configuration is found `invalid_config`
+will be thrown.
 
 To start the application in the shell enter the following command:
 
@@ -76,7 +77,7 @@ Another option for using `elvis` from the shell is explicitly providing a
 configuration as an argument to `rock/1`:
 
 ```erlang
-Config = #{src_dirs => ["src"], rules => []},
+Config = [#{dirs => ["src"], filter => "*.erl", rules => []}],
 elvis:rock(Config).
 %%+ # src/elvis.erl [OK]
 %%+ # src/elvis_result.erl [OK]
@@ -85,11 +86,13 @@ elvis:rock(Config).
 %%= ok
 ```
 
-`Config` should have a valid format, since this is a project under development
-the definition for *valid format* is still a work in progress.
+**IMPORTANT**: `Config` should have a valid format, but since this is a project
+under development the definition for *valid format* is still a work in progress.
+If the configuration format changes though, the example configuration files and
+the documentation in this README will be updated.
 
 We have only presented results where all files were well-behaved (respect all
-the rules), so here's an example of how it looks when files break some og the
+the rules), so here's an example of how it looks when files break some of the
 rules:
 
 ```
@@ -108,7 +111,7 @@ rules:
 
 There's also a way to use `elvis` as a GitHub [webhook][webhooks] for
 `pull request` (PR) events by calling the `webhook/1` function. This will add
-a comment for each rule that is broken by a line in the files associated wiith
+a comment for each rule that is broken by a line in the files associated with
 the PR.
 
 Since GitHub's API needs a valid user and password to allow the creation of
@@ -138,15 +141,29 @@ environment values in your [configuration][config] file:
    elvis,
    [
     {config,
-      #{src_dirs => ["src", "test"],
+     [#{dirs => ["src", "test"],
+        filter => "*.erl"
         rules    => [{elvis_style, line_length, [80]},
                      {elvis_style, no_tabs, []},
                      {elvis_style, macro_names, []},
                      {elvis_style, macro_module_names, []},
-                     {elvis_style, operator_spaces, [{right, ","}, {right, "++"}, {left, "++"}]}
+                     {elvis_style, operator_spaces, [{right, ","},
+                                                     {right, "++"},
+                                                     {left, "++"}
+                                                    ]}
                     ]
+       },
+      #{dirs => ["."],
+        filter => "Makefile",
+        rules => [{elvis_project, no_deps_master_erlang_mk, []}]
+       },
+      #{dirs => ["."],
+        filter => "rebar.config",
+        rules => [{elvis_project, no_deps_master_rebar, []}]
        }
+     ]
     },
+    %% Only necessary for the 'webhook' functionality
     {github_user, "user"},
     {github_password, "password"}
    ]
@@ -154,16 +171,16 @@ environment values in your [configuration][config] file:
 ].
 ```
 
-The `src_dirs` key is a list that indicates where `elvis` should look for the
-`*.erl` files that will be run through each of the rules specified by the
-`rules` entry, which is list of items with the following structure
-`{Module, Function, Args}`.
+The `dirs` key is a list that indicates where `elvis` should look for the
+files that match `filter`, which will be run through each of the rules
+specified by the `rules` entry, which is list of items with the following
+structure `{Module, Function, Args}`.
 
-As you can see a rule is just a function that takes 3 arguments: `elvis`'s
-[configuration](#configuration), information of the file to be analyzed and
-configuration `Args` (arguments) specified for the rule. This means that you can
-define rules of your own as long as the functions that implement them respect
-this arity.
+As you can see a rule is just a function and it takes 3 arguments: `elvis`'s
+`config` entry from its [configuration](#configuration); the file to be
+analyzed; and some configuration `Args` (arguments) specified for the rule.
+This means you can define rules of your own as long as the functions that
+implement them respect this arity.
 
 There's currently no default configuration for `elvis`, but in the meantime
 you can take the one in `config/elvis.config` as a starting point.
