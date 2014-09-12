@@ -777,6 +777,11 @@ to_map({ann_type, Attrs, [Var, Type]}) ->
                  text => get_text(Attrs),
                  var => to_map(Var),
                  type => to_map(Type)}};
+to_map({paren_type, Attrs, [Type]}) ->
+    #{type => record_field,
+      attrs => #{location => get_location(Attrs),
+                 text => get_text(Attrs),
+                 type => to_map(Type)}};
 to_map(any) -> %% any()
     #{type => any};
 
