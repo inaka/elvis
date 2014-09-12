@@ -96,7 +96,7 @@ erlang_halt(Code) ->
 
 -spec to_str(binary() | list() | atom()) -> string().
 to_str(Arg) when is_binary(Arg) ->
-    binary_to_list(Arg);
+    unicode:characters_to_list(Arg);
 to_str(Arg) when is_atom(Arg) ->
     atom_to_list(Arg);
 to_str(Arg) when is_integer(Arg) ->
