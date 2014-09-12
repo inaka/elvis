@@ -284,7 +284,11 @@ main_git_hook_fail(_Config) ->
                      "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
         Files = [
                  #{path => "fake_long_line.erl",
-                   content => LongLine}
+                   content => LongLine},
+                 #{path => "README.md",
+                   content => <<"### Title">>},
+                 #{path => "Makefile",
+                   content => <<"@Some text\n\nCT_OPTS =">>}
                 ],
         FakeStagedFiles = fun() -> Files end,
         meck:expect(elvis_git, staged_files, FakeStagedFiles),
