@@ -48,11 +48,17 @@ rock() ->
     rock(Config).
 
 -spec rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
-rock(Config) when is_list(Config) ->
-    Results = lists:map(fun rock/1, Config),
-    lists:foldl(fun combine_results/2, ok, Results);
-rock(Config = #{files := Files, rules := _Rules}) ->
+rock(Config) ->
+    elvis_config:validate(Config),
+    NewConfig = elvis_config:normalize(Config),
+    Results = lists:map(fun do_rock/1, NewConfig),
+    lists:foldl(fun combine_results/2, ok, Results).
+
+%% @private
+do_rock(Config0) ->
     elvis_utils:info("Loading files...~n"),
+    Config = elvis_config:resolve_files(Config0),
+    Files = elvis_config:files(Config),
     Fun = fun (File) ->
                   Path = elvis_file:path(File),
                   elvis_utils:info("Loading ~s~n", [Path]),
@@ -66,18 +72,7 @@ rock(Config = #{files := Files, rules := _Rules}) ->
     case elvis_result:status(Results) of
         fail -> {fail, Results};
         ok -> ok
-    end;
-rock(Config = #{dirs := _Dirs, rules := _Rules}) ->
-    NewConfig = elvis_config:resolve_files(Config),
-    rock(NewConfig);
-rock(Config = #{src_dirs := Dirs}) ->
-    %% NOTE: Provided for backwards compatibility.
-    %% Rename 'src_dirs' key to 'dirs'.
-    Config1 = maps:remove(src_dirs, Config),
-    Config2 = Config1#{dirs => Dirs},
-    rock(Config2);
-rock(Config) ->
-    throw({invalid_config, Config}).
+    end.
 
 %%% Git-Hook Command
 
@@ -120,7 +115,8 @@ combine_results({fail, ItemResults}, {fail, AccResults}) ->
 
 -spec apply_rules(elvis_config:config(), elvis_file:file()) ->
     elvis_result:file().
-apply_rules(Config = #{rules := Rules}, File) ->
+apply_rules(Config, File) ->
+    Rules = elvis_config:rules(Config),
     Acc = {[], Config, File},
     {RulesResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
 
