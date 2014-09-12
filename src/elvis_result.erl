@@ -100,21 +100,21 @@ print([Result | Results]) ->
 print(#{file := File, rules := Rules}) ->
     Path = elvis_file:path(File),
     Status = case status(Rules) of
-                 ok -> "OK";
-                 fail -> "FAIL"
+                 ok -> "{{green-bold}}OK";
+                 fail -> "{{red-bold}}FAIL"
              end,
 
-    elvis_utils:info("# ~s [~s]~n", [Path, Status]),
+    elvis_utils:notice("# ~s [~s{{white-bold}}]", [Path, Status]),
     print(Rules);
 
 print(#{items := []}) ->
     ok;
 print(#{name := Name, items := Items}) ->
-    elvis_utils:info("  - ~s~n", [atom_to_list(Name)]),
+    elvis_utils:notice("  - ~s", [atom_to_list(Name)]),
     print(Items);
 
 print(#{message := Msg, info := Info}) ->
-    elvis_utils:info("    - " ++ Msg ++ "~n", Info).
+    elvis_utils:notice("    - " ++ Msg, Info).
 
 -spec status([rule()]) -> ok | fail.
 status([]) ->

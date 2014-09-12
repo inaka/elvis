@@ -77,6 +77,12 @@ rock_with_empty_map_config(_Config) ->
              fail
          catch
              throw:{invalid_config, _} -> ok
+         end,
+    ok = try
+             elvis:rock([]),
+             fail
+         catch
+             throw:{invalid_config, _} -> ok
          end.
 
 -spec rock_with_empty_list_config(config()) -> any().
@@ -305,7 +311,7 @@ main_git_hook_fail(_Config) ->
         catch
             meck:unload(elvis_utils),
             meck:unload(elvis_git)
-    end.
+            end.
 
 -spec main_git_hook_ok(config()) -> any().
 main_git_hook_ok(_Config) ->
@@ -357,7 +363,7 @@ check_some_line_output(Fun, Expected, FilterFun) ->
 
 check_first_line_output(Fun, Expected) ->
     Equals = fun(Result, Exp) ->
-                 Result == Exp
+                     Result == Exp
              end,
     check_first_line_output(Fun, Expected, Equals).
 
@@ -366,9 +372,9 @@ check_first_line_output(Fun, Expected, FilterFun) ->
     Fun(),
     ct:capture_stop(),
     Lines = case ct:capture_get([]) of
-                 [] -> [];
-                 [Head | _] -> [Head]
-             end,
+                [] -> [];
+                [Head | _] -> [Head]
+            end,
     ListFun = fun(Line) -> FilterFun(Line, Expected) end,
     [_ | _] = lists:filter(ListFun, Lines).
 

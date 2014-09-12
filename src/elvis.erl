@@ -36,7 +36,7 @@ main(Args) ->
         {ok, {Options, Commands}} ->
             process_options(Options, Commands);
         {error, {Reason, Data}} ->
-            io:format("Error: ~s ~p~n~n", [Reason, Data]),
+            elvis_utils:error_prn("~s ~p~n~n", [Reason, Data]),
             help()
     end.
 
@@ -56,17 +56,17 @@ rock(Config) ->
 
 %% @private
 do_rock(Config0) ->
-    elvis_utils:info("Loading files...~n"),
+    elvis_utils:info("Loading files..."),
     Config = elvis_config:resolve_files(Config0),
     Files = elvis_config:files(Config),
     Fun = fun (File) ->
                   Path = elvis_file:path(File),
-                  elvis_utils:info("Loading ~s~n", [Path]),
+                  elvis_utils:info("Loading ~s", [Path]),
                   elvis_file:load_file_data(Config, File)
           end,
     LoadedFiles = lists:map(Fun, Files),
 
-    elvis_utils:info("Applying rules...~n"),
+    elvis_utils:info("Applying rules..."),
     Results = [apply_rules(Config, File) || File <- LoadedFiles],
 
     case elvis_result:status(Results) of
@@ -151,7 +151,7 @@ process_options(Options, Commands) ->
         process_options(Options, AtomCommands, Config)
     catch
         throw:Exception ->
-            io:format("Error: ~p.~n", [Exception])
+            elvis_utils:error_prn("~p.", [Exception])
     end.
 
 -spec process_options([atom()], [string()], elvis_config:config()) -> ok.

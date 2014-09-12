@@ -62,6 +62,8 @@ ensure_config_list(Config) ->
     Config.
 
 -spec validate(config()) -> ok | {error, term()}.
+validate([]) ->
+    throw({invalid_config, empty_config});
 validate(Config) when is_list(Config) ->
     lists:foreach(fun validate/1, Config);
 validate(RuleGroup) ->

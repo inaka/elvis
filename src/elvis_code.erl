@@ -734,7 +734,6 @@ to_map({type, Attrs, constraint, [Sub, SubType]}) ->
                  subtype => Sub},
       content => to_map(SubType)};
 to_map({type, Attrs, bounded_fun, [FunType, Defs]}) ->
-    %% io:format("~p~n", [Defs]),
     #{type => type,
       attrs => #{location => get_location(Attrs),
                  text => get_text(Attrs),
