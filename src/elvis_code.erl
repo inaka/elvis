@@ -48,7 +48,7 @@
       | module
       | type | callback
       | export | export_type
-      | remote_type | type | ann_type
+      | remote_type | type | ann_type | paren_type
       | any.
 
 -type tree_node() ::
