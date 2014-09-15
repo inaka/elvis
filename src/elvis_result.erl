@@ -58,7 +58,9 @@ new(item, Msg, Info) ->
 new(rule, Name, Results) ->
     #{name => Name, items => Results};
 new(file, File, Rules) ->
-    #{file => File, rules => Rules}.
+    #{file => File, rules => Rules};
+new(error, Msg, Info) ->
+    #{error_msg => Msg, info => Info}.
 
 -spec new(item, term(), any(), any()) -> item().
 new(item, Msg, Info, LineNum) ->
@@ -106,15 +108,18 @@ print(#{file := File, rules := Rules}) ->
 
     elvis_utils:notice("# ~s [~s{{white-bold}}]", [Path, Status]),
     print(Rules);
-
+%% Rule
 print(#{items := []}) ->
     ok;
 print(#{name := Name, items := Items}) ->
     elvis_utils:notice("  - ~s", [atom_to_list(Name)]),
     print(Items);
-
+%% Item
 print(#{message := Msg, info := Info}) ->
-    elvis_utils:notice("    - " ++ Msg, Info).
+    elvis_utils:notice("    - " ++ Msg, Info);
+%% Error
+print(#{error_msg := Msg, info := Info}) ->
+    elvis_utils:error_prn(Msg, Info).
 
 -spec status([rule()]) -> ok | fail.
 status([]) ->

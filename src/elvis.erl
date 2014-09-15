@@ -55,23 +55,34 @@ rock(Config) ->
     lists:foldl(fun combine_results/2, ok, Results).
 
 %% @private
+-spec do_rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
 do_rock(Config0) ->
     elvis_utils:info("Loading files..."),
     Config = elvis_config:resolve_files(Config0),
     Files = elvis_config:files(Config),
-    Fun = fun (File) ->
-                  Path = elvis_file:path(File),
-                  elvis_utils:info("Loading ~s", [Path]),
-                  elvis_file:load_file_data(Config, File)
-          end,
+    Fun = fun (File) -> load_file_data(Config, File) end,
     LoadedFiles = lists:map(Fun, Files),
-
     elvis_utils:info("Applying rules..."),
     Results = [apply_rules(Config, File) || File <- LoadedFiles],
 
     case elvis_result:status(Results) of
         fail -> {fail, Results};
         ok -> ok
+    end.
+
+%% @private
+-spec load_file_data(elvis_config:config(), elvis_file:file()) ->
+    elvis_file:file().
+load_file_data(Config, File) ->
+    Path = elvis_file:path(File),
+    elvis_utils:info("Loading ~s", [Path]),
+    try
+        elvis_file:load_file_data(Config, File)
+    catch
+        _:Reason ->
+            Msg = "~p when loading file ~p.",
+            elvis_utils:error_prn(Msg, [Reason, Path]),
+            File
     end.
 
 %%% Git-Hook Command
@@ -124,18 +135,16 @@ apply_rules(Config, File) ->
     elvis_result:print(Results),
     Results.
 
-apply_rule({Module, Function, Args}, Acc = {Result, Config, File}) ->
-    try
-        Results = Module:Function(Config, File, Args),
-        RuleResult = elvis_result:new(rule, Function, Results),
-
-        {[RuleResult | Result], Config, File}
-    catch
-        _:Reason ->
-            Msg = "~p while applying rule '~p'",
-            elvis_utils:error_prn(Msg, [Function, Reason]),
-            Acc
-    end.
+apply_rule({Module, Function, Args}, {Result, Config, File}) ->
+    RuleResult = try
+                     Results = Module:Function(Config, File, Args),
+                     elvis_result:new(rule, Function, Results)
+                 catch
+                     _:Reason ->
+                         Msg = "'~p' while applying rule '~p'.",
+                         elvis_result:new(error, Msg, [Reason, Function])
+                 end,
+    {[RuleResult | Result], Config, File}.
 
 %%% Command Line Interface
 
