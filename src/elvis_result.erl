@@ -79,7 +79,8 @@ get_rules(#{rules := Rules}) -> Rules.
 get_name(#{name := Name}) -> Name.
 
 -spec get_items(rule()) -> [item()].
-get_items(#{items := Items}) -> Items.
+get_items(#{items := Items}) -> Items;
+get_items(_) -> [].
 
 -spec get_message(item()) -> string().
 get_message(#{message := Message}) -> Message.
