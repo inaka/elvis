@@ -36,7 +36,7 @@ main(Args) ->
         {ok, {Options, Commands}} ->
             process_options(Options, Commands);
         {error, {Reason, Data}} ->
-            io:format("Error: ~s ~p~n~n", [Reason, Data]),
+            elvis_utils:error_prn("~s ~p~n~n", [Reason, Data]),
             help()
     end.
 
@@ -48,36 +48,42 @@ rock() ->
     rock(Config).
 
 -spec rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
-rock(Config) when is_list(Config) ->
-    Results = lists:map(fun rock/1, Config),
-    lists:foldl(fun combine_results/2, ok, Results);
-rock(Config = #{files := Files, rules := _Rules}) ->
-    elvis_utils:info("Loading files...~n"),
-    Fun = fun (File) ->
-                  Path = elvis_file:path(File),
-                  elvis_utils:info("Loading ~s~n", [Path]),
-                  elvis_file:load_file_data(Config, File)
-          end,
-    LoadedFiles = lists:map(Fun, Files),
+rock(Config) ->
+    elvis_config:validate(Config),
+    NewConfig = elvis_config:normalize(Config),
+    Results = lists:map(fun do_rock/1, NewConfig),
+    lists:foldl(fun combine_results/2, ok, Results).
 
-    elvis_utils:info("Applying rules...~n"),
+%% @private
+-spec do_rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
+do_rock(Config0) ->
+    elvis_utils:info("Loading files..."),
+    Config = elvis_config:resolve_files(Config0),
+    Files = elvis_config:files(Config),
+    Fun = fun (File) -> load_file_data(Config, File) end,
+    LoadedFiles = lists:map(Fun, Files),
+    elvis_utils:info("Applying rules..."),
     Results = [apply_rules(Config, File) || File <- LoadedFiles],
 
     case elvis_result:status(Results) of
         fail -> {fail, Results};
         ok -> ok
-    end;
-rock(Config = #{dirs := _Dirs, rules := _Rules}) ->
-    NewConfig = elvis_config:resolve_files(Config),
-    rock(NewConfig);
-rock(Config = #{src_dirs := Dirs}) ->
-    %% NOTE: Provided for backwards compatibility.
-    %% Rename 'src_dirs' key to 'dirs'.
-    Config1 = maps:remove(src_dirs, Config),
-    Config2 = Config1#{dirs => Dirs},
-    rock(Config2);
-rock(Config) ->
-    throw({invalid_config, Config}).
+    end.
+
+%% @private
+-spec load_file_data(elvis_config:config(), elvis_file:file()) ->
+    elvis_file:file().
+load_file_data(Config, File) ->
+    Path = elvis_file:path(File),
+    elvis_utils:info("Loading ~s", [Path]),
+    try
+        elvis_file:load_file_data(Config, File)
+    catch
+        _:Reason ->
+            Msg = "~p when loading file ~p.",
+            elvis_utils:error_prn(Msg, [Reason, Path]),
+            File
+    end.
 
 %%% Git-Hook Command
 
@@ -120,7 +126,8 @@ combine_results({fail, ItemResults}, {fail, AccResults}) ->
 
 -spec apply_rules(elvis_config:config(), elvis_file:file()) ->
     elvis_result:file().
-apply_rules(Config = #{rules := Rules}, File) ->
+apply_rules(Config, File) ->
+    Rules = elvis_config:rules(Config),
     Acc = {[], Config, File},
     {RulesResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
 
@@ -129,9 +136,14 @@ apply_rules(Config = #{rules := Rules}, File) ->
     Results.
 
 apply_rule({Module, Function, Args}, {Result, Config, File}) ->
-    Results = Module:Function(Config, File, Args),
-    RuleResult = elvis_result:new(rule, Function, Results),
-
+    RuleResult = try
+                     Results = Module:Function(Config, File, Args),
+                     elvis_result:new(rule, Function, Results)
+                 catch
+                     _:Reason ->
+                         Msg = "'~p' while applying rule '~p'.",
+                         elvis_result:new(error, Msg, [Reason, Function])
+                 end,
     {[RuleResult | Result], Config, File}.
 
 %%% Command Line Interface
@@ -155,7 +167,7 @@ process_options(Options, Commands) ->
         process_options(Options, AtomCommands, Config)
     catch
         throw:Exception ->
-            io:format("Error: ~p.~n", [Exception])
+            elvis_utils:error_prn("~p.", [Exception])
     end.
 
 -spec process_options([atom()], [string()], elvis_config:config()) -> ok.
