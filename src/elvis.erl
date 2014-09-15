@@ -141,7 +141,7 @@ apply_rule({Module, Function, Args}, {Result, Config, File}) ->
                      elvis_result:new(rule, Function, Results)
                  catch
                      _:Reason ->
-                         Msg = "'~p' while applying rule '~p'",
+                         Msg = "'~p' while applying rule '~p'.",
                          elvis_result:new(error, Msg, [Reason, Function])
                  end,
     {[RuleResult | Result], Config, File}.
