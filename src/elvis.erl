@@ -141,8 +141,10 @@ apply_rule({Module, Function, Args}, {Result, Config, File}) ->
                      elvis_result:new(rule, Function, Results)
                  catch
                      _:Reason ->
-                         Msg = "'~p' while applying rule '~p'.",
-                         elvis_result:new(error, Msg, [Reason, Function])
+                         Msg = "'~p' while applying rule '~p' - ~p",
+                         StackTrace = erlang:get_stacktrace(),
+                         Info = [Reason, Function, StackTrace],
+                         elvis_result:new(error, Msg, Info)
                  end,
     {[RuleResult | Result], Config, File}.
 
