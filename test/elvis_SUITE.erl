@@ -121,7 +121,7 @@ rock_with_list_config(_Config) ->
 -spec rock_with_file_config(config()) -> ok.
 rock_with_file_config(_Config) ->
     Fun = fun() -> elvis:rock() end,
-    Expected = "# \\.\\./\\.\\./test/examples/.*\\.erl \\[FAIL\\]\n",
+    Expected = "# \\.\\./\\.\\./test/examples/.*\\.erl.*FAIL",
     check_some_line_output(Fun, Expected, fun matches_regex/2),
     ok.
 
@@ -250,14 +250,14 @@ main_commands(_Config) ->
 
 -spec main_config(config()) -> any().
 main_config(_Config) ->
-    Expected = "Error: missing_option_arg config",
+    Expected = "missing_option_arg config",
 
     OptFun = fun() -> elvis:main("-c") end,
-    check_first_line_output(OptFun, Expected, fun starts_with/2),
+    check_first_line_output(OptFun, Expected, fun matches_regex/2),
 
-    EnoentExpected = "Error: enoent.\n",
+    EnoentExpected = "enoent",
     OptEnoentFun = fun() -> elvis:main("-c missing") end,
-    check_first_line_output(OptEnoentFun, EnoentExpected),
+    check_first_line_output(OptEnoentFun, EnoentExpected, fun matches_regex/2),
 
     ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
     check_emtpy_output(ConfigFun),
@@ -265,17 +265,17 @@ main_config(_Config) ->
 
 -spec main_rock(config()) -> any().
 main_rock(_Config) ->
-    ExpectedFail = "# \\.\\./\\.\\./test/examples/.*\\.erl \\[FAIL\\]\n",
+    ExpectedFail = "# \\.\\./\\.\\./test/examples/.*\\.erl.*FAIL",
 
     NoConfigArgs = "rock",
     NoConfigFun = fun() -> elvis:main(NoConfigArgs) end,
     check_some_line_output(NoConfigFun, ExpectedFail, fun matches_regex/2),
 
-    Expected = "# ../../src/elvis.erl [OK]",
+    Expected = "# ../../src/elvis.erl.*OK",
 
     ConfigArgs = "rock -c ../../config/elvis-test.config",
     ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-    check_some_line_output(ConfigFun, Expected, fun starts_with/2),
+    check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
 
     ok.
 
@@ -299,11 +299,11 @@ main_git_hook_fail(_Config) ->
         FakeStagedFiles = fun() -> Files end,
         meck:expect(elvis_git, staged_files, FakeStagedFiles),
 
-        Expected = "# fake_long_line.erl [FAIL]",
+        Expected = "# fake_long_line.erl.*FAIL",
 
         ConfigArgs = "git-hook -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        check_some_line_output(ConfigFun, Expected, fun starts_with/2),
+        check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
 
         meck:expect(elvis_git, staged_files, fun() -> [] end),
         check_emtpy_output(ConfigFun)
@@ -332,9 +332,9 @@ main_default_config(_Config) ->
     Dest = "./elvis.config",
     file:copy(Src, Dest),
 
-    Expected = "# ../../src/elvis.erl [OK]",
+    Expected = "# ../../src/elvis.erl.*OK",
     RockFun = fun() -> elvis:main("rock") end,
-    check_some_line_output(RockFun, Expected, fun starts_with/2),
+    check_some_line_output(RockFun, Expected, fun matches_regex/2),
 
     file:delete(Dest),
 
@@ -342,10 +342,10 @@ main_default_config(_Config) ->
 
 -spec main_unexistent(config()) -> any().
 main_unexistent(_Config) ->
-    Expected = "Error: unrecognized_or_unimplemened_command.\n",
+    Expected = "unrecognized_or_unimplemened_command.",
 
     UnexistentFun = fun() -> elvis:main("aaarrrghh") end,
-    check_first_line_output(UnexistentFun, Expected),
+    check_first_line_output(UnexistentFun, Expected,fun  matches_regex/2),
 
     ok.
 

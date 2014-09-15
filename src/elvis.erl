@@ -124,11 +124,18 @@ apply_rules(Config, File) ->
     elvis_result:print(Results),
     Results.
 
-apply_rule({Module, Function, Args}, {Result, Config, File}) ->
-    Results = Module:Function(Config, File, Args),
-    RuleResult = elvis_result:new(rule, Function, Results),
+apply_rule({Module, Function, Args}, Acc = {Result, Config, File}) ->
+    try
+        Results = Module:Function(Config, File, Args),
+        RuleResult = elvis_result:new(rule, Function, Results),
 
-    {[RuleResult | Result], Config, File}.
+        {[RuleResult | Result], Config, File}
+    catch
+        _:Reason ->
+            Msg = "~p while applying rule '~p'",
+            elvis_utils:error_prn(Msg, [Function, Reason]),
+            Acc
+    end.
 
 %%% Command Line Interface
 
