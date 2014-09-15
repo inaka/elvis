@@ -47,7 +47,8 @@ parse_tree(_Config, File = #{parse_tree := ParseTree}) ->
     {ParseTree, File};
 parse_tree(Config, File = #{path := Path, content := Content}) ->
     Ext = filename:extension(Path),
-    ParseTree = resolve_parse_tree(Config, Ext, Content),
+    ExtStr = elvis_utils:to_str(Ext),
+    ParseTree = resolve_parse_tree(Config, ExtStr, Content),
     parse_tree(Config, File#{parse_tree => ParseTree});
 parse_tree(Config, File0 = #{path := _Path}) ->
     {_, File} = src(File0),
