@@ -23,6 +23,43 @@ otherwise a configuration file can be specified through the use of the
 elvis rock --config config/elvis.config
 ```
 
+### Webhook
+
+There's also a way to use `elvis` as a GitHub [webhook][webhooks] for
+`pull request` (PR) events by calling the `webhook/1` function. This will add
+a comment in each file and rule that is broken, analyzing only the files
+associated with the PR.
+
+#### [elvis.inakalabs.com][elvis-web]
+
+This Website is available for you to add `elvis` as a webhook in your GitHub's
+repositories. Just log in with your GitHub credentials and the site will pull
+all the repos for which you have permissions to add webhooks. The `elvis`
+webhook can always be deactivated at any time using the same mechanism.
+
+When activating the webhook, the site will use the GitHub API to add the user
+`elvisinaka` as a collaborator to your repo, so that it can create comments
+on its pull requests. If the repo belongs to an organization, a **Services**
+team is created instead (if it doesn't exist already), then this team is added
+to the repo and the `elvisinaka` user is added to that team.
+
+#### Running the webhook on your servers
+
+Since GitHub's API needs a valid user and password to allow the creation of
+comments on PRs, the parameters `github_user` and `github_password` need to be
+added to `elvis`'s [configuration](#configuration).
+
+The `webhook/1` function takes a map containing the keys `headers` and `body`,
+whose values should be the map of headers and the body from the GitHub's event
+request.
+
+```erlang
+Headers = #{<<"X-GitHub-Event">>, <<"pull_request">>},
+Body = <<"{}">>, %% JSON data form GitHub's event.
+Request = #{headers => Headers, body => Body},
+elvis:webhook(Request).
+```
+
 ### Git hook
 
 `elvis` can also be used as a [`git` pre-commit hook][pre-commit]
@@ -107,28 +144,6 @@ rules:
 # ../../test/examples/small.erl [OK]
 ```
 
-### Webhook
-
-There's also a way to use `elvis` as a GitHub [webhook][webhooks] for
-`pull request` (PR) events by calling the `webhook/1` function. This will add
-a comment for each rule that is broken by a line in the files associated with
-the PR.
-
-Since GitHub's API needs a valid user and password to allow the creation of
-comments, the parameters `github_user` and `github_password` need to be added to
-`elvis`'s [configuration](#configuration).
-
-The `webhook/1` function takes a map containing the keys `headers` and `body`,
-whose values should be the map of headers and the body from the GitHub's event
-request.
-
-```erlang
-Headers = #{<<"X-GitHub-Event">>, <<"pull_request">>},
-Body = <<"{}">>, %% JSON data form GitHub's event.
-Request = #{headers => Headers, body => Body},
-elvis:webhook(Request).
-```
-
 ## Configuration
 
 To provide a default configuration for `elvis` you should either provide an
@@ -205,3 +220,4 @@ Inspired on [HoundCI][houndci]
   [pre-commit]: http://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks
   [config]: http://www.erlang.org/doc/man/config.html
   [webhooks]: https://developer.github.com/v3/repos/hooks/
+  [elvis-web]: http://elvis.inakalabs.com/
