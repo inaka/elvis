@@ -32,3 +32,6 @@ escript: all
 
 shell: app
 	erl -pa ebin -pa deps/*/ebin -s sync -s elvis -s lager -config config/elvis.config
+
+test-shell: app
+	erl -pa ebin -pa deps/*/ebin -pa test -s sync -s elvis -s lager -config config/elvis.config

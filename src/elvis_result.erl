@@ -99,7 +99,7 @@ print([]) ->
 print([Result | Results]) ->
     print(Result),
     print(Results);
-
+%% File
 print(#{file := File, rules := Rules}) ->
     Path = elvis_file:path(File),
     Status = case status(Rules) of
