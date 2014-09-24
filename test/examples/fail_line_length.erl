@@ -4,7 +4,8 @@
          function_1/0,
          function_2/0,
          function_3/0,
-         function_4/0
+         function_4/0,
+         function_5/0
         ]).
 
 function_1() ->
@@ -18,3 +19,6 @@ function_3() ->
 
 function_4() ->
     io:format("This line is 90 characters long and should be detected!!!!!!!!!!!!!!!!!!").
+
+function_5() ->
+    io:format("This line is 90 characters long and should be detected ~p!!!!!!!!!!!!!!!!!!", [yeah]).

@@ -162,7 +162,8 @@ print(Message, Args) ->
         {ok, true} -> ok;
         _ ->
             Output = io_lib:format(Message, Args),
-            io:format(parse_colors(Output))
+            EscapedOutput = escape_format_str(Output),
+            io:format(parse_colors(EscapedOutput))
     end.
 
 
@@ -182,3 +183,10 @@ parse_colors(Message) ->
                   re:replace(Acc, Regex, Color, Opts)
           end,
     lists:foldl(Fun, Message, maps:keys(Colors)).
+
+-spec escape_format_str(string()) -> string().
+escape_format_str(String) ->
+    Binary = list_to_binary(String),
+    Result = re:replace(Binary, "[^~]~", "~~"),
+    ResultBin = iolist_to_binary(Result),
+    binary_to_list(ResultBin).
