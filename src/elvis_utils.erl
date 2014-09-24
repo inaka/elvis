@@ -187,6 +187,6 @@ parse_colors(Message) ->
 -spec escape_format_str(string()) -> string().
 escape_format_str(String) ->
     Binary = list_to_binary(String),
-    Result = re:replace(Binary, "[^~]~", "~~"),
+    Result = re:replace(Binary, "[^~]~", "~~", [global]),
     ResultBin = iolist_to_binary(Result),
     binary_to_list(ResultBin).
