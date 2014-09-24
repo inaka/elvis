@@ -68,7 +68,7 @@ verify_line_length_rule(_Config) ->
     File = "fail_line_length.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    [_, _, _] = elvis_style:line_length(ElvisConfig, Path, [80]).
+    [_, _, _, _] = elvis_style:line_length(ElvisConfig, Path, [80]).
 
 -spec verify_no_tabs_rule(config()) -> any().
 verify_no_tabs_rule(_Config) ->
