@@ -157,7 +157,7 @@ environment values in your [configuration][config] file:
    [
     {config,
      [#{dirs => ["src", "test"],
-        filter => "*.erl"
+        filter => "*.erl",
         rules    => [{elvis_style, line_length, [80]},
                      {elvis_style, no_tabs, []},
                      {elvis_style, macro_names, []},
