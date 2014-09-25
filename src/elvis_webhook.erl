@@ -9,8 +9,8 @@
 
 -type github_info() ::
         {
-          elvis_github:credentials(),
-          elvis_github:repository(),
+          egithub:credentials(),
+          egithub:repository(),
           integer(),
           [map()]
         }.
@@ -19,7 +19,7 @@
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec event(elvis_github:credentials(), request()) -> ok | {error, term()}.
+-spec event(egithub:credentials(), request()) -> ok | {error, term()}.
 event(Cred, #{headers := Headers, body := Body}) ->
     HeaderName = <<"x-github-event">>,
     case maps:is_key(HeaderName, Headers) of
@@ -40,7 +40,7 @@ event(Cred, #{headers := Headers, body := Body}) ->
 %%% Events
 
 -spec event(elvis_config:config(),
-            elvis_github:credentials(),
+            egithub:credentials(),
             event(),
             map()) -> ok | {error, term()}.
 event(LocalConfig,
@@ -50,7 +50,7 @@ event(LocalConfig,
     Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
     Config = repo_config(Cred, Repo, LocalConfig),
 
-    {ok, GithubFiles} = elvis_github:pull_req_files(Cred, Repo, PR),
+    {ok, GithubFiles} = egithub:pull_req_files(Cred, Repo, PR),
 
     GithubFiles1 = [F#{path => Path}
                     || F = #{<<"filename">> := Path} <- GithubFiles],
@@ -62,7 +62,7 @@ event(LocalConfig,
 
     case elvis:rock(Config2) of
         {fail, Results} ->
-            {ok, Comments} = elvis_github:pull_req_comments(Cred, Repo, PR),
+            {ok, Comments} = egithub:pull_req_comments(Cred, Repo, PR),
             GithubInfo = {Cred, Repo, PR, Comments},
             comment_files(GithubInfo, Results);
         ok -> ok
@@ -82,14 +82,14 @@ file_info(Cred, Repo,
             <<"raw_url">> := RawUrl,
             <<"patch">> := Patch}) ->
     CommitId = commit_id_from_raw_url(RawUrl, Filename),
-    {ok, Content} = elvis_github:file_content(Cred, Repo, CommitId, Filename),
+    {ok, Content} = egithub:file_content(Cred, Repo, CommitId, Filename),
     #{path => Filename,
       content => Content,
       commit_id => CommitId,
       patch => Patch}.
 
 repo_config(Cred, Repo, LocalConfig) ->
-    case elvis_github:file_content(Cred, Repo, "master", "elvis.config") of
+    case egithub:file_content(Cred, Repo, "master", "elvis.config") of
         {ok, ConfigContent} ->
             ConfigEval = elvis_code:eval(ConfigContent),
             RepoConfig = elvis_config:load(ConfigEval),
@@ -148,7 +148,7 @@ comment_lines(GithubInfo, [Item | Items], File) ->
                     lager:info("Comment '~p' for ~p on line ~p exists", Args);
                 not_exists ->
                     {ok, _} =
-                        elvis_github:pull_req_comment_line(
+                        egithub:pull_req_comment_line(
                           Cred, Repo, PR, CommitId, Path, Position, Text
                         )
             end;
