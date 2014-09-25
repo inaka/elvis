@@ -11,11 +11,13 @@
 -define(module_name, ?MODULE).
 
 module_name() ->
-  ?MODULE:function_name(),
-  ?module_name:?function_name().
+    ?MODULE:function_name(),
+    ?module_name:?function_name().
 
 function_name() ->
-  module:?FUNCTION_NAME(params),
-  module:?FUNCTION_NAME (params).
+    module:?FUNCTION_NAME(params),
+    module:?FUNCTION_NAME (params),
+    lists:?MODULE().
 
-no_errors() -> ?LINE.
+no_errors() ->
+    ?LINE.

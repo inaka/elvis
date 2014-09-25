@@ -335,26 +335,36 @@ check_macro_names(Line, Num, _Args) ->
 check_macro_module_names(Line, Num, _Args) ->
     {ok, ModNameRegex} = re:compile("[?]([A-z0-9_]+)[:]"),
     {ok, FunNameRegex} = re:compile("[:][?]([A-z0-9_]+)"),
-    case re:run(Line, ModNameRegex, [{capture, all_but_first, list}]) of
+
+    ModuleMsg = ?MACRO_AS_MODULE_NAME_MSG,
+    ModuleResults =
+        apply_macro_module_names(Line, Num, ModNameRegex, ModuleMsg),
+
+    FunctionMsg = ?MACRO_AS_FUNCTION_NAME_MSG,
+    FunResults =
+        apply_macro_module_names(Line, Num, FunNameRegex, FunctionMsg),
+
+    case FunResults ++ ModuleResults of
+        [] ->
+            no_result;
+        Results ->
+            {ok, Results}
+    end.
+
+-spec apply_macro_module_names(binary(), integer(), string(), string()) ->
+    [elvis_result:item_result()].
+apply_macro_module_names(Line, Num, Regex, Msg) ->
+    case re:run(Line, Regex, [{capture, all_but_first, list}]) of
         nomatch ->
-            case re:run(Line, FunNameRegex, [{capture, all_but_first, list}]) of
-                nomatch ->
-                    no_result;
-                {match, [MacroName]} ->
-                    Msg = ?MACRO_AS_FUNCTION_NAME_MSG,
-                    Info = [MacroName, Num],
-                    Result = elvis_result:new(item, Msg, Info, Num),
-                    {ok, Result}
-            end;
+            [];
         {match, [MacroName]} ->
             case lists:member(MacroName, ?MACRO_MODULE_NAMES_EXCEPTIONS) of
-                true ->
-                    no_result;
+                    true ->
+                    [];
                 false ->
-                    Msg = ?MACRO_AS_MODULE_NAME_MSG,
                     Info = [MacroName, Num],
                     Result = elvis_result:new(item, Msg, Info, Num),
-                    {ok, Result}
+                    [Result]
             end
     end.
 
