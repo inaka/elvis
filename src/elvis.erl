@@ -100,12 +100,12 @@ git_hook(Config) ->
 %% @doc Should receive the payload of a Github event and act accordingly.
 -spec webhook(webhook:request()) -> ok | {error, term()}.
 webhook(Request) ->
-    Credentials = elvis_github:basic_auth_credentials(),
+    Credentials = github_credentials(),
     elvis_webhook:event(Credentials, Request).
 
 %% @doc Receives github credentials (basic or OAuth) and the payload
 %%      from an event, acting accordingly.
--spec webhook(elvis_github:credentials(), webhook:request()) ->
+-spec webhook(egithub:credentials(), webhook:request()) ->
     ok | {error, term()}.
 webhook(Credentials, Request) ->
     elvis_webhook:event(Credentials, Request).
@@ -222,3 +222,9 @@ git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
                                       files.
 ">>,
    io:put_chars(Commands).
+
+-spec github_credentials() -> egithub:credentials().
+github_credentials() ->
+    User = application:get_env(elvis, github_user, ""),
+    Password = application:get_env(elvis, github_password, ""),
+    egithub:basic_auth(User, Password).

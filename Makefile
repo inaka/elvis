@@ -1,6 +1,6 @@
 PROJECT = elvis
 
-DEPS = lager sync getopt jiffy ibrowse aleppo zipper
+DEPS = lager sync getopt jiffy ibrowse aleppo zipper egithub
 TEST_DEPS = meck
 
 dep_lager = git https://github.com/basho/lager.git 2.0.3
@@ -11,6 +11,7 @@ dep_jiffy = git https://github.com/davisp/jiffy 0.11.3
 dep_ibrowse = git https://github.com/cmullaparthi/ibrowse v4.1.1
 dep_aleppo = git https://github.com/inaka/aleppo 0.9.0
 dep_zipper = git https://github.com/inaka/zipper 0.1.0
+dep_egithub = git https://github.com/inaka/erlang-github 0.1.0
 
 include erlang.mk
 
