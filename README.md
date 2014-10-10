@@ -1,6 +1,7 @@
 ![](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
 # elvis
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/inaka/elvis?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Erlang Style Reviewer
 
