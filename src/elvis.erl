@@ -190,6 +190,9 @@ process_commands([rock | Cmds], Config) ->
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
+process_commands(['install', 'git-hook' | Cmds], Config) ->
+    elvis_git:install_hook(),
+    process_commands(Cmds, Config);
 process_commands(['git-hook' | Cmds], Config) ->
     git_hook(Config),
     process_commands(Cmds, Config);
@@ -220,6 +223,9 @@ rock             Rock your socks off by running all rules to your source files.
 git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
                                       specified in the configuration to those
                                       files.
+install git-hook
+                Installs Elvis as a pre-commit hook in your current working
+                directory, which should be a git repository.
 ">>,
    io:put_chars(Commands).
 
