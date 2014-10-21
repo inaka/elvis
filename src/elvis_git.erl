@@ -66,7 +66,9 @@ install_hook() ->
     try
         check_git_dir(),
         ok = filelib:ensure_dir(?PRE_COMMIT_FILE),
-        add_pre_commit_hook()
+        add_pre_commit_hook(),
+        elvis_utils:info("Elvis pre-commit hook installed. "
+                         "Wop-bop-a-loom-a-blop-bam-boom!")
     catch
         _:Reason ->
             elvis_utils:error_prn(Reason)
@@ -97,11 +99,10 @@ add_pre_commit_hook() ->
                 {ok, Content} = file:read_file(?PRE_COMMIT_FILE),
                 case binary:match(Content, <<"elvis">>) of
                     nomatch -> {[append], Command};
-                    _ ->  throw("Already a git hook.")
+                    _ ->  throw("Elvis is already installed as a git hook.")
                 end;
             false -> {[write], <<Header/binary, Command/binary>>}
         end,
-    io:format("~p - ~p ~n", [Mode, Data]),
 
     file:write_file(Filename, Data, Mode),
     os:cmd("chmod +x " ++ ?PRE_COMMIT_FILE).

@@ -223,6 +223,9 @@ rock             Rock your socks off by running all rules to your source files.
 git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
                                       specified in the configuration to those
                                       files.
+install git-hook
+                Installs Elvis as a pre-commit hook in your current working
+                directory, which should be a git repository.
 ">>,
    io:put_chars(Commands).
 
