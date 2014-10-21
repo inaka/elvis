@@ -190,6 +190,9 @@ process_commands([rock | Cmds], Config) ->
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
+process_commands(['install', 'git-hook' | Cmds], Config) ->
+    elvis_git:install_hook(),
+    process_commands(Cmds, Config);
 process_commands(['git-hook' | Cmds], Config) ->
     git_hook(Config),
     process_commands(Cmds, Config);

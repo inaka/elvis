@@ -3,7 +3,8 @@
 -export([
          staged_files/0,
          staged_content/1,
-         relative_position/2
+         relative_position/2,
+         install_hook/0
         ]).
 
 -define(LIST_STAGED,
@@ -11,6 +12,8 @@
 
 -define(STAGED_CONTENT(Path),
         "git show :" ++ Path).
+
+-define(PRE_COMMIT_FILE, ".git/hooks/pre-commit").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public
@@ -56,9 +59,52 @@ relative_position([Line | Lines], Num, Positions) ->
             relative_position(Lines, Num, NewPositions)
     end.
 
+%% @doc Install a pre commit hook for the git repository
+%%      in the current dir.
+-spec install_hook() -> ok.
+install_hook() ->
+    try
+        check_git_dir(),
+        ok = filelib:ensure_dir(?PRE_COMMIT_FILE),
+        add_pre_commit_hook()
+    catch
+        _:Reason ->
+            elvis_utils:error_prn(Reason)
+    end.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% @doc Check if the current dir is a git repository.
+check_git_dir() ->
+    case filelib:is_dir(".git") of
+        true -> ok;
+        false -> throw("Not a git repository.")
+    end.
+
+%% @doc Adds elvis as a pre commit hook. If a pre-commit file already exists
+%%      appends the command to it, otherwise the file is created.
+add_pre_commit_hook() ->
+    Filename = ?PRE_COMMIT_FILE,
+
+    Header = <<"#!/bin/sh\n">>,
+    Command = <<"elvis git-hook\n">>,
+
+    {Mode, Data} =
+        case filelib:is_file(Filename) of
+            true ->
+                {ok, Content} = file:read_file(?PRE_COMMIT_FILE),
+                case binary:match(Content, <<"elvis">>) of
+                    nomatch -> {[append], Command};
+                    _ ->  throw("Already a git hook.")
+                end;
+            false -> {[write], <<Header/binary, Command/binary>>}
+        end,
+    io:format("~p - ~p ~n", [Mode, Data]),
+
+    file:write_file(Filename, Data, Mode),
+    os:cmd("chmod +x " ++ ?PRE_COMMIT_FILE).
 
 %% @private
 %% @doc Return the corresponding local and global line increments based
