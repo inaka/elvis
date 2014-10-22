@@ -42,7 +42,7 @@ path(File) ->
 
 %% @doc Add the root node of the parse tree to the file data.
 -spec parse_tree(elvis_config:config(), file()) ->
-    {elvis_code:tree_node(), file()}.
+    {ktn_code:tree_node(), file()}.
 parse_tree(_Config, File = #{parse_tree := ParseTree}) ->
     {ParseTree, File};
 parse_tree(Config, File = #{path := Path, content := Content}) ->
@@ -94,9 +94,9 @@ filter_files(Files, Filter) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -spec resolve_parse_tree(elvis_config:config(), string(), binary()) ->
-    undefined | elvis_code:tree_node().
+    undefined | ktn_code:tree_node().
 resolve_parse_tree(Config, ".erl", Content) ->
-    elvis_code:parse_tree(Config, Content);
+    ktn_code:parse_tree(Config, Content);
 resolve_parse_tree(_, _, _) ->
     undefined.
 

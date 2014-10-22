@@ -136,7 +136,7 @@ god_modules(Config, Target, [Limit]) ->
     [elvis_result:item()].
 no_if_expression(Config, Target, []) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
-    Predicate = fun(Node) -> elvis_code:type(Node) == 'if' end,
+    Predicate = fun(Node) -> ktn_code:type(Node) == 'if' end,
     ResultFun = result_node_line_fun(?NO_IF_EXPRESSION_MSG),
     case elvis_code:find(Predicate, Root) of
         [] ->
@@ -153,7 +153,7 @@ invalid_dynamic_call(Config, Target, IgnoreModules) ->
 
     case lists:member(ModuleName, IgnoreModules) of
         false ->
-            Predicate = fun(Node) -> elvis_code:type(Node) == 'callback' end,
+            Predicate = fun(Node) -> ktn_code:type(Node) == 'callback' end,
             case elvis_code:find(Predicate, Root) of
                 [] ->
                     check_invalid_dynamic_calls(Root);
@@ -179,14 +179,14 @@ used_ignored_variable(Config, Target, []) ->
     [elvis_result:item()].
 no_behavior_info(Config, Target, []) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
-    Children = elvis_code:content(Root),
+    Children = ktn_code:content(Root),
 
     FilterFun =
         fun
             (Node) ->
-                case elvis_code:type(Node) of
+                case ktn_code:type(Node) of
                     function ->
-                        Name = elvis_code:attr(name, Node),
+                        Name = ktn_code:attr(name, Node),
                         lists:member(Name,
                                      [behavior_info, behaviour_info]);
                     _ -> false
@@ -270,7 +270,7 @@ no_spec_with_records(Config, Target, []) ->
 result_node_line_fun(Msg) ->
     fun
         (Node) ->
-            {Line, _} = elvis_code:attr(location, Node),
+            {Line, _} = ktn_code:attr(location, Node),
             Info = [Line],
             elvis_result:new(item, Msg, Info, Line)
     end.
@@ -278,7 +278,7 @@ result_node_line_fun(Msg) ->
 result_node_line_col_fun(Msg) ->
     fun
         (Node) ->
-            {Line, Col} = elvis_code:attr(location, Node),
+            {Line, Col} = ktn_code:attr(location, Node),
             Info = [Line, Col],
             elvis_result:new(item, Msg, Info, Line)
     end.
@@ -392,7 +392,7 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
         {match, [{Col, _} | _]} ->
             Type = case elvis_code:find_by_location(Root, {Num, Col}) of
                        not_found -> undefined;
-                       {ok, Node} -> elvis_code:type(Node)
+                       {ok, Node} -> ktn_code:type(Node)
                    end,
             case Type of
                 atom -> [];
@@ -407,7 +407,7 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
             end
     end.
 
--spec check_nesting_level(elvis_code:tree_node(), [integer()]) ->
+-spec check_nesting_level(ktn_code:tree_node(), [integer()]) ->
     [elvis_result:item_result()].
 check_nesting_level(ParentNode, [MaxLevel]) ->
     case elvis_code:past_nesting_limit(ParentNode, MaxLevel) of
@@ -416,7 +416,7 @@ check_nesting_level(ParentNode, [MaxLevel]) ->
             Msg = ?NESTING_LEVEL_MSG,
 
             Fun = fun(Node) ->
-                      {Line, Col} = elvis_code:attr(location, Node),
+                      {Line, Col} = ktn_code:attr(location, Node),
                       Info = [Line, Col, MaxLevel],
                       elvis_result:new(item, Msg, Info, Line)
                   end,
@@ -424,7 +424,7 @@ check_nesting_level(ParentNode, [MaxLevel]) ->
             lists:map(Fun, NestedNodes)
     end.
 
--spec check_invalid_dynamic_calls(elvis_code:tree_node()) ->
+-spec check_invalid_dynamic_calls(ktn_code:tree_node()) ->
     [elvis_result:item_result()].
 check_invalid_dynamic_calls(Root) ->
     case elvis_code:find(fun is_dynamic_call/1, Root) of
@@ -434,16 +434,16 @@ check_invalid_dynamic_calls(Root) ->
             lists:map(ResultFun, InvalidCalls)
     end.
 
--spec is_dynamic_call(elvis_code:tree_node()) ->
+-spec is_dynamic_call(ktn_code:tree_node()) ->
     boolean().
 is_dynamic_call(Node) ->
-    case elvis_code:type(Node) of
+    case ktn_code:type(Node) of
         call ->
-            FunctionSpec = elvis_code:attr(function, Node),
-            case elvis_code:type(FunctionSpec) of
+            FunctionSpec = ktn_code:attr(function, Node),
+            case ktn_code:type(FunctionSpec) of
                 remote ->
-                    ModuleName = elvis_code:attr(module, FunctionSpec),
-                    var == elvis_code:type(ModuleName);
+                    ModuleName = ktn_code:attr(module, FunctionSpec),
+                    var == ktn_code:type(ModuleName);
                 _Other ->
                     false
             end;
@@ -451,13 +451,13 @@ is_dynamic_call(Node) ->
             false
     end.
 
--spec is_ignored_var(elvis_code:tree_node()) ->
+-spec is_ignored_var(ktn_code:tree_node()) ->
     boolean().
 is_ignored_var(Zipper) ->
     Node = zipper:node(Zipper),
-    case elvis_code:type(Node) of
+    case ktn_code:type(Node) of
         var ->
-            Name = elvis_code:attr(name, Node),
+            Name = ktn_code:attr(name, Node),
             [FirstChar | _] = atom_to_list(Name),
             (FirstChar == $_)
                 and (Name =/= '_')
@@ -470,26 +470,26 @@ check_parent_match(Zipper) ->
         undefined -> false;
         ParentZipper ->
             Parent = zipper:node(ParentZipper),
-            case elvis_code:type(Parent) of
+            case ktn_code:type(Parent) of
                 match ->
                     zipper:down(ParentZipper) == Zipper;
                 _ -> check_parent_match(ParentZipper)
             end
     end.
 
--spec is_otp_module(elvis_code:tree_node()) -> boolean().
+-spec is_otp_module(ktn_code:tree_node()) -> boolean().
 is_otp_module(Root) ->
     OtpSet = sets:from_list([gen_server,
                              gen_event,
                              gen_fsm,
                              supervisor_bridge
                             ]),
-    IsBehaviorAttr = fun(Node) ->  behavior == elvis_code:type(Node) end,
+    IsBehaviorAttr = fun(Node) ->  behavior == ktn_code:type(Node) end,
     case elvis_code:find(IsBehaviorAttr, Root) of
         [] ->
             false;
         Behaviors ->
-            ValueFun = fun(Node) -> elvis_code:attr(value, Node) end,
+            ValueFun = fun(Node) -> ktn_code:attr(value, Node) end,
             Names = lists:map(ValueFun, Behaviors),
             BehaviorsSet = sets:from_list(Names),
             case sets:to_list(sets:intersection(OtpSet, BehaviorsSet)) of
@@ -498,33 +498,33 @@ is_otp_module(Root) ->
             end
     end.
 
--spec has_state_record(elvis_code:node()) -> boolean().
+-spec has_state_record(ktn_code:tree_node()) -> boolean().
 has_state_record(Root) ->
     IsStateRecord =
         fun(Node) ->
-                (record_attr == elvis_code:type(Node))
-                    and (state == elvis_code:attr(name, Node))
+                (record_attr == ktn_code:type(Node))
+                    and (state == ktn_code:attr(name, Node))
         end,
     case elvis_code:find(IsStateRecord, Root) of
         [] -> false;
         _ -> true
     end.
 
--spec has_state_type(elvis_code:node()) -> boolean().
+-spec has_state_type(ktn_code:tree_node()) -> boolean().
 has_state_type(Root) ->
     IsStateType =
         fun(Node) ->
-                (type_attr == elvis_code:type(Node))
-                    and (state == elvis_code:attr(name, Node))
+                (type_attr == ktn_code:type(Node))
+                    and (state == ktn_code:attr(name, Node))
         end,
     elvis_code:find(IsStateType, Root) /= [].
 
--spec spec_includes_record(elvis_code:tree_node()) -> boolean().
+-spec spec_includes_record(ktn_code:tree_node()) -> boolean().
 spec_includes_record(Node) ->
     IsTypeRecord = fun(Child) ->
-                           (elvis_code:type(Child) == type)
-                               and (elvis_code:attr(name, Child) == record)
+                           (ktn_code:type(Child) == type)
+                               and (ktn_code:attr(name, Child) == record)
                    end,
 
-    (elvis_code:type(Node) == spec)
+    (ktn_code:type(Node) == spec)
         and (elvis_code:find(IsTypeRecord, Node) /= []).
