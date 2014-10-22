@@ -91,7 +91,7 @@ file_info(Cred, Repo,
 repo_config(Cred, Repo, LocalConfig) ->
     case egithub:file_content(Cred, Repo, "master", "elvis.config") of
         {ok, ConfigContent} ->
-            ConfigEval = elvis_code:eval(ConfigContent),
+            ConfigEval = ktn_code:eval(ConfigContent),
             RepoConfig = elvis_config:load(ConfigEval),
             RepoConfig;
         {error, _} ->

@@ -76,10 +76,10 @@ context([Current | Future], Past, CtxCount = {PrevCount, NextCount}, Results) ->
 %% Fun to each line. Fun takes 3 arguments (the line
 %% as a binary, the line number and the supplied Args) and
 %% returns 'no_result' or {'ok', Result}.
--spec check_nodes(elvis_code:tree_node(), fun(), [term()]) ->
+-spec check_nodes(ktn_code:tree_node(), fun(), [term()]) ->
     [elvis_result:item()].
 check_nodes(RootNode, Fun, Args) ->
-    ChildNodes = elvis_code:content(RootNode),
+    ChildNodes = ktn_code:content(RootNode),
     check_nodes(ChildNodes, Fun, Args, []).
 
 %% @private
