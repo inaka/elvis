@@ -24,12 +24,8 @@
                                elvis_file:file(),
                                [term()]) ->
     [elvis_result:item()].
-no_deps_master_erlang_mk(Config, Target, []) ->
-    no_deps_master_erlang_mk(Config, Target, [[]]);
-no_deps_master_erlang_mk(Config, Target, [X | _] = IgnoreDeps)
-  when is_atom(X) ->
-    no_deps_master_erlang_mk(Config, Target, [IgnoreDeps]);
-no_deps_master_erlang_mk(_Config, Target, [IgnoreDeps]) ->
+no_deps_master_erlang_mk(_Config, Target, RuleConfig) ->
+    IgnoreDeps = maps:get(ignore, RuleConfig, []),
     Deps = get_erlang_mk_deps(Target),
     DepsInMaster = lists:filter(fun is_erlang_mk_master_dep/1, Deps),
     DepToResult =
@@ -51,11 +47,8 @@ no_deps_master_erlang_mk(_Config, Target, [IgnoreDeps]) ->
                            elvis_file:file(),
                            [term()]) ->
     [elvis_result:item()].
-no_deps_master_rebar(Config, Target, []) ->
-    no_deps_master_rebar(Config, Target, [[]]);
-no_deps_master_rebar(Config, Target, [X | _] = IgnoreDeps) when is_atom(X) ->
-    no_deps_master_rebar(Config, Target, [IgnoreDeps]);
-no_deps_master_rebar(_Config, Target, [IgnoreDeps]) ->
+no_deps_master_rebar(_Config, Target, RuleConfig) ->
+    IgnoreDeps = maps:get(ignore, RuleConfig, []),
     Deps = get_rebar_deps(Target),
     DepsInMaster = lists:filter(fun is_rebar_master_dep/1, Deps),
 
@@ -75,7 +68,7 @@ no_deps_master_rebar(_Config, Target, [IgnoreDeps]) ->
                                elvis_file:file(),
                                [term()]) ->
     [elvis_result:item()].
-old_configuration_format(_Config, Target, []) ->
+old_configuration_format(_Config, Target, _RuleConfig) ->
     Path = elvis_file:path(Target),
     {ok, [AllConfig]} = file:consult(Path),
     case proplists:get_value(elvis, AllConfig) of
