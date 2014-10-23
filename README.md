@@ -52,8 +52,8 @@ team is created instead (if it doesn't exist already), then this team is added
 to the repo and the `elvisinaka` user is added to that team.
 
 When there's no `elvis.config` in the master branch of your repo a default
-set of rules are run. The list of all the rules that are part of this sets
-can be found [here](https://github.com/inaka/elvis/wiki/Default-Rules-in-Elvis-Webhook).
+set of rules are run. The list of all the rules that are part of this set can be
+found [here](https://github.com/inaka/elvis/wiki/Default-Rules-in-Elvis-Webhook).
 
 #### Running the webhook on your servers
 
@@ -218,8 +218,7 @@ required only when `elvis` is used as a [webhook](#webhook).
 ## Implemented Rules
 
 A reference of all rules implemented in Elvis can be found in this wiki page:
-[Rules]().
-
+[Rules](https://github.com/inaka/elvis/wiki/Rules).
 
 ## Dependencies
 
