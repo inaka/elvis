@@ -141,7 +141,10 @@ verify_god_modules(_Config) ->
 
     Path = "fail_god_modules.erl",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
-    [_] = elvis_style:god_modules(ElvisConfig, File, [25]).
+
+    [_] = elvis_style:god_modules(ElvisConfig, File, [25]),
+
+    [] = elvis_style:god_modules(ElvisConfig, File, [25, [fail_god_modules]]).
 
 -spec verify_no_if_expression(config()) -> any().
 verify_no_if_expression(_Config) ->

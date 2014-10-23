@@ -122,14 +122,24 @@ nesting_level(Config, Target, [Level]) ->
 -spec god_modules(elvis_config:config(), elvis_file:file(), [integer()]) ->
     [elvis_result:item()].
 god_modules(Config, Target, [Limit]) ->
+    god_modules(Config, Target, [Limit, []]);
+god_modules(Config, Target, [Limit, IgnoreModules]) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
-    Exported = elvis_code:exported_functions(Root),
-    case length(Exported) of
-        Count when Count > Limit ->
-            Msg = ?GOD_MODULES_MSG,
-            Result = elvis_result:new(item, Msg, [Count], 1),
-            [Result];
-        _ -> []
+    ModuleName = elvis_code:module_name(Root),
+
+    case lists:member(ModuleName, IgnoreModules) of
+        false ->
+            Exported = elvis_code:exported_functions(Root),
+            case length(Exported) of
+                Count when Count > Limit ->
+                    Msg = ?GOD_MODULES_MSG,
+                    Result = elvis_result:new(item, Msg, [Count], 1),
+                    [Result];
+                _ ->
+                    []
+            end;
+        true->
+            []
     end.
 
 -spec no_if_expression(elvis_config:config(), elvis_file:file(), []) ->
