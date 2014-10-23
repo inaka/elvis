@@ -143,6 +143,15 @@ rock_with_old_config(_Config) ->
              ok
          catch
              throw:{invalid_config, _} -> fail
+         end,
+
+    ConfigPath2 = "../../config/old/elvis-test-rule-config-list.config",
+    ElvisConfig2 = elvis_config:load_file(ConfigPath2),
+    ok = try
+             elvis:rock(ElvisConfig2),
+             ok
+         catch
+             throw:{invalid_config, _} -> fail
          end.
 
 %%%%%%%%%%%%%%%

@@ -135,6 +135,8 @@ apply_rules(Config, File) ->
     elvis_result:print(Results),
     Results.
 
+apply_rule({Module, Function}, {Result, Config, File}) ->
+    apply_rule({Module, Function, #{}}, {Result, Config, File});
 apply_rule({Module, Function, ConfigArgs}, {Result, Config, File}) ->
     ConfigMap = ensure_config_map(Module, Function, ConfigArgs),
     RuleResult = try
