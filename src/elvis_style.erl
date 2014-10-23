@@ -147,7 +147,11 @@ no_if_expression(Config, Target, []) ->
 
 -spec invalid_dynamic_call(elvis_config:config(), elvis_file:file(), []) ->
     [elvis_result:item()].
-invalid_dynamic_call(Config, Target, IgnoreModules) ->
+invalid_dynamic_call(Config, Target, []) ->
+    invalid_dynamic_call(Config, Target, [[]]);
+invalid_dynamic_call(Config, Target, [X | _] = IgnoreModules) when is_atom(X) ->
+    invalid_dynamic_call(Config, Target, [IgnoreModules]);
+invalid_dynamic_call(Config, Target, [IgnoreModules]) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
     ModuleName = elvis_code:module_name(Root),
 

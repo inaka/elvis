@@ -170,7 +170,15 @@ verify_invalid_dynamic_call(_Config) ->
      #{line_num := 25},
      #{line_num := 26},
      #{line_num := 34}
-    ] = elvis_style:invalid_dynamic_call(ElvisConfig, FileFail, []).
+    ] = elvis_style:invalid_dynamic_call(ElvisConfig, FileFail, []),
+
+    [] = elvis_style:invalid_dynamic_call(ElvisConfig,
+                                          FileFail,
+                                          [[fail_invalid_dynamic_call]]),
+
+    [] = elvis_style:invalid_dynamic_call(ElvisConfig,
+                                          FileFail,
+                                          [fail_invalid_dynamic_call]).
 
 -spec verify_used_ignored_variable(config()) -> any().
 verify_used_ignored_variable(_Config) ->

@@ -24,30 +24,52 @@
                                elvis_file:file(),
                                [term()]) ->
     [elvis_result:item()].
-no_deps_master_erlang_mk(_Config, Target, []) ->
+no_deps_master_erlang_mk(Config, Target, []) ->
+    no_deps_master_erlang_mk(Config, Target, [[]]);
+no_deps_master_erlang_mk(Config, Target, [X | _] = IgnoreDeps)
+  when is_atom(X) ->
+    no_deps_master_erlang_mk(Config, Target, [IgnoreDeps]);
+no_deps_master_erlang_mk(_Config, Target, [IgnoreDeps]) ->
     Deps = get_erlang_mk_deps(Target),
     DepsInMaster = lists:filter(fun is_erlang_mk_master_dep/1, Deps),
-    DepToResult = fun(Line) ->
-                      Opts = [{capture, all_but_first, binary}],
-                      {match, [Name]} = re:run(Line, "dep_([^ ]*)", Opts),
-                      elvis_result:new(item, ?DEP_MASTER, [Name])
-                  end,
+    DepToResult =
+        fun(Line) ->
+                Opts = [{capture, all_but_first, binary}],
+                {match, [Name]} = re:run(Line, "dep_([^ ]*)", Opts),
+                NameAtom = binary_to_atom(Name, utf8),
+                case lists:member(NameAtom, IgnoreDeps) of
+                    true ->
+                        [];
+                    false ->
+                        [elvis_result:new(item, ?DEP_MASTER, [Name])]
+                end
+        end,
 
-    lists:map(DepToResult, DepsInMaster).
+    lists:flatmap(DepToResult, DepsInMaster).
 
 -spec no_deps_master_rebar(elvis_config:config(),
                            elvis_file:file(),
                            [term()]) ->
     [elvis_result:item()].
-no_deps_master_rebar(_Config, Target, []) ->
+no_deps_master_rebar(Config, Target, []) ->
+    no_deps_master_rebar(Config, Target, [[]]);
+no_deps_master_rebar(Config, Target, [X | _] = IgnoreDeps) when is_atom(X) ->
+    no_deps_master_rebar(Config, Target, [IgnoreDeps]);
+no_deps_master_rebar(_Config, Target, [IgnoreDeps]) ->
     Deps = get_rebar_deps(Target),
     DepsInMaster = lists:filter(fun is_rebar_master_dep/1, Deps),
 
-    DepToResult = fun({AppName, _, _}) ->
-                          elvis_result:new(item, ?DEP_MASTER, [AppName])
-                  end,
+    DepToResult =
+        fun({AppName, _, _}) ->
+                case lists:member(AppName, IgnoreDeps) of
+                    true ->
+                        [];
+                    false ->
+                        [elvis_result:new(item, ?DEP_MASTER, [AppName])]
+                end
+        end,
 
-    lists:map(DepToResult, DepsInMaster).
+    lists:flatmap(DepToResult, DepsInMaster).
 
 -spec old_configuration_format(elvis_config:config(),
                                elvis_file:file(),

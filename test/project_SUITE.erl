@@ -54,7 +54,13 @@ verify_no_deps_master_erlang_mk(_Config) ->
     Filename = "Makefile.fail",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Filename),
 
-    [_, _, _] = elvis_project:no_deps_master_erlang_mk(ElvisConfig, File, []).
+    [_, _, _] = elvis_project:no_deps_master_erlang_mk(ElvisConfig, File, []),
+
+    [_, _] =
+        elvis_project:no_deps_master_erlang_mk(ElvisConfig, File, [[sync]]),
+
+    [_] =
+        elvis_project:no_deps_master_erlang_mk(ElvisConfig, File, [sync, meck]).
 
 -spec verify_no_deps_master_rebar(config()) -> any().
 verify_no_deps_master_rebar(_Config) ->
@@ -64,7 +70,12 @@ verify_no_deps_master_rebar(_Config) ->
     Filename = "rebar.config.fail",
     {ok, File} = elvis_test_utils:find_file(SrcDirs, Filename),
 
-    [_, _] = elvis_project:no_deps_master_rebar(ElvisConfig, File, []).
+    [_, _] = elvis_project:no_deps_master_rebar(ElvisConfig, File, []),
+
+    [_] = elvis_project:no_deps_master_rebar(ElvisConfig, File, [[aleppo]]),
+
+    [] =
+        elvis_project:no_deps_master_rebar(ElvisConfig, File, [aleppo, getopt]).
 
 -spec verify_old_config_format(config()) -> any().
 verify_old_config_format(_Config) ->
