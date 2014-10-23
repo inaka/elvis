@@ -128,7 +128,17 @@ is_old_config(ElvisConfig) ->
         Config when is_map(Config) -> true;
         Config when is_list(Config) ->
             SrcDirsIsKey = fun(RuleGroup) ->
-                                   maps:is_key(src_dirs, RuleGroup)
+                                   maps:is_key(src_dirs, RuleGroup) orelse
+                                       exists_old_rule(RuleGroup)
                            end,
             lists:filter(SrcDirsIsKey, Config) /= []
     end.
+
+exists_old_rule(#{rules := Rules}) ->
+    Filter = fun
+                 ({_, _, Args}) when is_list(Args) ->
+                     true;
+                 (_) ->
+                     false
+             end,
+    lists:filter(Filter, Rules) /= [].

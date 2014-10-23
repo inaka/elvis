@@ -95,6 +95,10 @@ verify_old_config_format(_Config) ->
     {ok, FileFail1} = elvis_test_utils:find_file(SrcDirs, PathFail1),
     [_] = elvis_project:old_configuration_format(ElvisConfig, FileFail1, #{}),
 
+    PathFail2 = "fail.2.elvis.config",
+    {ok, FileFail2} = elvis_test_utils:find_file(SrcDirs, PathFail2),
+    [_] = elvis_project:old_configuration_format(ElvisConfig, FileFail2, #{}),
+
     PathPass = "pass.elvis.config",
     {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
     [] = elvis_project:old_configuration_format(ElvisConfig, FilePass, #{}).
