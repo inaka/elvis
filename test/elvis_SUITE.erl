@@ -361,12 +361,6 @@ check_some_line_output(Fun, Expected, FilterFun) ->
     ListFun = fun(Line) -> FilterFun(Line, Expected) end,
     [_ | _] = lists:filter(ListFun, Lines).
 
-check_first_line_output(Fun, Expected) ->
-    Equals = fun(Result, Exp) ->
-                     Result == Exp
-             end,
-    check_first_line_output(Fun, Expected, Equals).
-
 check_first_line_output(Fun, Expected, FilterFun) ->
     ct:capture_start(),
     Fun(),

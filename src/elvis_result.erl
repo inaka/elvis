@@ -5,6 +5,7 @@
          new/3,
          new/4,
          status/1,
+         clean/1,
          print/1
         ]).
 
@@ -122,7 +123,7 @@ print(#{message := Msg, info := Info}) ->
 print(#{error_msg := Msg, info := Info}) ->
     elvis_utils:error_prn(Msg, Info).
 
--spec status([rule()]) -> ok | fail.
+-spec status([file() | rule()]) -> ok | fail.
 status([]) ->
     ok;
 status([#{rules := Rules} | Files]) ->
@@ -134,3 +135,27 @@ status([#{items := []} | Rules]) ->
     status(Rules);
 status(_Rules) ->
     fail.
+
+
+%% @doc Removes files that don't have any failures.
+-spec clean([file() | rule()]) -> [file() | rule()].
+clean(Files)->
+    clean(Files, []).
+
+%% @private
+-spec clean([file() | rule()], [file() | rule()]) -> [file() | rule()].
+clean([], Result) ->
+    lists:reverse(Result);
+clean([#{rules := []} | Files], Result) ->
+    clean(Files, Result);
+clean([File = #{rules := Rules, file := FileInfo} | Files], Result) ->
+    CleanRules = clean(Rules),
+    FileInfo1 = maps:remove(content, FileInfo),
+    FileInfo2 = maps:remove(parse_tree, FileInfo1),
+    NewFile = File#{rules => CleanRules,
+                    file => FileInfo2},
+    clean(Files, [NewFile | Result]);
+clean([#{items := []} | Rules], Result) ->
+    clean(Rules, Result);
+clean([Rule | Rules], Result) ->
+    clean(Rules, [Rule | Result]).
