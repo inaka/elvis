@@ -66,7 +66,7 @@ do_rock(Config0) ->
     Results = [apply_rules(Config, File) || File <- LoadedFiles],
 
     case elvis_result:status(Results) of
-        fail -> {fail, Results};
+        fail -> {fail, elvis_result:clean(Results)};
         ok -> ok
     end.
 
