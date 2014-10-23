@@ -5,12 +5,14 @@
 Erlang Style Reviewer
 
 ## Contact Us
-For **questions** or **general comments** regarding the use of this library, please use our public
-[hipchat room](https://www.hipchat.com/gpBpW3SsT).
+For **questions** or **general comments** regarding the use of this library,
+please use our public [hipchat room](https://www.hipchat.com/gpBpW3SsT).
 
-If you find any **bugs** or have a **problem** while using this library, please [open an issue](https://github.com/inaka/elvis/issues/new) in this repo (or a pull request :)).
+If you find any **bugs** or have a **problem** while using this library, please
+[open an issue](https://github.com/inaka/elvis/issues/new) in this repo
+(or a pull request :)).
 
-And you can check all of our open-source projects at [inaka.github.io](http://inaka.github.io)
+And you can check all of our open-source projects at [inaka.github.io](http://inaka.github.io).
 
 ## Usage
 
@@ -170,15 +172,15 @@ environment values in your [configuration][config] file:
     {config,
      [#{dirs => ["src", "test"],
         filter => "*.erl",
-        rules    => [{elvis_style, line_length, [80]},
-                     {elvis_style, no_tabs, []},
-                     {elvis_style, macro_names, []},
-                     {elvis_style, macro_module_names, []},
-                     {elvis_style, operator_spaces, [{right, ","},
-                                                     {right, "++"},
-                                                     {left, "++"}
-                                                    ]}
-                    ]
+        rules => [{elvis_style, line_length, #{limit => 80}},
+                  {elvis_style, no_tabs},
+                  {elvis_style, macro_names},
+                  {elvis_style, macro_module_names},
+                  {elvis_style, operator_spaces, #{rules => [{right, ","},
+                                                             {right, "++"},
+                                                             {left, "++"}]}
+                  }
+                 ]
        },
       #{dirs => ["."],
         filter => "Makefile",
@@ -201,11 +203,12 @@ environment values in your [configuration][config] file:
 The `dirs` key is a list that indicates where `elvis` should look for the
 files that match `filter`, which will be run through each of the rules
 specified by the `rules` entry, which is list of items with the following
-structure `{Module, Function, Args}`.
+structure `{Module, Function, RuleConfig}` (or just `{Module, Function}`
+if the rule takes no configuration values).
 
-As you can see a rule is just a function and it takes 3 arguments: `elvis`'s
+The implementation of a rule is just a function that takes 3 arguments: `elvis`'s
 `config` entry from its [configuration](#configuration); the file to be
-analyzed; and some configuration `Args` (arguments) specified for the rule.
+analyzed; and a `RuleConfig` configuration map specified for the rule.
 This means you can define rules of your own as long as the functions that
 implement them respect this arity.
 
