@@ -135,9 +135,12 @@ apply_rules(Config, File) ->
     elvis_result:print(Results),
     Results.
 
-apply_rule({Module, Function, Args}, {Result, Config, File}) ->
+apply_rule({Module, Function}, {Result, Config, File}) ->
+    apply_rule({Module, Function, #{}}, {Result, Config, File});
+apply_rule({Module, Function, ConfigArgs}, {Result, Config, File}) ->
+    ConfigMap = ensure_config_map(Module, Function, ConfigArgs),
     RuleResult = try
-                     Results = Module:Function(Config, File, Args),
+                     Results = Module:Function(Config, File, ConfigMap),
                      elvis_result:new(rule, Function, Results)
                  catch
                      _:Reason ->
@@ -234,3 +237,25 @@ github_credentials() ->
     User = application:get_env(elvis, github_user, ""),
     Password = application:get_env(elvis, github_password, ""),
     egithub:basic_auth(User, Password).
+
+%% @doc Process a tules configuration argument and converts it to a map.
+ensure_config_map(_, _, Map) when is_map(Map) ->
+    Map;
+ensure_config_map(elvis_style, line_length, [Limit]) ->
+    #{limit => Limit};
+ensure_config_map(elvis_style, operator_spaces, Rules) ->
+    #{rules => Rules};
+ensure_config_map(elvis_style, nesting_level, [Level]) ->
+    #{level => Level};
+ensure_config_map(elvis_style, god_modules, [Limit]) ->
+    #{limit => Limit};
+ensure_config_map(elvis_style, god_modules, [Limit, IgnoreModules]) ->
+    #{limit => Limit, ignore => IgnoreModules};
+ensure_config_map(elvis_style, invalid_dynamic_call, IgnoreModules) ->
+    #{ignore => IgnoreModules};
+ensure_config_map(elvis_style,
+                  module_naming_convention,
+                  [Regex, IgnoreModules]) ->
+    #{regex => Regex, ignore => IgnoreModules};
+ensure_config_map(_, _, []) ->
+    #{}.

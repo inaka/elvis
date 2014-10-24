@@ -82,25 +82,26 @@
 %% name of a module.
 -spec line_length(elvis_config:config(), elvis_file:file(), [term()]) ->
     [elvis_result:item()].
-line_length(_Config, Target, [Limit]) ->
+line_length(_Config, Target, RuleConfig) ->
+    Limit = maps:get(limit, RuleConfig, 80),
     {Src, _} = elvis_file:src(Target),
     elvis_utils:check_lines(Src, fun check_line_length/3, [Limit]).
 
 -spec no_tabs(elvis_config:config(), elvis_file:file(), [term()]) ->
     [elvis_result:item()].
-no_tabs(_Config, Target, []) ->
+no_tabs(_Config, Target, _RuleConfig) ->
     {Src, _} = elvis_file:src(Target),
     elvis_utils:check_lines(Src, fun check_no_tabs/3, []).
 
 -spec macro_names(elvis_config:config(), elvis_file:file(), [term()]) ->
     [elvis_result:item()].
-macro_names(_Config, Target, []) ->
+macro_names(_Config, Target, _RuleConfig) ->
     {Src, _} = elvis_file:src(Target),
     elvis_utils:check_lines(Src, fun check_macro_names/3, []).
 
 -spec macro_module_names(elvis_config:config(), elvis_file:file(), []) ->
     [elvis_result:item()].
-macro_module_names(_Config, Target, []) ->
+macro_module_names(_Config, Target, _RuleConfig) ->
     {Src, _} = elvis_file:src(Target),
     elvis_utils:check_lines(Src, fun check_macro_module_names/3, []).
 
@@ -108,33 +109,46 @@ macro_module_names(_Config, Target, []) ->
                       elvis_file:file(),
                       [{right|left, string()}]) ->
     [elvis_result:item()].
-operator_spaces(Config, Target, Rules) ->
+operator_spaces(Config, Target, RuleConfig) ->
+    Rules = maps:get(rules, RuleConfig, []),
     {Src, _} = elvis_file:src(Target),
     {Root, _} = elvis_file:parse_tree(Config, Target),
     elvis_utils:check_lines(Src, fun check_operator_spaces/3, {Root, Rules}).
 
 -spec nesting_level(elvis_config:config(), elvis_file:file(), [integer()]) ->
     [elvis_result:item()].
-nesting_level(Config, Target, [Level]) ->
+nesting_level(Config, Target, RuleConfig) ->
+    Level = maps:get(level, RuleConfig, 3),
     {Root, _} = elvis_file:parse_tree(Config, Target),
     elvis_utils:check_nodes(Root, fun check_nesting_level/2, [Level]).
 
 -spec god_modules(elvis_config:config(), elvis_file:file(), [integer()]) ->
     [elvis_result:item()].
-god_modules(Config, Target, [Limit]) ->
+god_modules(Config, Target, RuleConfig) ->
+    Limit = maps:get(limit, RuleConfig, 25),
+    IgnoreModules = maps:get(ignore, RuleConfig, []),
+
     {Root, _} = elvis_file:parse_tree(Config, Target),
-    Exported = elvis_code:exported_functions(Root),
-    case length(Exported) of
-        Count when Count > Limit ->
-            Msg = ?GOD_MODULES_MSG,
-            Result = elvis_result:new(item, Msg, [Count], 1),
-            [Result];
-        _ -> []
+    ModuleName = elvis_code:module_name(Root),
+
+    case lists:member(ModuleName, IgnoreModules) of
+        false ->
+            Exported = elvis_code:exported_functions(Root),
+            case length(Exported) of
+                Count when Count > Limit ->
+                    Msg = ?GOD_MODULES_MSG,
+                    Result = elvis_result:new(item, Msg, [Count], 1),
+                    [Result];
+                _ ->
+                    []
+            end;
+        true->
+            []
     end.
 
 -spec no_if_expression(elvis_config:config(), elvis_file:file(), []) ->
     [elvis_result:item()].
-no_if_expression(Config, Target, []) ->
+no_if_expression(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
     Predicate = fun(Node) -> ktn_code:type(Node) == 'if' end,
     ResultFun = result_node_line_fun(?NO_IF_EXPRESSION_MSG),
@@ -147,7 +161,8 @@ no_if_expression(Config, Target, []) ->
 
 -spec invalid_dynamic_call(elvis_config:config(), elvis_file:file(), []) ->
     [elvis_result:item()].
-invalid_dynamic_call(Config, Target, IgnoreModules) ->
+invalid_dynamic_call(Config, Target, RuleConfig) ->
+    IgnoreModules = maps:get(ignore, RuleConfig, []),
     {Root, _} = elvis_file:parse_tree(Config, Target),
     ModuleName = elvis_code:module_name(Root),
 
@@ -165,7 +180,7 @@ invalid_dynamic_call(Config, Target, IgnoreModules) ->
 
 -spec used_ignored_variable(elvis_config:config(), elvis_file:file(), []) ->
     [elvis_result:item()].
-used_ignored_variable(Config, Target, []) ->
+used_ignored_variable(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
     ResultFun = result_node_line_col_fun(?USED_IGNORED_VAR_MSG),
     case elvis_code:find_zipper(fun is_ignored_var/1, Root) of
@@ -177,7 +192,7 @@ used_ignored_variable(Config, Target, []) ->
 
 -spec no_behavior_info(elvis_config:config(), elvis_file:file(), []) ->
     [elvis_result:item()].
-no_behavior_info(Config, Target, []) ->
+no_behavior_info(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
     Children = ktn_code:content(Root),
 
@@ -207,7 +222,10 @@ no_behavior_info(Config, Target, []) ->
                                elvis_file:file(),
                                [list()]) ->
     [elvis_result:item()].
-module_naming_convention(Config, Target, [Regex, IgnoreModules]) ->
+module_naming_convention(Config, Target, RuleConfig) ->
+    Regex = maps:get(regex, RuleConfig, ".*"),
+    IgnoreModules = maps:get(ignore, RuleConfig, []),
+
     {Root, _} = elvis_file:parse_tree(Config, Target),
     ModuleName = elvis_code:module_name(Root),
 
@@ -229,7 +247,7 @@ module_naming_convention(Config, Target, [Regex, IgnoreModules]) ->
                             elvis_file:file(),
                             [list()]) ->
     [elvis_result:item()].
-state_record_and_type(Config, Target, []) ->
+state_record_and_type(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
     case is_otp_module(Root) of
         true ->
@@ -252,7 +270,7 @@ state_record_and_type(Config, Target, []) ->
                            elvis_file:file(),
                            [list()]) ->
     [elvis_result:item()].
-no_spec_with_records(Config, Target, []) ->
+no_spec_with_records(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
     case elvis_code:find(fun spec_includes_record/1, Root) of
         [] -> [];
