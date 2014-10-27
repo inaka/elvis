@@ -30,7 +30,8 @@
          main_git_hook_fail/1,
          main_git_hook_ok/1,
          main_default_config/1,
-         main_unexistent/1
+         main_unexistent/1,
+         main_code_path/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -354,8 +355,34 @@ main_unexistent(_Config) ->
     Expected = "unrecognized_or_unimplemened_command.",
 
     UnexistentFun = fun() -> elvis:main("aaarrrghh") end,
-    check_first_line_output(UnexistentFun, Expected,fun  matches_regex/2),
+    check_first_line_output(UnexistentFun, Expected, fun matches_regex/2),
 
+    ok.
+
+-spec main_code_path(config()) -> any().
+main_code_path(_Config) ->
+    Expected = "user_defined_rules.erl.*FAIL",
+    Prefix = "../../",
+    OutDir = Prefix ++ "ebin-test",
+    Args = "rock -c "
+        ++ Prefix
+        ++ "config/elvis-test-pa.config --code-path "
+        ++ OutDir,
+    Source = Prefix ++ "test/examples/user_defined_rules.erl",
+    Destination = Prefix ++ "ebin-test/user_defined_rules",
+
+    try
+        file:make_dir(OutDir),
+        file:copy(Source, Destination ++ ".erl"),
+        compile:file(Destination, [{outdir, OutDir}]),
+
+        CodePathFun = fun() -> elvis:main(Args) end,
+        check_some_line_output(CodePathFun, Expected, fun matches_regex/2)
+    after
+        file:delete(Destination ++ ".erl"),
+        file:delete(Destination ++ ".beam"),
+        file:del_dir(OutDir)
+    end,
     ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
