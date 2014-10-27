@@ -223,6 +223,20 @@ required only when `elvis` is used as a [webhook](#webhook).
 A reference of all rules implemented in Elvis can be found in this wiki page:
 [Rules](https://github.com/inaka/elvis/wiki/Rules).
 
+## User Defined Rules
+
+If you have implemented an Elvis rule that's in your local repo or in one of
+your dependencies, you can add this rule to your `elvis.config` file and
+tell Elvis where to find the `.beam` that contains the compiled rule using
+the `--code-path` (`-p`) option.
+
+For example if the rule is in one of your deps, you could run Elvis in the
+following way:
+
+```shell
+elvis rock -p deps/elvis_rules/ebin -c elvis.config
+```
+
 ## Dependencies
 
 - Erlang/OTP 17.0
