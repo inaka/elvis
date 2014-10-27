@@ -160,7 +160,7 @@ option_spec_list() ->
      {help, $h, "help", undefined, "Show this help information."},
      {config, $c, "config", string, Commands},
      {commands, undefined, "commands", undefined, "Show available commands."},
-     {code_path, $p, "code-path", string, "Add the directory ni the code path."}
+     {code_path, $p, "code-path", string, "Add the directory in the code path."}
     ].
 
 -spec process_options([atom()], [string()]) -> ok.
