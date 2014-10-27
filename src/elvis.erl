@@ -36,7 +36,7 @@ main(Args) ->
         {ok, {Options, Commands}} ->
             process_options(Options, Commands);
         {error, {Reason, Data}} ->
-            elvis_utils:error_prn("~s ~p~n~n", [Reason, Data]),
+            elvis_utils:error_prn("~s ~p~n", [Reason, Data]),
             help()
     end.
 
@@ -159,7 +159,8 @@ option_spec_list() ->
     [
      {help, $h, "help", undefined, "Show this help information."},
      {config, $c, "config", string, Commands},
-     {commands, undefined, "commands", undefined, "Show available commands."}
+     {commands, undefined, "commands", undefined, "Show available commands."},
+     {code_path, $p, "code-path", string, "Add the directory ni the code path."}
     ].
 
 -spec process_options([atom()], [string()]) -> ok.
@@ -182,6 +183,9 @@ process_options([{config, Path} | Opts], Cmds, _) ->
     process_options(Opts, Cmds, Config);
 process_options([commands | Opts], Cmds, Config) ->
     commands(),
+    process_options(Opts, Cmds, Config);
+process_options([{code_path, Path} | Opts], Cmds, Config) ->
+    code:add_path(Path),
     process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
