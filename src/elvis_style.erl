@@ -101,9 +101,10 @@ macro_names(_Config, Target, _RuleConfig) ->
 
 -spec macro_module_names(elvis_config:config(), elvis_file:file(), []) ->
     [elvis_result:item()].
-macro_module_names(_Config, Target, _RuleConfig) ->
+macro_module_names(Config, Target, _RuleConfig) ->
     {Src, _} = elvis_file:src(Target),
-    elvis_utils:check_lines(Src, fun check_macro_module_names/3, []).
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+    elvis_utils:check_lines(Src, fun check_macro_module_names/3, [Root]).
 
 -spec operator_spaces(elvis_config:config(),
                       elvis_file:file(),
@@ -350,17 +351,17 @@ check_macro_names(Line, Num, _Args) ->
 
 -spec check_macro_module_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item_result()}.
-check_macro_module_names(Line, Num, _Args) ->
+check_macro_module_names(Line, Num, Root) ->
     {ok, ModNameRegex} = re:compile("[?]([A-z0-9_]+)[:]"),
     {ok, FunNameRegex} = re:compile("[:][?]([A-z0-9_]+)"),
 
     ModuleMsg = ?MACRO_AS_MODULE_NAME_MSG,
     ModuleResults =
-        apply_macro_module_names(Line, Num, ModNameRegex, ModuleMsg),
+        apply_macro_module_names(Line, Num, ModNameRegex, ModuleMsg, Root),
 
     FunctionMsg = ?MACRO_AS_FUNCTION_NAME_MSG,
     FunResults =
-        apply_macro_module_names(Line, Num, FunNameRegex, FunctionMsg),
+        apply_macro_module_names(Line, Num, FunNameRegex, FunctionMsg, Root),
 
     case FunResults ++ ModuleResults of
         [] ->
@@ -369,21 +370,53 @@ check_macro_module_names(Line, Num, _Args) ->
             {ok, Results}
     end.
 
--spec apply_macro_module_names(binary(), integer(), string(), string()) ->
+-spec apply_macro_module_names(binary(),
+                               integer(),
+                               string(),
+                               string(),
+                               term()) ->
     [elvis_result:item_result()].
-apply_macro_module_names(Line, Num, Regex, Msg) ->
-    case re:run(Line, Regex, [{capture, all_but_first, list}]) of
+apply_macro_module_names(Line, Num, Regex, Msg, Root) ->
+    case re:run(Line, Regex, [{capture, all_but_first, index}]) of
         nomatch ->
             [];
-        {match, [MacroName]} ->
-            case lists:member(MacroName, ?MACRO_MODULE_NAMES_EXCEPTIONS) of
-                    true ->
+        {match, [{Col, Len}]} ->
+            MacroName = binary_to_list(binary:part(Line, Col, Len)),
+            case
+                lists:member(MacroName, ?MACRO_MODULE_NAMES_EXCEPTIONS)
+                or not is_remote_call({Num, Col + 1}, Root)
+            of
+                true ->
                     [];
                 false ->
                     Info = [MacroName, Num],
                     Result = elvis_result:new(item, Msg, Info, Num),
                     [Result]
             end
+    end.
+
+is_remote_call({Num, Col}, Root) ->
+    case elvis_code:find_by_location(Root, {Num, Col}) of
+        not_found ->
+            true;
+        {ok, Node0} ->
+            Pred =
+                fun(Zipper) ->
+                        (Node0 == zipper:node(Zipper))
+                        andalso has_remote_call_parent(Zipper)
+                end,
+            [] =/= elvis_code:find_zipper(Pred, Root)
+    end.
+
+has_remote_call_parent(undefined) ->
+    false;
+has_remote_call_parent(Zipper) ->
+    Node = zipper:node(Zipper),
+    case ktn_code:type(Node) of
+        remote ->
+            true;
+        _ ->
+            has_remote_call_parent(zipper:up(Zipper))
     end.
 
 -spec check_operator_spaces(binary(), integer(), [{right|left, string()}]) ->

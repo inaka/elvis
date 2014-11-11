@@ -25,23 +25,24 @@
 -export_type([file/0]).
 
 -type file() :: #{path => string(), content => binary()}.
+-type line_content() :: {integer(), integer()}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Takes a binary that holds source code and applies
-%% Fun to each line. Fun takes 3 arguments (the line
-%% as a binary, the line number and the supplied Args) and
-%% returns 'no_result' or {'ok', Result}.
+%%      Fun to each line. Fun takes 3 arguments (the line
+%%      as a binary, the line number and the supplied Args) and
+%%      returns 'no_result' or {'ok', Result}.
 -spec check_lines(binary(), fun(), [term()]) ->
     [elvis_result:item()].
 check_lines(Src, Fun, Args) ->
     Lines = binary:split(Src, <<"\n">>, [global]),
     check_lines(Lines, Fun, Args, [], 1).
 
--type line_content() :: {integer(), integer()}.
-
+%% @doc Checks each line calling fun and providing the previous and next
+%%      lines based on the context tuple {Before, After}.
 -spec check_lines_with_context(binary(), fun(), [term()], line_content()) ->
     [elvis_result:item()].
 check_lines_with_context(Src, Fun, Args, Ctx) ->
@@ -51,7 +52,7 @@ check_lines_with_context(Src, Fun, Args, Ctx) ->
 
 %% @private
 check_lines([], _Fun, _Args, Results, _Num) ->
-    lists:reverse(Results);
+    lists:flatten(lists:reverse(Results));
 check_lines([Line | Lines], Fun, Args, Results, Num) ->
     case Fun(Line, Num, Args) of
         {ok, Result} ->
