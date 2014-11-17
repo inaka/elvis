@@ -9,10 +9,10 @@ dep_getopt = git https://github.com/jcomellas/getopt v0.8.2
 dep_meck = git https://github.com/eproxus/meck 0.8.2
 dep_jiffy = git https://github.com/davisp/jiffy 0.11.3
 dep_ibrowse = git https://github.com/cmullaparthi/ibrowse v4.1.1
-dep_aleppo = git https://github.com/inaka/aleppo 0.9.0
+dep_aleppo = git https://github.com/inaka/aleppo 0.9.1
 dep_zipper = git https://github.com/inaka/zipper 0.1.0
 dep_egithub = git https://github.com/inaka/erlang-github 0.1.1
-dep_katana =  git https://github.com/inaka/erlang-katana jfacorro.16.move.elvis_code.to.ktn_code
+dep_katana =  git https://github.com/inaka/erlang-katana 0.2.0
 
 include erlang.mk
 
@@ -35,7 +35,7 @@ escript: all
 shell: app
 	erl -pa ebin -pa deps/*/ebin -s sync -s elvis -s lager -config config/elvis.config
 
-test-shell: app
+test-shell: build-ct-suites app
 	erl -pa ebin -pa deps/*/ebin -pa test -s sync -s elvis -s lager -config config/elvis.config
 
 install: escript
