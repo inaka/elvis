@@ -192,7 +192,10 @@ process_options([], Cmds, Config) ->
 
 -spec process_commands([string()], elvis_config:config()) -> ok.
 process_commands([rock | Cmds], Config) ->
-    _ = rock(Config),
+    case rock(Config) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
+    end,
     process_commands(Cmds, Config);
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
@@ -206,7 +209,7 @@ process_commands(['git-hook' | Cmds], Config) ->
 process_commands([], _Config) ->
     ok;
 process_commands([_Cmd | _Cmds], _Config) ->
-    throw(unrecognized_or_unimplemened_command).
+    throw(unrecognized_or_unimplemented_command).
 
 %%% Options
 
