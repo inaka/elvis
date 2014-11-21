@@ -352,8 +352,8 @@ check_macro_names(Line, Num, _Args) ->
 -spec check_macro_module_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item_result()}.
 check_macro_module_names(Line, Num, Root) ->
-    {ok, ModNameRegex} = re:compile("[?]([A-z0-9_]+)[:]"),
-    {ok, FunNameRegex} = re:compile("[:][?]([A-z0-9_]+)"),
+    {ok, ModNameRegex} = re:compile("[?](\\w+)[:][?]?\\w+\\s*\\("),
+    {ok, FunNameRegex} = re:compile("[?]?\\w+[:][?](\\w+)\\s*\\("),
 
     ModuleMsg = ?MACRO_AS_MODULE_NAME_MSG,
     ModuleResults =
