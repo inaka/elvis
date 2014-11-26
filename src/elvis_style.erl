@@ -17,7 +17,7 @@
          no_spec_with_records/3
         ]).
 
--define(LINE_LENGTH_MSG, "Line ~p is too long: ~p.").
+-define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
 
 -define(NO_TABS_MSG, "Line ~p has a tab at column ~p.").
 
