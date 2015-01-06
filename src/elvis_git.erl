@@ -8,7 +8,7 @@
         ]).
 
 -define(LIST_STAGED,
-        "git diff --name-only --staged").
+        "git diff --name-status --staged | awk '$1 != \"D\" { print $2 }'").
 
 -define(STAGED_CONTENT(Path),
         "git show :" ++ Path).
