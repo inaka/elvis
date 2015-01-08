@@ -6,7 +6,8 @@
 
 -export([
          relative_position_from_patch/1,
-         check_staged_files/1
+         check_staged_files/1,
+         ignore_deleted_files/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -76,3 +77,19 @@ check_staged_files(_Config) ->
     os:cmd("git reset " ++ Filename),
 
     file:delete(Filename).
+
+-spec ignore_deleted_files(config()) -> any().
+ignore_deleted_files(Config) ->
+    PrivDir = proplists:get_value(priv_dir, Config),
+    file:set_cwd(PrivDir),%ct will set cwd of each test to its log_dir
+    os:cmd("git init ."),
+    file:write_file("test", <<"ingore">>, [append]),
+    file:write_file("test2", <<"ignore">>, [append]),
+    os:cmd("git add . && git commit -m 'Add dummy files'"),
+    os:cmd("git rm test"),
+    file:write_file("test2", <<"ignore">>, [append]),%modified
+    file:write_file("test3", <<"ignore">>, [append]),%new
+    os:cmd("git add ."),
+    StagedFiles = lists:sort([Path
+                              || #{path := Path} <- elvis_git:staged_files()]),
+    ["test2", "test3"] = StagedFiles.
