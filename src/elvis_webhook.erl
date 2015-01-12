@@ -16,9 +16,12 @@ event(Cred, Request) -> egithub_webhook:event(?MODULE, Cred, Request).
 %%% Callbacks
 
 -spec handle_pull_request(
-  egithub:credentials(), string(), [egithub_webhook:file()]) ->
+  egithub:credentials(), egithub_webhook:req_data(),
+  [egithub_webhook:file()]) ->
   {ok, [egithub_webhook:message()]} | {error, term()}.
-handle_pull_request(Cred, Repo, GithubFiles) ->
+handle_pull_request(
+    Cred, #{<<"repository">> := Repository}, GithubFiles) ->
+    Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
     Config = repo_config(Cred, Repo, elvis_config:default()),
 
     GithubFiles1 = [F#{path => Path}
