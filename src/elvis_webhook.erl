@@ -1,56 +1,25 @@
 -module(elvis_webhook).
 
+-behaviour(egithub_webhook).
+
 -export([event/2]).
-
--export_type([request/0]).
-
--type event() :: pull_request.
--type request() :: #{headers => map(), body => map()}.
-
--type github_info() ::
-        {
-          egithub:credentials(),
-          egithub:repository(),
-          integer(),
-          [map()]
-        }.
+-export([handle_pull_request/3]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Public API
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% External Functions
 
--spec event(egithub:credentials(), request()) -> ok | {error, term()}.
-event(Cred, #{headers := Headers, body := Body}) ->
-    HeaderName = <<"x-github-event">>,
-    case maps:is_key(HeaderName, Headers) of
-        false ->
-            {error, missing_header};
-        true ->
-            EventName = maps:get(HeaderName, Headers),
-            EventData = jiffy:decode(Body, [return_maps]),
-            Config = elvis_config:default(),
-            event(Config, Cred, EventName, EventData)
-    end.
+-spec event(egithub:credentials(), egithub_webhook:request()) ->
+  ok | {error, term()}.
+event(Cred, Request) -> egithub_webhook:event(?MODULE, Cred, Request).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Private functions
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Callbacks
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Events
-
--spec event(elvis_config:config(),
-            egithub:credentials(),
-            event(),
-            map()) -> ok | {error, term()}.
-event(LocalConfig,
-      Cred,
-      <<"pull_request">>,
-      #{<<"number">> := PR, <<"repository">> := Repository}) ->
-    Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
-    Config = repo_config(Cred, Repo, LocalConfig),
-
-    {ok, GithubFiles} = egithub:pull_req_files(Cred, Repo, PR),
+-spec handle_pull_request(
+  egithub:credentials(), string(), [egithub_webhook:file()]) ->
+  {ok, [egithub_webhook:message()]} | {error, term()}.
+handle_pull_request(Cred, Repo, GithubFiles) ->
+    Config = repo_config(Cred, Repo, elvis_config:default()),
 
     GithubFiles1 = [F#{path => Path}
                     || F = #{<<"filename">> := Path} <- GithubFiles],
@@ -61,18 +30,9 @@ event(LocalConfig,
     Config2 = elvis_config:apply_to_files(FileInfoFun, Config1),
 
     case elvis:rock(Config2) of
-        {fail, Results} ->
-            {ok, Comments} = egithub:pull_req_comments(Cred, Repo, PR),
-            GithubInfo = {Cred, Repo, PR, Comments},
-            comment_files(GithubInfo, Results);
-        ok -> ok
-    end;
-
-event(_Config, _Cred, <<"ping">>, _Data) ->
-    ok;
-
-event(_Config, _Cred, Event, _Data) ->
-    {error, io_lib:format("Nothing to do for event: ~p.~n", [Event])}.
+        {fail, Results} -> {ok, messages_from_results(Results)};
+        ok -> {ok, []}
+    end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helper functions
@@ -106,31 +66,28 @@ commit_id_from_raw_url(Url, Filename) ->
     {match, [_, {Pos, Len} | _]} = re:run(UrlString, Regex),
     string:substr(UrlString, Pos + 1, Len).
 
-%% @doc Comment files that failed rules.
--spec comment_files(github_info(), [elvis_result:file()]) -> ok.
-comment_files(GithubInfo, Results) ->
-    Fun = fun(Result) ->
-                  File = elvis_result:get_file(Result),
-                  Rules = elvis_result:get_rules(Result),
-                  comment_rules(GithubInfo, Rules, File)
-          end,
-    lists:foreach(Fun, Results).
+messages_from_results(Results) ->
+    lists:flatmap(
+        fun(Result) ->
+            messages_from_result(Result)
+        end, Results).
 
--spec comment_rules(github_info(), [elvis_result:rule()], elvis_file:file()) ->
-    ok.
-comment_rules(GithubInfo, Rules, File) ->
-    Fun = fun(Rule) ->
-              Items = elvis_result:get_items(Rule),
-              comment_lines(GithubInfo, Items, File)
-          end,
-    lists:foreach(Fun, Rules).
+messages_from_result(Result) ->
+    File = elvis_result:get_file(Result),
+    Rules = elvis_result:get_rules(Result),
+    lists:flatmap(
+        fun(Rule) ->
+            messages_from_result(Rule, File)
+        end, Rules).
 
--spec comment_lines(github_info(), [elvis_result:item()], elvis_file:file()) ->
-    ok.
-comment_lines(_GithubInfo, [], _File) ->
-    ok;
-comment_lines(GithubInfo, [Item | Items], File) ->
-    {Cred, Repo, PR, Comments} = GithubInfo,
+messages_from_result(Rule, File) ->
+    Items = elvis_result:get_items(Rule),
+    lists:flatmap(
+        fun(Item) ->
+            messages_from_item(Item, File)
+        end, Items).
+
+messages_from_item(Item, File) ->
     #{path := Path,
       commit_id := CommitId,
       patch := Patch} = File,
@@ -141,33 +98,14 @@ comment_lines(GithubInfo, [Item | Items], File) ->
     case elvis_git:relative_position(Patch, Line) of
         {ok, Position} ->
             Text = list_to_binary(io_lib:format(Message, Info)),
-
-            case comment_exists(Comments, Path, Position, Text) of
-                exists ->
-                    Args = [Text, Path, Line],
-                    lager:info("Comment '~p' for ~p on line ~p exists", Args);
-                not_exists ->
-                    {ok, _} =
-                        egithub:pull_req_comment_line(
-                          Cred, Repo, PR, CommitId, Path, Position, Text
-                        )
-            end;
+            [ #{commit_id => CommitId,
+                path      => Path,
+                position  => Position,
+                text      => Text
+                }
+            ];
         not_found ->
             Args = [Line],
-            lager:info("Line ~p does not belong to file's diff.", Args)
-    end,
-
-    comment_lines(GithubInfo, Items, File).
-
-comment_exists([], _Path, _Line, _Body) ->
-    not_exists;
-comment_exists([Comment | Comments], Path, Position, Body) ->
-    try
-        #{<<"path">> := Path,
-          <<"position">> := Position,
-          <<"body">> := Body} = Comment,
-        exists
-    catch
-        error:{badmatch, _} ->
-            comment_exists(Comments, Path, Position, Body)
+            lager:info("Line ~p does not belong to file's diff.", Args),
+            []
     end.
