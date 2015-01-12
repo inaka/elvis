@@ -17,7 +17,7 @@ event(Cred, Request) -> egithub_webhook:event(?MODULE, Cred, Request).
 
 -spec handle_pull_request(
   egithub:credentials(), string(), [egithub_webhook:file()]) ->
-  {ok, [egithub_webhook:messge()]} | {error, term()}.
+  {ok, [egithub_webhook:message()]} | {error, term()}.
 handle_pull_request(Cred, Repo, GithubFiles) ->
     Config = repo_config(Cred, Repo, elvis_config:default()),
 
