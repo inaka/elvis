@@ -446,7 +446,6 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                        {ok, Node} -> ktn_code:type(Node)
                    end,
             case Type of
-                undefined -> [];
                 atom -> [];
                 binary_element -> [];
                 string -> [];
