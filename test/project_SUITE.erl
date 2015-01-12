@@ -115,10 +115,10 @@ verify_git_for_deps_rebar(_Config) ->
 
     [_, _] = elvis_project:git_for_deps_rebar(ElvisConfig, File, #{}),
 
-    RuleConfig =  #{ignore => [aleppo]},
+    RuleConfig =  #{ignore => [getopt]},
     [_] = elvis_project:git_for_deps_rebar(ElvisConfig, File, RuleConfig),
 
-    RuleConfig1 =  #{ignore => [aleppo, lager]},
+    RuleConfig1 =  #{ignore => [getopt, lager]},
     [] = elvis_project:git_for_deps_rebar(ElvisConfig, File, RuleConfig1).
 
 -spec verify_old_config_format(config()) -> any().
