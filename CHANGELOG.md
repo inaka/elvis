@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - [#195] elvis_webhook as an egithub_webhook
+- [#185] Rule to enforce dependency url fetch protocol
 
 ### Deprecated
 
