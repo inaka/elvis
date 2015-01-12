@@ -3,6 +3,8 @@
 -export([
          no_deps_master_erlang_mk/3,
          no_deps_master_rebar/3,
+         git_for_deps_erlang_mk/3,
+         git_for_deps_rebar/3,
          old_configuration_format/3
         ]).
 
@@ -10,6 +12,10 @@
         "Dependency '~s' revision is specified 'master', "
         "please change this to a tag, branch or specific "
         "commit.").
+
+-define(DEP_NO_GIT,
+        "Dependency '~s' is not using git protocol, "
+        "please change this to something like `git://...`").
 
 -define(OLD_CONFIG_FORMAT,
         "The current Elvis configuration file has an outdated format. "
@@ -20,6 +26,28 @@
 %% Rules
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-spec git_for_deps_erlang_mk(elvis_config:config(),
+                               elvis_file:file(),
+                               [term()]) ->
+    [elvis_result:item()].
+git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
+    IgnoreDeps = maps:get(ignore, RuleConfig, []),
+    Deps = get_erlang_mk_deps(Target),
+    BadDeps = lists:filter(fun is_erlang_mk_not_git_dep/1, Deps),
+    lists:flatmap(
+        fun(Line) -> erlang_mk_dep_to_result(Line, IgnoreDeps) end, BadDeps).
+
+-spec git_for_deps_rebar(elvis_config:config(),
+                           elvis_file:file(),
+                           [term()]) ->
+    [elvis_result:item()].
+git_for_deps_rebar(_Config, Target, RuleConfig) ->
+    IgnoreDeps = maps:get(ignore, RuleConfig, []),
+    Deps = get_rebar_deps(Target),
+    BadDeps = lists:filter(fun is_rebar_not_git_dep/1, Deps),
+    lists:flatmap(
+        fun(Line) -> rebar_dep_to_result(Line, IgnoreDeps) end, BadDeps).
+
 -spec no_deps_master_erlang_mk(elvis_config:config(),
                                elvis_file:file(),
                                [term()]) ->
@@ -27,21 +55,9 @@
 no_deps_master_erlang_mk(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
     Deps = get_erlang_mk_deps(Target),
-    DepsInMaster = lists:filter(fun is_erlang_mk_master_dep/1, Deps),
-    DepToResult =
-        fun(Line) ->
-                Opts = [{capture, all_but_first, binary}],
-                {match, [Name]} = re:run(Line, "dep_([^ ]*)", Opts),
-                NameAtom = binary_to_atom(Name, utf8),
-                case lists:member(NameAtom, IgnoreDeps) of
-                    true ->
-                        [];
-                    false ->
-                        [elvis_result:new(item, ?DEP_MASTER, [Name])]
-                end
-        end,
-
-    lists:flatmap(DepToResult, DepsInMaster).
+    BadDeps = lists:filter(fun is_erlang_mk_master_dep/1, Deps),
+    lists:flatmap(
+        fun(Line) -> erlang_mk_dep_to_result(Line, IgnoreDeps) end, BadDeps).
 
 -spec no_deps_master_rebar(elvis_config:config(),
                            elvis_file:file(),
@@ -50,19 +66,9 @@ no_deps_master_erlang_mk(_Config, Target, RuleConfig) ->
 no_deps_master_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
     Deps = get_rebar_deps(Target),
-    DepsInMaster = lists:filter(fun is_rebar_master_dep/1, Deps),
-
-    DepToResult =
-        fun({AppName, _, _}) ->
-                case lists:member(AppName, IgnoreDeps) of
-                    true ->
-                        [];
-                    false ->
-                        [elvis_result:new(item, ?DEP_MASTER, [AppName])]
-                end
-        end,
-
-    lists:flatmap(DepToResult, DepsInMaster).
+    BadDeps = lists:filter(fun is_rebar_master_dep/1, Deps),
+    lists:flatmap(
+        fun(Line) -> rebar_dep_to_result(Line, IgnoreDeps) end, BadDeps).
 
 -spec old_configuration_format(elvis_config:config(),
                                elvis_file:file(),
@@ -106,6 +112,18 @@ is_rebar_master_dep({_AppName, _Vsn, {_SCM, _Location, {branch, "master"}}}) ->
 is_rebar_master_dep(_) ->
     false.
 
+is_rebar_not_git_dep({_AppName, _Vsn, {_SCM, "git://" ++ _, _Branch}}) -> false;
+is_rebar_not_git_dep(_) -> true.
+
+rebar_dep_to_result({AppName, _, _}, IgnoreDeps) ->
+    case lists:member(AppName, IgnoreDeps) of
+        true ->
+            [];
+        false ->
+            [elvis_result:new(item, ?DEP_MASTER, [AppName])]
+    end.
+
+
 %%% erlang.mk
 
 is_erlang_mk_master_dep(Line) ->
@@ -114,11 +132,25 @@ is_erlang_mk_master_dep(Line) ->
         _ -> true
     end.
 
+is_erlang_mk_not_git_dep(Line) ->
+    lager:alert("~p", [Line]), false.
+
 get_erlang_mk_deps(File) ->
     {Src, _} = elvis_file:src(File),
     Lines = binary:split(Src, <<"\n">>, [global]),
     IsDepsLine = fun(Line) -> re:run(Line, "dep_", []) /= nomatch end,
     lists:filter(IsDepsLine, Lines).
+
+erlang_mk_dep_to_result(Line, IgnoreDeps) ->
+    Opts = [{capture, all_but_first, binary}],
+    {match, [Name]} = re:run(Line, "dep_([^ ]*)", Opts),
+    NameAtom = binary_to_atom(Name, utf8),
+    case lists:member(NameAtom, IgnoreDeps) of
+        true ->
+            [];
+        false ->
+            [elvis_result:new(item, ?DEP_MASTER, [Name])]
+    end.
 
 %% Old config
 
