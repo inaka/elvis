@@ -11,7 +11,7 @@ dep_jiffy = git https://github.com/davisp/jiffy 0.11.3
 dep_ibrowse = git https://github.com/cmullaparthi/ibrowse v4.1.1
 dep_aleppo = git https://github.com/inaka/aleppo 0.9.1
 dep_zipper = git https://github.com/inaka/zipper 0.1.0
-dep_egithub = git https://github.com/inaka/erlang-github 0.1.4
+dep_egithub = git https://github.com/inaka/erlang-github 0.1.5
 dep_katana =  git https://github.com/inaka/erlang-katana 0.2.0
 
 include erlang.mk
