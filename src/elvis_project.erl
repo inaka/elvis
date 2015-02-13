@@ -102,8 +102,8 @@ old_configuration_format(_Config, Target, _RuleConfig) ->
 %%% Rebar
 
 get_rebar_deps(File) ->
-    Path = elvis_file:path(File),
-    {ok, Terms} = file:consult(Path),
+    {Src, _} = elvis_file:src(File),
+    Terms = ktn_code:consult(Src),
     IsDepsTerm = fun
                      ({deps, _}) -> true;
                      (_) -> false

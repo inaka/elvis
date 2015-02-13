@@ -55,7 +55,7 @@
 -spec new(item | rule | file, any(), any()) ->
     item() | rule() | file().
 new(item, Msg, Info) ->
-    #{message => Msg, info => Info};
+    new(item, Msg, Info, 0);
 new(rule, Name, Results) ->
     #{name => Name, items => Results};
 new(file, File, Rules) ->
@@ -65,8 +65,9 @@ new(error, Msg, Info) ->
 
 -spec new(item, term(), any(), any()) -> item().
 new(item, Msg, Info, LineNum) ->
-    Item = new(item, Msg, Info),
-    Item#{line_num => LineNum}.
+    #{message => Msg,
+      info => Info,
+      line_num => LineNum}.
 
 %% Getters
 
