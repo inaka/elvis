@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file.
 
 - [#194] Ensure that 'elvis git-hook' does not check deleted files
 
-~~~
+---
 
 ## 0.2.4 - 2015-01-05
 
@@ -48,7 +48,7 @@ All notable changes to this project will be documented in this file.
 
 - [#179] Problems with printing UTF in comments.
 
-~~~
+---
 
 ## 0.2.3 - 2014-10-16
 
@@ -68,7 +68,7 @@ All notable changes to this project will be documented in this file.
 
 - None.
 
-~~~
+---
 
 ## 0.2.2 - 2014-09-26
 
@@ -91,7 +91,7 @@ All notable changes to this project will be documented in this file.
 - [#122] Webhook error: undef while applying rule used_ignored_variable.
 - [#120] Elvis webhook is not working.
 
-~~~
+---
 
 ## 0.2.1 - 2014-09-15
 
@@ -113,7 +113,7 @@ All notable changes to this project will be documented in this file.
 - [#112] Unhandled abstract form error on OTP stdlib.
 - [#113] Error when source file contains non ASCII chars.
 
-~~~
+---
 
 ## 0.2.0 - 2014-09-11
 
@@ -136,7 +136,7 @@ All notable changes to this project will be documented in this file.
 - [#105] Update README with new configuration format.
 - [#108] Elvis tries to parse all files, even non erlang ones.
 
-~~~
+---
 
 ## 0.1.1 - 2014-09-09
 
