@@ -97,18 +97,24 @@ messages_from_item(Item, File) ->
     Message = elvis_result:get_message(Item),
     Info = elvis_result:get_info(Item),
     Line = elvis_result:get_line_num(Item),
+    Text = list_to_binary(io_lib:format(Message, Info)),
 
-    case elvis_git:relative_position(Patch, Line) of
-        {ok, Position} ->
-            Text = list_to_binary(io_lib:format(Message, Info)),
-            [ #{commit_id => CommitId,
-                path      => Path,
-                position  => Position,
-                text      => Text
-                }
-            ];
-        not_found ->
-            Args = [Line],
-            lager:info("Line ~p does not belong to file's diff.", Args),
-            []
+    case Line of
+        0 ->
+            [#{text => Text,
+               position => Line}];
+        _ ->
+            case elvis_git:relative_position(Patch, Line) of
+                {ok, Position} ->
+                    [ #{commit_id => CommitId,
+                        path      => Path,
+                        position  => Position,
+                        text      => Text
+                       }
+                    ];
+                not_found ->
+                    Args = [Line],
+                    lager:info("Line ~p does not belong to file's diff.", Args),
+                    []
+            end
     end.
