@@ -307,7 +307,7 @@ result_node_line_col_fun(Msg) ->
 
 -spec line_is_comment(binary()) -> true | false.
 line_is_comment(Line) ->
-    case re:run(Line, "^ *%") of
+    case re:run(Line, "^[ \t]*%") of
         nomatch    -> false;
         {match, _} -> true
     end.
