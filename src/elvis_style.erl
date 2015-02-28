@@ -84,8 +84,9 @@
     [elvis_result:item()].
 line_length(_Config, Target, RuleConfig) ->
     Limit = maps:get(limit, RuleConfig, 80),
+    SkipComments = maps:get(skip_comments, RuleConfig, false),
     {Src, _} = elvis_file:src(Target),
-    elvis_utils:check_lines(Src, fun check_line_length/3, [Limit]).
+    elvis_utils:check_lines(Src, fun check_line_length/3, [Limit, SkipComments]).
 
 -spec no_tabs(elvis_config:config(), elvis_file:file(), [term()]) ->
     [elvis_result:item()].
@@ -304,9 +305,23 @@ result_node_line_col_fun(Msg) ->
 
 %% Rule checking
 
+-spec line_is_comment(binary()) -> true | false.
+line_is_comment(Line) ->
+    case re:run(Line, "^ *%") of
+        nomatch    -> false;
+        {match, _} -> true
+    end.
+
 -spec check_line_length(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
-check_line_length(Line, Num, [Limit]) ->
+check_line_length(Line, Num, [Limit, true]) ->
+    case line_is_comment(Line) of
+        false -> check_line_length(Line, Num, Limit);
+        true  -> no_result
+    end;
+check_line_length(Line, Num, [Limit|_]) ->
+    check_line_length(Line, Num, Limit);
+check_line_length(Line, Num, Limit) ->
     case byte_size(Line) of
         Large when Large > Limit ->
             Msg = ?LINE_LENGTH_MSG,

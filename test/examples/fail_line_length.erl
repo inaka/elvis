@@ -9,6 +9,7 @@
          function_6/2
         ]).
 
+% Single line comment over 80 characters!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 function_1() ->
     io:format("Hello").
 
