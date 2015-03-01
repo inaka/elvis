@@ -312,13 +312,23 @@ line_is_comment(Line) ->
         {match, _} -> true
     end.
 
+-spec remove_comment(binary()) -> binary().
+remove_comment(Line) ->
+    case re:run(Line, "([^%]+)", [{capture, first, binary}]) of
+        nomatch            -> Line;
+        {match, [Without]} -> Without
+    end.
+
 -spec check_line_length(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
-check_line_length(Line, Num, [Limit, true]) ->
+check_line_length(Line, Num, [Limit, whole_line]) ->
     case line_is_comment(Line) of
         false -> check_line_length(Line, Num, Limit);
         true  -> no_result
     end;
+check_line_length(Line, Num, [Limit, any]) ->
+    LineWithoutComment = remove_comment(Line),
+    check_line_length(LineWithoutComment, Num, Limit);
 check_line_length(Line, Num, [Limit|_]) ->
     check_line_length(Line, Num, Limit);
 check_line_length(Line, Num, Limit) ->
