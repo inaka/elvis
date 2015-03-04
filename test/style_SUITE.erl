@@ -60,6 +60,17 @@ end_per_suite(Config) ->
 %%%%%%%%%%%%%%%
 %%% Rules
 
+verify_line_numbers(_, _, []) ->
+    ok;
+verify_line_numbers(N, Results, [ExpectedNum|More]) ->
+    #{info := [ActualNum|_]} = lists:nth(N, Results),
+    case ActualNum of
+        ExpectedNum ->
+            verify_line_numbers(N + 1, Results, More);
+        _ ->
+            lager:error("Expecting ~p, got ~p~n", [ExpectedNum, ActualNum])
+    end.
+
 -spec verify_line_length_rule(config()) -> any().
 verify_line_length_rule(_Config) ->
     ElvisConfig = elvis_config:default(),
@@ -68,12 +79,21 @@ verify_line_length_rule(_Config) ->
     File = "fail_line_length.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    [_, _, _, _, Utf] =
-        elvis_style:line_length(ElvisConfig, Path, #{limit => 80}),
+    Result = elvis_style:line_length(ElvisConfig, Path, #{limit => 80}),
+    8 = length(Result),
+    #{info := Info, message := Msg} = lists:nth(8, Result),
+    <<"Line 31 is too long:     gb_trees:from_orddict(", _/binary>> =
+        list_to_binary(io_lib:format(Msg, Info)),
 
-    #{info := Info, message := Msg} = Utf,
-    <<"Line 29 is too long:     gb_trees:from_orddict(", _/binary>> =
-        list_to_binary(io_lib:format(Msg, Info)).
+    WholeLineResult = elvis_style:line_length(ElvisConfig, Path,
+                                              #{limit => 80,
+                                                skip_comments => whole_line}),
+    6 = length(WholeLineResult),
+
+    AnyResult = elvis_style:line_length(ElvisConfig, Path,
+                                        #{limit => 80,
+                                          skip_comments => any}),
+    5 = length(AnyResult).
 
 -spec verify_no_tabs_rule(config()) -> any().
 verify_no_tabs_rule(_Config) ->
