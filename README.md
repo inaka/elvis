@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/inaka/elvis.png?label=ready&title=Ready)](https://waffle.io/inaka/elvis)
 ![](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
 # elvis
