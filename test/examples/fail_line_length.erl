@@ -6,7 +6,8 @@
          function_3/0,
          function_4/0,
          function_5/0,
-         function_6/2
+         function_6/2,
+         function_7/0
         ]).
 
 % Single line comment over 80 characters!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
