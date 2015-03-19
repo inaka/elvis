@@ -10,7 +10,6 @@
          %% General
          erlang_halt/1,
          to_str/1,
-         maps_get/3,
 
          %% Output
          info/1,
@@ -121,13 +120,6 @@ indentation(Line, Char, Count) ->
     case Len rem Count of
         0 -> Len div Count;
         _ -> invalid
-    end.
-
--spec maps_get(term(), map(), term()) -> term().
-maps_get(Key, Map, Default) ->
-    case maps:is_key(Key, Map) of
-        true -> maps:get(Key, Map);
-        false -> Default
     end.
 
 -spec info(string()) -> ok.

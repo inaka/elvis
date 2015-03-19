@@ -3,7 +3,7 @@
 %% General
 -export([
          find/2,
-         find_zipper/2,
+         find/3,
          find_by_location/2
         ]).
 
@@ -20,70 +20,104 @@
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% @doc Finds all nodes that comply with the predicate function.
--spec find(fun((ktn_code:tree_node()) ->
-    boolean()), ktn_code:tree_node()) -> [ktn_code:tree_node()].
-find(Pred, Node) ->
-    Results = find(Pred, Node, []),
-    lists:flatten(Results).
+-type find_options() :: #{mode => node | zipper,
+                          traverse => content | all}.
 
-find(_Pred, [], Results) ->
-    Results;
-find(Pred, [Node | Nodes], Results) ->
-    [find(Pred, Node, Results) | find(Pred, Nodes, [])];
-find(Pred, Node, Results) ->
-    Content = ktn_code:content(Node),
-    case Pred(Node) of
-        true ->
-            find(Pred, Content, [Node | Results]);
-        false ->
-            find(Pred, Content, Results)
-    end.
-
--spec find_zipper(fun((zipper:zipper()) -> boolean()), ktn_code:tree_node()) ->
+%% @doc Same as calling find/3 with `#{mode => node, traverse => content}` as
+%%      the options map.
+%% @end
+-spec find(fun((zipper:zipper()) -> boolean()),
+           ktn_code:tree_node()) ->
     [ktn_code:tree_node()].
-find_zipper(Pred, Root) ->
+find(Pred, Root) ->
+    find(Pred, Root, #{mode => node, traverse => content}).
+
+%% @doc Find all nodes in the tree for which the predicate function returns
+%%      `true`. The options map has two keys:
+%%        - `mode`: when the value `node` is specified the predicate function
+%%          receives a tree_node() as its argument. When `zipper` is specified
+%%          the argument is the zipper location for the current node.
+%%        - `traverse`: the value `content` indicates to only take into account
+%%          nodes in the parent-child hierarchy. When `all` is provided the
+%%          nodes held in the `node_attrs` map are also taken into account in
+%%          the search.
+%% @end
+-spec find(fun((zipper:zipper()) -> boolean()),
+           ktn_code:tree_node(),
+           find_options()) ->
+    [ktn_code:tree_node()].
+find(Pred, Root, Opts) ->
+    Mode = ktn_maps:get(mode, Opts, node),
+    ZipperMode = ktn_maps:get(traverse, Opts, content),
+
+    Zipper = case ZipperMode of
+                 content -> content_zipper(Root);
+                 all -> all_zipper(Root)
+             end,
+    Results = find(Pred, Zipper, [], Mode),
+    lists:reverse(Results).
+
+-spec content_zipper(ktn_code:tree_node()) -> zipper:zipper().
+content_zipper(Root) ->
     IsBranch = fun
                    (#{content := [_ | _]}) -> true;
                    (_) -> false
                end,
     Children = fun (#{content := Content}) -> Content end,
     MakeNode = fun(Node, _) -> Node end,
-    Zipper = zipper:new(IsBranch, Children, MakeNode, Root),
-    Results = find_zipper(Pred, Zipper, []),
-    lists:reverse(Results).
+    zipper:new(IsBranch, Children, MakeNode, Root).
 
-find_zipper(Pred, Zipper, Results) ->
+-spec all_zipper(ktn_code:tree_node()) -> zipper:zipper().
+all_zipper(Root) ->
+    IsBranch = fun (Node = #{}) ->
+                   ktn_code:content(Node) =/= []
+                   orelse maps:is_key(node_attrs, Node)
+               end,
+    Children = fun
+                   (#{content := Content, node_attrs := NodeAttrs}) ->
+                       Content ++ lists:flatten(maps:values(NodeAttrs));
+                   (#{node_attrs := NodeAttrs}) ->
+                       lists:flatten(maps:values(NodeAttrs));
+                   (#{content := Content}) ->
+                       Content
+               end,
+    MakeNode = fun(Node, _) -> Node end,
+    zipper:new(IsBranch, Children, MakeNode, Root).
+
+find(Pred, Zipper, Results, Mode) ->
     case zipper:is_end(Zipper) of
         true ->
             Results;
         false ->
-            Node = zipper:node(Zipper),
-            NewResults = case Pred(Zipper) of
-                             true -> [Node | Results];
+            Value = case Mode of
+                        zipper -> Zipper;
+                        node -> zipper:node(Zipper)
+                    end,
+            NewResults = case Pred(Value) of
+                             true -> [zipper:node(Zipper) | Results];
                              false -> Results
                          end,
-            find_zipper(Pred, zipper:next(Zipper), NewResults)
+            find(Pred, zipper:next(Zipper), NewResults, Mode)
     end.
-
 
 -spec find_by_location(ktn_code:tree_node(), {integer(), integer()}) ->
     not_found | {ok, ktn_code:tree_node()}.
-find_by_location(Root, {Line, Column}) ->
-    Fun = fun
-              (Node = #{attrs := #{location := {NodeLine, NodeCol}}})
-                when NodeLine == Line->
-                  Text = ktn_code:attr(text, Node),
-                  Length = length(Text),
-                  (NodeCol =< Column) and (Column =< NodeCol + Length);
-              (_) ->
-                  false
+find_by_location(Root, Location) ->
+    Fun = fun (Node) ->
+              is_at_location(Node, Location)
           end,
-    case find(Fun, Root) of
+    case find(Fun, Root, #{traverse => all}) of
         [] -> not_found;
-        [Node | _] ->
-            {ok, Node}
+        [Node | _] -> {ok, Node}
     end.
+
+is_at_location(Node = #{attrs := #{location := {Line, NodeCol}}},
+               {Line, Column}) ->
+    Text = ktn_code:attr(text, Node),
+    Length = length(Text),
+    (NodeCol =< Column) andalso (Column < NodeCol + Length);
+is_at_location(_, _) ->
+    false.
 
 %%% Processing functions
 
