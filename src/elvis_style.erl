@@ -86,7 +86,8 @@ line_length(_Config, Target, RuleConfig) ->
     Limit = maps:get(limit, RuleConfig, 80),
     SkipComments = maps:get(skip_comments, RuleConfig, false),
     {Src, _} = elvis_file:src(Target),
-    elvis_utils:check_lines(Src, fun check_line_length/3, [Limit, SkipComments]).
+    Args = [Limit, SkipComments],
+    elvis_utils:check_lines(Src, fun check_line_length/3, Args).
 
 -spec no_tabs(elvis_config:config(), elvis_file:file(), [term()]) ->
     [elvis_result:item()].
@@ -185,7 +186,7 @@ invalid_dynamic_call(Config, Target, RuleConfig) ->
 used_ignored_variable(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
     ResultFun = result_node_line_col_fun(?USED_IGNORED_VAR_MSG),
-    case elvis_code:find_zipper(fun is_ignored_var/1, Root) of
+    case elvis_code:find(fun is_ignored_var/1, Root, #{mode => zipper}) of
         [] ->
             [];
         UsedIgnoredVars ->
@@ -376,7 +377,7 @@ check_macro_names(Line, Num, _Args) ->
 
 -spec check_macro_module_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item_result()}.
-check_macro_module_names(Line, Num, Root) ->
+check_macro_module_names(Line, Num, [Root]) ->
     {ok, ModNameRegex} = re:compile("[?](\\w+)[:][?]?\\w+\\s*\\("),
     {ok, FunNameRegex} = re:compile("[?]?\\w+[:][?](\\w+)\\s*\\("),
 
@@ -409,7 +410,7 @@ apply_macro_module_names(Line, Num, Regex, Msg, Root) ->
             MacroName = binary_to_list(binary:part(Line, Col, Len)),
             case
                 lists:member(MacroName, ?MACRO_MODULE_NAMES_EXCEPTIONS)
-                or not is_remote_call({Num, Col + 1}, Root)
+                orelse not is_remote_call({Num, Col}, Root)
             of
                 true ->
                     [];
@@ -427,10 +428,10 @@ is_remote_call({Num, Col}, Root) ->
         {ok, Node0} ->
             Pred =
                 fun(Zipper) ->
-                        (Node0 == zipper:node(Zipper))
-                        andalso has_remote_call_parent(Zipper)
+                    (Node0 == zipper:node(Zipper))
+                    andalso has_remote_call_parent(Zipper)
                 end,
-            [] =/= elvis_code:find_zipper(Pred, Root)
+            [] =/= elvis_code:find(Pred, Root, #{mode => zipper})
     end.
 
 has_remote_call_parent(undefined) ->
@@ -474,6 +475,7 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                 atom -> [];
                 binary_element -> [];
                 string -> [];
+                char -> [];
                 comment -> [];
                 _ ->
                     Msg = ?OPERATOR_SPACE_MSG,
@@ -515,10 +517,10 @@ check_invalid_dynamic_calls(Root) ->
 is_dynamic_call(Node) ->
     case ktn_code:type(Node) of
         call ->
-            FunctionSpec = ktn_code:attr(function, Node),
+            FunctionSpec = ktn_code:node_attr(function, Node),
             case ktn_code:type(FunctionSpec) of
                 remote ->
-                    ModuleName = ktn_code:attr(module, FunctionSpec),
+                    ModuleName = ktn_code:node_attr(module, FunctionSpec),
                     var == ktn_code:type(ModuleName);
                 _Other ->
                     false
@@ -560,7 +562,7 @@ is_otp_module(Root) ->
                              gen_fsm,
                              supervisor_bridge
                             ]),
-    IsBehaviorAttr = fun(Node) ->  behavior == ktn_code:type(Node) end,
+    IsBehaviorAttr = fun(Node) -> behavior == ktn_code:type(Node) end,
     case elvis_code:find(IsBehaviorAttr, Root) of
         [] ->
             false;

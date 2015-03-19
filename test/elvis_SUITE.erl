@@ -172,6 +172,7 @@ run_webhook(_Config) ->
         FakeFun1 = fun(_, _, _) -> {ok, []} end,
         meck:expect(egithub, pull_req_files, FakeFun1),
         meck:expect(egithub, pull_req_comments, FakeFun1),
+        meck:expect(egithub, issue_comments, FakeFun1),
         FakeFun2 = fun(_, _, _, _) -> {error, error} end,
         meck:expect(egithub, file_content, FakeFun2),
 
