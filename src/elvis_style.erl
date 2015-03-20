@@ -92,7 +92,7 @@
     [elvis_result:item()].
 line_length(_Config, Target, RuleConfig) ->
     Limit = maps:get(limit, RuleConfig, 80),
-    SkipComments = maps:get(skip_comments, RuleConfig, any),
+    SkipComments = maps:get(skip_comments, RuleConfig, false),
     {Src, _} = elvis_file:src(Target),
     Args = [Limit, SkipComments],
     elvis_utils:check_lines(Src, fun check_line_length/3, Args).

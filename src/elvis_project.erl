@@ -26,9 +26,11 @@
 %% Rules
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-type git_for_deps_erlang_mk_config() :: #{ignore => [module()]}.
+
 -spec git_for_deps_erlang_mk(elvis_config:config(),
-                               elvis_file:file(),
-                               [term()]) ->
+                             elvis_file:file(),
+                             git_for_deps_erlang_mk_config()) ->
     [elvis_result:item()].
 git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
@@ -39,9 +41,11 @@ git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
             erlang_mk_dep_to_result(Line, ?DEP_NO_GIT, IgnoreDeps)
         end, BadDeps).
 
+-type git_for_deps_rebar_config() :: #{ignore => [module()]}.
+
 -spec git_for_deps_rebar(elvis_config:config(),
-                           elvis_file:file(),
-                           [term()]) ->
+                         elvis_file:file(),
+                         git_for_deps_rebar_config()) ->
     [elvis_result:item()].
 git_for_deps_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
@@ -52,9 +56,11 @@ git_for_deps_rebar(_Config, Target, RuleConfig) ->
             rebar_dep_to_result(Line, ?DEP_NO_GIT, IgnoreDeps)
         end, BadDeps).
 
+-type no_deps_master_erlang_mk_config() :: #{ignore => [module()]}.
+
 -spec no_deps_master_erlang_mk(elvis_config:config(),
                                elvis_file:file(),
-                               [term()]) ->
+                               no_deps_master_erlang_mk_config()) ->
     [elvis_result:item()].
 no_deps_master_erlang_mk(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
@@ -65,9 +71,11 @@ no_deps_master_erlang_mk(_Config, Target, RuleConfig) ->
             erlang_mk_dep_to_result(Line, ?DEP_MASTER, IgnoreDeps)
         end, BadDeps).
 
+-type no_deps_master_rebar_config() :: #{ignore => [module()]}.
+
 -spec no_deps_master_rebar(elvis_config:config(),
                            elvis_file:file(),
-                           [term()]) ->
+                           no_deps_master_rebar_config()) ->
     [elvis_result:item()].
 no_deps_master_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
