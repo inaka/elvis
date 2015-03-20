@@ -86,9 +86,11 @@ no_deps_master_rebar(_Config, Target, RuleConfig) ->
             rebar_dep_to_result(Line, ?DEP_MASTER, IgnoreDeps)
         end, BadDeps).
 
+-type empty_rule_config() :: #{}.
+
 -spec old_configuration_format(elvis_config:config(),
                                elvis_file:file(),
-                               [term()]) ->
+                               empty_rule_config()) ->
     [elvis_result:item()].
 old_configuration_format(_Config, Target, _RuleConfig) ->
     Path = elvis_file:path(Target),
