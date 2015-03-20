@@ -9,6 +9,8 @@
 -export([
          rock/0,
          rock/1,
+         rock_this/1,
+         rock_this/2,
          webhook/1,
          webhook/2
         ]).
@@ -42,7 +44,7 @@ main(Args) ->
 
 %%% Rock Command
 
--spec rock() -> ok | {fail, elvis_result:file()}.
+-spec rock() -> ok | {fail, [elvis_result:file()]}.
 rock() ->
     Config = elvis_config:default(),
     rock(Config).
@@ -53,6 +55,43 @@ rock(Config) ->
     NewConfig = elvis_config:normalize(Config),
     Results = lists:map(fun do_rock/1, NewConfig),
     lists:foldl(fun combine_results/2, ok, Results).
+
+-spec rock_this(elvis_config:config()) ->
+    ok | {fail, elvis_result:file()}.
+rock_this(Target) ->
+    Config = elvis_config:default(),
+    rock_this(Target, Config).
+
+-spec rock_this(atom() | string(), elvis_config:config()) ->
+    ok | {fail, elvis_result:file()}.
+rock_this(Module, Config) when is_atom(Module) ->
+    ModuleInfo = Module:module_info(compile),
+    Path = proplists:get_value(source, ModuleInfo),
+    rock_this(Path, Config);
+rock_this(Path, Config) ->
+    elvis_config:validate(Config),
+    NewConfig = elvis_config:normalize(Config),
+    Dirname = filename:dirname(Path),
+    Filename = filename:basename(Path),
+    File = case elvis_file:find_files([Dirname], Filename, local) of
+               [] -> throw({enoent, Path});
+               [File0] -> File0
+           end,
+
+    FilterFun = fun(Cfg) ->
+                        Filter = elvis_config:filter(Cfg),
+                        [] =/= elvis_file:filter_files([File], Filter)
+                end,
+    FilteredConfig = lists:filter(FilterFun, NewConfig),
+
+    LoadedFile = load_file_data(FilteredConfig, File),
+
+    ApplyRulesFun = fun(Cfg) -> apply_rules(Cfg, LoadedFile) end,
+    Results = lists:map(ApplyRulesFun, FilteredConfig),
+    case elvis_result:status(Results) of
+        fail -> {fail, elvis_result:clean(Results)};
+        ok -> ok
+    end.
 
 %% @private
 -spec do_rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.

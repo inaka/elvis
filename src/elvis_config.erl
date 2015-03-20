@@ -8,6 +8,7 @@
          normalize/1,
          %% Geters
          dirs/1,
+         filter/1,
          files/1,
          rules/1,
          %% Files
@@ -102,6 +103,12 @@ dirs(_RuleGroup = #{dirs := Dirs}) ->
     Dirs;
 dirs(#{}) ->
     [].
+
+-spec filter(config()) -> [string()].
+filter(_RuleGroup = #{filter := Filter}) ->
+    Filter;
+filter(#{}) ->
+    undefined.
 
 -spec files(config()) -> [string()].
 files(_RuleGroup = #{files := Files}) ->
