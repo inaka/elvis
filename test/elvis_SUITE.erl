@@ -14,6 +14,7 @@
          rock_with_list_config/1,
          rock_with_file_config/1,
          rock_with_old_config/1,
+         rock_this/1,
          %% Webhook
          run_webhook/1,
          run_webhook_ping/1,
@@ -154,6 +155,21 @@ rock_with_old_config(_Config) ->
          catch
              throw:{invalid_config, _} -> fail
          end.
+
+-spec rock_this(config()) -> ok.
+rock_this(_Config) ->
+    ok = elvis:rock_this(elvis),
+
+    ok = try
+             elvis:rock_this("bla.erl")
+         catch
+             _:{enoent, "bla.erl"} -> ok
+         end,
+
+    Path = "../../test/examples/fail_god_modules.erl",
+    {fail, _} = elvis:rock_this(Path),
+
+    ok.
 
 %%%%%%%%%%%%%%%
 %%% Webhook

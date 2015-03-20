@@ -76,7 +76,7 @@ find_files(Dirs, Pattern, Option) ->
                      local -> "/"
                  end,
     Fun = fun(Dir) ->
-                filelib:wildcard(Dir ++ MiddlePath ++ Pattern)
+              filelib:wildcard(Dir ++ MiddlePath ++ Pattern)
           end,
     [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
 
