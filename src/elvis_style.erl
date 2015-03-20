@@ -78,9 +78,17 @@
 %% Rules
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-type empty_rule_config() :: #{}.
+
+-type line_length_config() :: #{limit => integer(),
+                                skip_comments => false | any | whole_line
+                               }.
+
 %% @doc Target can be either a filename or the
 %% name of a module.
--spec line_length(elvis_config:config(), elvis_file:file(), [term()]) ->
+-spec line_length(elvis_config:config(),
+                  elvis_file:file(),
+                  line_length_config()) ->
     [elvis_result:item()].
 line_length(_Config, Target, RuleConfig) ->
     Limit = maps:get(limit, RuleConfig, 80),
@@ -89,28 +97,36 @@ line_length(_Config, Target, RuleConfig) ->
     Args = [Limit, SkipComments],
     elvis_utils:check_lines(Src, fun check_line_length/3, Args).
 
--spec no_tabs(elvis_config:config(), elvis_file:file(), [term()]) ->
+-spec no_tabs(elvis_config:config(),
+              elvis_file:file(),
+              empty_rule_config()) ->
     [elvis_result:item()].
 no_tabs(_Config, Target, _RuleConfig) ->
     {Src, _} = elvis_file:src(Target),
     elvis_utils:check_lines(Src, fun check_no_tabs/3, []).
 
--spec macro_names(elvis_config:config(), elvis_file:file(), [term()]) ->
+-spec macro_names(elvis_config:config(),
+                  elvis_file:file(),
+                  empty_rule_config()) ->
     [elvis_result:item()].
 macro_names(_Config, Target, _RuleConfig) ->
     {Src, _} = elvis_file:src(Target),
     elvis_utils:check_lines(Src, fun check_macro_names/3, []).
 
--spec macro_module_names(elvis_config:config(), elvis_file:file(), []) ->
+-spec macro_module_names(elvis_config:config(),
+                         elvis_file:file(),
+                         empty_rule_config()) ->
     [elvis_result:item()].
 macro_module_names(Config, Target, _RuleConfig) ->
     {Src, _} = elvis_file:src(Target),
     {Root, _} = elvis_file:parse_tree(Config, Target),
     elvis_utils:check_lines(Src, fun check_macro_module_names/3, [Root]).
 
+-type operator_spaces_config() :: #{rules => [{right|left, string()}]}.
+
 -spec operator_spaces(elvis_config:config(),
                       elvis_file:file(),
-                      [{right|left, string()}]) ->
+                      operator_spaces_config()) ->
     [elvis_result:item()].
 operator_spaces(Config, Target, RuleConfig) ->
     Rules = maps:get(rules, RuleConfig, []),
@@ -118,14 +134,22 @@ operator_spaces(Config, Target, RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
     elvis_utils:check_lines(Src, fun check_operator_spaces/3, {Root, Rules}).
 
--spec nesting_level(elvis_config:config(), elvis_file:file(), [integer()]) ->
+-type nesting_level_config() :: #{level => integer()}.
+
+-spec nesting_level(elvis_config:config(),
+                    elvis_file:file(),
+                    nesting_level_config()) ->
     [elvis_result:item()].
 nesting_level(Config, Target, RuleConfig) ->
     Level = maps:get(level, RuleConfig, 3),
     {Root, _} = elvis_file:parse_tree(Config, Target),
     elvis_utils:check_nodes(Root, fun check_nesting_level/2, [Level]).
 
--spec god_modules(elvis_config:config(), elvis_file:file(), [integer()]) ->
+-type god_modules_config() :: #{limit => integer()}.
+
+-spec god_modules(elvis_config:config(),
+                  elvis_file:file(),
+                  god_modules_config()) ->
     [elvis_result:item()].
 god_modules(Config, Target, RuleConfig) ->
     Limit = maps:get(limit, RuleConfig, 25),
@@ -149,7 +173,9 @@ god_modules(Config, Target, RuleConfig) ->
             []
     end.
 
--spec no_if_expression(elvis_config:config(), elvis_file:file(), []) ->
+-spec no_if_expression(elvis_config:config(),
+                       elvis_file:file(),
+                       empty_rule_config()) ->
     [elvis_result:item()].
 no_if_expression(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
@@ -162,7 +188,11 @@ no_if_expression(Config, Target, _RuleConfig) ->
             lists:map(ResultFun, IfExprs)
     end.
 
--spec invalid_dynamic_call(elvis_config:config(), elvis_file:file(), []) ->
+-type invalid_dynamic_call_config() :: #{ignore => [module()]}.
+
+-spec invalid_dynamic_call(elvis_config:config(),
+                           elvis_file:file(),
+                           invalid_dynamic_call_config()) ->
     [elvis_result:item()].
 invalid_dynamic_call(Config, Target, RuleConfig) ->
     IgnoreModules = maps:get(ignore, RuleConfig, []),
@@ -181,7 +211,9 @@ invalid_dynamic_call(Config, Target, RuleConfig) ->
         true -> []
     end.
 
--spec used_ignored_variable(elvis_config:config(), elvis_file:file(), []) ->
+-spec used_ignored_variable(elvis_config:config(),
+                            elvis_file:file(),
+                            empty_rule_config()) ->
     [elvis_result:item()].
 used_ignored_variable(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
@@ -193,7 +225,9 @@ used_ignored_variable(Config, Target, _RuleConfig) ->
             lists:map(ResultFun, UsedIgnoredVars)
     end.
 
--spec no_behavior_info(elvis_config:config(), elvis_file:file(), []) ->
+-spec no_behavior_info(elvis_config:config(),
+                       elvis_file:file(),
+                       empty_rule_config()) ->
     [elvis_result:item()].
 no_behavior_info(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
@@ -220,10 +254,13 @@ no_behavior_info(Config, Target, _RuleConfig) ->
             lists:map(ResultFun, BehaviorInfos)
     end.
 
+-type module_naming_convention_config() :: #{regex => string(),
+                                             ignore => [module()]
+                                            }.
 
 -spec module_naming_convention(elvis_config:config(),
                                elvis_file:file(),
-                               [list()]) ->
+                               module_naming_convention_config()) ->
     [elvis_result:item()].
 module_naming_convention(Config, Target, RuleConfig) ->
     Regex = maps:get(regex, RuleConfig, ".*"),
@@ -248,7 +285,7 @@ module_naming_convention(Config, Target, RuleConfig) ->
 
 -spec state_record_and_type(elvis_config:config(),
                             elvis_file:file(),
-                            [list()]) ->
+                            empty_rule_config()) ->
     [elvis_result:item()].
 state_record_and_type(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
@@ -271,7 +308,7 @@ state_record_and_type(Config, Target, _RuleConfig) ->
 
 -spec no_spec_with_records(elvis_config:config(),
                            elvis_file:file(),
-                           [list()]) ->
+                           empty_rule_config()) ->
     [elvis_result:item()].
 no_spec_with_records(Config, Target, _RuleConfig) ->
     {Root, _} = elvis_file:parse_tree(Config, Target),
