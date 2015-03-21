@@ -640,6 +640,6 @@ spec_includes_record(Node) ->
                            (ktn_code:type(Child) == type)
                                and (ktn_code:attr(name, Child) == record)
                    end,
-
+    Opts = #{traverse => all},
     (ktn_code:type(Node) == spec)
-        and (elvis_code:find(IsTypeRecord, Node) /= []).
+        and (elvis_code:find(IsTypeRecord, Node, Opts) /= []).
