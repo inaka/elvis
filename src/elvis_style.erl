@@ -3,6 +3,7 @@
 -export([
          line_length/3,
          no_tabs/3,
+         no_trailing_whitespace/3,
          macro_names/3,
          macro_module_names/3,
          operator_spaces/3,
@@ -20,6 +21,8 @@
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
 
 -define(NO_TABS_MSG, "Line ~p has a tab at column ~p.").
+
+-define(NO_TRAILING_WHITESPACE_MSG, "Line ~p has trailing whitespace.").
 
 -define(INVALID_MACRO_NAME_MSG,
         "Invalid macro name ~s on line ~p. Use UPPER_CASE.").
@@ -104,6 +107,14 @@ line_length(_Config, Target, RuleConfig) ->
 no_tabs(_Config, Target, _RuleConfig) ->
     {Src, _} = elvis_file:src(Target),
     elvis_utils:check_lines(Src, fun check_no_tabs/3, []).
+
+-spec no_trailing_whitespace(elvis_config:config(),
+                             elvis_file:file(),
+                             [term()]) ->
+    [elvis_result:item()].
+no_trailing_whitespace(_Config, Target, _RuleConfig) ->
+    {Src, _} = elvis_file:src(Target),
+    elvis_utils:check_lines(Src, fun check_no_trailing_whitespace/3, []).
 
 -spec macro_names(elvis_config:config(),
                   elvis_file:file(),
@@ -389,6 +400,19 @@ check_no_tabs(Line, Num, _Args) ->
         {Index, _} ->
             Msg = ?NO_TABS_MSG,
             Info = [Num, Index],
+            Result = elvis_result:new(item, Msg, Info, Num),
+            {ok, Result}
+    end.
+
+-spec check_no_trailing_whitespace(binary(), integer(), [term()]) ->
+    no_result | {ok, elvis_result:item()}.
+check_no_trailing_whitespace(Line, Num, _Args) ->
+    case re:run(Line, "\\s+$") of
+        nomatch ->
+            no_result;
+        {match, [PosLen]} ->
+            Msg = ?NO_TRAILING_WHITESPACE_MSG,
+            Info = [PosLen, binary:part(Line, PosLen)],
             Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result}
     end.
