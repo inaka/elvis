@@ -103,9 +103,16 @@ verify_no_trailing_whitespace_rule(_Config) ->
     File = "fail_no_trailing_whitespace.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    Items = elvis_style:no_trailing_whitespace(ElvisConfig, Path, #{}),
-    length(Items) == 4 orelse
-        ct:fail("Expected 4 error items. Got: ~p", [Items]).
+    do_verify_no_trailing_whitespace(Path, ElvisConfig,
+                                     #{ignore_empty_lines => true}, 3),
+    do_verify_no_trailing_whitespace(Path, ElvisConfig,
+                                     #{ignore_empty_lines => false}, 4),
+    do_verify_no_trailing_whitespace(Path, ElvisConfig, #{}, 4).
+
+do_verify_no_trailing_whitespace(Path, Config, RuleConfig, ExpectedNumItems) ->
+    Items = elvis_style:no_trailing_whitespace(Config, Path, RuleConfig),
+    length(Items) == ExpectedNumItems orelse
+        ct:fail("Expected ~b error items. Got: ~p", [ExpectedNumItems, Items]).
 
 -spec verify_macro_names_rule(config()) -> any().
 verify_macro_names_rule(_Config) ->
