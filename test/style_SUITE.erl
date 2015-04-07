@@ -9,6 +9,7 @@
 -export([
          verify_line_length_rule/1,
          verify_no_tabs_rule/1,
+         verify_no_trailing_whitespace_rule/1,
          verify_macro_names_rule/1,
          verify_macro_module_names/1,
          verify_operator_spaces/1,
@@ -93,6 +94,25 @@ verify_no_tabs_rule(_Config) ->
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
     [_, _] = elvis_style:no_tabs(ElvisConfig, Path, #{}).
+
+-spec verify_no_trailing_whitespace_rule(config()) -> any().
+verify_no_trailing_whitespace_rule(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    File = "fail_no_trailing_whitespace.erl",
+    {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
+
+    do_verify_no_trailing_whitespace(Path, ElvisConfig,
+                                     #{ignore_empty_lines => true}, 3),
+    do_verify_no_trailing_whitespace(Path, ElvisConfig,
+                                     #{ignore_empty_lines => false}, 4),
+    do_verify_no_trailing_whitespace(Path, ElvisConfig, #{}, 4).
+
+do_verify_no_trailing_whitespace(Path, Config, RuleConfig, ExpectedNumItems) ->
+    Items = elvis_style:no_trailing_whitespace(Config, Path, RuleConfig),
+    length(Items) == ExpectedNumItems orelse
+        ct:fail("Expected ~b error items. Got: ~p", [ExpectedNumItems, Items]).
 
 -spec verify_macro_names_rule(config()) -> any().
 verify_macro_names_rule(_Config) ->
