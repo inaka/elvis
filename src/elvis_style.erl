@@ -15,7 +15,9 @@
          no_behavior_info/3,
          module_naming_convention/3,
          state_record_and_type/3,
-         no_spec_with_records/3
+         no_spec_with_records/3,
+         dont_repeat_yourself/3,
+         find_repeated_nodes/1
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -77,6 +79,10 @@
 -define(NO_SPEC_WITH_RECORDS,
         "The spec in line ~p uses a record, please define a type for the "
         "record and use that instead.").
+
+-define(DONT_REPEAT_YOURSELF,
+        "The code in line ~p and column ~p is the same code in line ~p "
+        "and column ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -332,6 +338,20 @@ no_spec_with_records(Config, Target, _RuleConfig) ->
             lists:map(ResultFun, SpecNodes)
     end.
 
+-spec dont_repeat_yourself(elvis_config:config(),
+                           elvis_file:file(),
+                           empty_rule_config()) ->
+    [elvis_result:item()].
+dont_repeat_yourself(Config, Target, _RuleConfig) ->
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+
+    case find_repeated_nodes(Root) of
+        [] -> [];
+        Nodes ->
+            ResultFun = result_node_line_col_fun(?DONT_REPEAT_YOURSELF),
+            lists:map(ResultFun, Nodes)
+    end.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -354,7 +374,10 @@ result_node_line_col_fun(Msg) ->
             elvis_result:new(item, Msg, Info, Line)
     end.
 
-%% Rule checking
+
+%%% Rule checking
+
+%% Line Length
 
 -spec line_is_comment(binary()) -> true | false.
 line_is_comment(Line) ->
@@ -393,6 +416,8 @@ check_line_length(Line, Num, Limit) ->
             no_result
     end.
 
+%% No Tabs
+
 -spec check_no_tabs(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
 check_no_tabs(Line, Num, _Args) ->
@@ -405,6 +430,8 @@ check_no_tabs(Line, Num, _Args) ->
             Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result}
     end.
+
+%% No Trailing Whitespace
 
 -spec check_no_trailing_whitespace(binary(), integer(), map()) ->
     no_result | {ok, elvis_result:item()}.
@@ -426,6 +453,8 @@ check_no_trailing_whitespace(Line, Num, RuleConfig) ->
             {ok, Result}
     end.
 
+%% Macro Names
+
 -spec check_macro_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
 check_macro_names(Line, Num, _Args) ->
@@ -444,6 +473,8 @@ check_macro_names(Line, Num, _Args) ->
                     {ok, Result}
             end
     end.
+
+%% Macro in Function Call as Module or Functon Name
 
 -spec check_macro_module_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item_result()}.
@@ -515,6 +546,8 @@ has_remote_call_parent(Zipper) ->
             has_remote_call_parent(zipper:up(Zipper))
     end.
 
+%% Operator Spaces
+
 -spec check_operator_spaces(binary(), integer(), [{right|left, string()}]) ->
     no_result | {ok, elvis_result:item_result()}.
 check_operator_spaces(Line, Num, {Root, Rules}) ->
@@ -555,6 +588,8 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
             end
     end.
 
+%% Nesting Level
+
 -spec check_nesting_level(ktn_code:tree_node(), [integer()]) ->
     [elvis_result:item_result()].
 check_nesting_level(ParentNode, [MaxLevel]) ->
@@ -571,6 +606,8 @@ check_nesting_level(ParentNode, [MaxLevel]) ->
 
             lists:map(Fun, NestedNodes)
     end.
+
+%% Invalid Dynamic Calls
 
 -spec check_invalid_dynamic_calls(ktn_code:tree_node()) ->
     [elvis_result:item_result()].
@@ -599,6 +636,8 @@ is_dynamic_call(Node) ->
             false
     end.
 
+%% Ignored Variable
+
 -spec is_ignored_var(ktn_code:tree_node()) ->
     boolean().
 is_ignored_var(Zipper) ->
@@ -624,6 +663,8 @@ check_parent_match(Zipper) ->
                 _ -> check_parent_match(ParentZipper)
             end
     end.
+
+%% State record in OTP module
 
 -spec is_otp_module(ktn_code:tree_node()) -> boolean().
 is_otp_module(Root) ->
@@ -667,6 +708,8 @@ has_state_type(Root) ->
         end,
     elvis_code:find(IsStateType, Root) /= [].
 
+%% Spec includes records
+
 -spec spec_includes_record(ktn_code:tree_node()) -> boolean().
 spec_includes_record(Node) ->
     IsTypeRecord = fun(Child) ->
@@ -676,3 +719,26 @@ spec_includes_record(Node) ->
     Opts = #{traverse => all},
     (ktn_code:type(Node) == spec)
         and (elvis_code:find(IsTypeRecord, Node, Opts) /= []).
+
+%% Don't repeat yourself
+
+-spec find_repeated_nodes(ktn_code:tree_node()) -> [ktn_code:tree_node()].
+find_repeated_nodes(Root) ->
+    elvis_code:map(Root, fun remove_location/1, []).
+
+-spec remove_location(ktn_code:tree_node()) -> ktn_code:tree_node().
+remove_location(Nodes) when is_list(Nodes) ->
+    lists:map(fun remove_location/1, Nodes);
+remove_location(#{attrs := Attrs} = Node) ->
+    AttrsNoLoc = maps:remove(location, Attrs),
+    case maps:get(node_attrs, Node, undefined) of
+        undefined ->
+            Node#{attrs => AttrsNoLoc};
+        NodeAttrs ->
+            NodeAttrsNoLoc =
+                [{Key, elvis_code:map(Value, fun remove_location/1, [])}
+                 || {Key, Value} <- maps:to_list(NodeAttrs)],
+
+            Node#{attrs => AttrsNoLoc,
+                  node_attrs => maps:from_list(NodeAttrsNoLoc)}
+    end.

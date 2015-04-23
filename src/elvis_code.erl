@@ -4,7 +4,10 @@
 -export([
          find/2,
          find/3,
-         find_by_location/2
+         find_by_location/2,
+         code_zipper/1,
+         code_zipper/2,
+         map/3
         ]).
 
 %% Specific
@@ -49,13 +52,20 @@ find(Pred, Root) ->
 find(Pred, Root, Opts) ->
     Mode = ktn_maps:get(mode, Opts, node),
     ZipperMode = ktn_maps:get(traverse, Opts, content),
-
-    Zipper = case ZipperMode of
-                 content -> content_zipper(Root);
-                 all -> all_zipper(Root)
-             end,
+    Zipper = code_zipper(Root, ZipperMode),
     Results = find(Pred, Zipper, [], Mode),
     lists:reverse(Results).
+
+-spec code_zipper(ktn_code:tree_node()) -> zipper:zipper().
+code_zipper(Root) ->
+    code_zipper(Root, content).
+
+-spec code_zipper(ktn_code:tree_node(), content | all) -> zipper:zipper().
+code_zipper(Root, Mode) ->
+    case Mode of
+        content -> content_zipper(Root);
+        all -> all_zipper(Root)
+    end.
 
 -spec content_zipper(ktn_code:tree_node()) -> zipper:zipper().
 content_zipper(Root) ->
@@ -64,7 +74,7 @@ content_zipper(Root) ->
                    (_) -> false
                end,
     Children = fun (#{content := Content}) -> Content end,
-    MakeNode = fun(Node, _) -> Node end,
+    MakeNode = fun(Node, Content) -> Node#{content => Content} end,
     zipper:new(IsBranch, Children, MakeNode, Root).
 
 -spec all_zipper(ktn_code:tree_node()) -> zipper:zipper().
@@ -118,6 +128,22 @@ is_at_location(Node = #{attrs := #{location := {Line, NodeCol}}},
     (NodeCol =< Column) andalso (Column < NodeCol + Length);
 is_at_location(_, _) ->
     false.
+
+-spec map(ktn_code:tree_node(), fun(), list()) -> ktn_code:tree_node().
+'map'(Root, Fun, Args) ->
+    Zipper = content_zipper(Root),
+    do_map(Fun, Args, Zipper).
+
+-spec do_map(zipper:zipper(), fun(), list()) -> ktn_code:tree_node().
+do_map(Fun, Args, Zipper) ->
+    NewZipper = zipper:edit(Fun, Args, Zipper),
+    NextZipper = zipper:next(NewZipper),
+    case zipper:is_end(NextZipper) of
+        true ->
+            zipper:root(NewZipper);
+        false ->
+            do_map(Fun, Args, NextZipper)
+    end.
 
 %%% Processing functions
 
