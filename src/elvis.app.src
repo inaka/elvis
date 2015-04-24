@@ -2,7 +2,7 @@
   application, elvis,
   [
    {description, "Erlang Style Reviewer, inspired on HoundCI"},
-   {vsn, "0.2.4"},
+   {vsn, "0.2.5"},
    {applications, [kernel, stdlib, ibrowse, ssl, jiffy, lager, aleppo, zipper]},
    {modules,
     [
