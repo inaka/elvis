@@ -16,8 +16,7 @@
          module_naming_convention/3,
          state_record_and_type/3,
          no_spec_with_records/3,
-         dont_repeat_yourself/3,
-         find_repeated_nodes/1
+         dont_repeat_yourself/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -342,10 +341,12 @@ no_spec_with_records(Config, Target, _RuleConfig) ->
                            elvis_file:file(),
                            empty_rule_config()) ->
     [elvis_result:item()].
-dont_repeat_yourself(Config, Target, _RuleConfig) ->
+dont_repeat_yourself(Config, Target, RuleConfig) ->
+    MinComplexity = maps:get(min_complexity, RuleConfig, 5),
+
     {Root, _} = elvis_file:parse_tree(Config, Target),
 
-    case find_repeated_nodes(Root) of
+    case find_repeated_nodes(Root, MinComplexity) of
         [] -> [];
         Nodes ->
             ResultFun = result_node_line_col_fun(?DONT_REPEAT_YOURSELF),
@@ -722,8 +723,9 @@ spec_includes_record(Node) ->
 
 %% Don't repeat yourself
 
--spec find_repeated_nodes(ktn_code:tree_node()) -> [ktn_code:tree_node()].
-find_repeated_nodes(Root) ->
+-spec find_repeated_nodes(ktn_code:tree_node(), non_neg_integer()) ->
+    [ktn_code:tree_node()].
+find_repeated_nodes(Root, MinComplexity) ->
     TypeAttrs = #{var => [location, name, text]},
     MapFun =
         fun(Node) ->
@@ -741,7 +743,7 @@ find_repeated_nodes(Root) ->
                    {Loc2, Node2} <- LocationNodePairs,
                    Loc1 =/= Loc2,
                    Node1 == Node2,
-                   count_nodes(Node1) >= 5],
+                   count_nodes(Node1) >= MinComplexity],
 
     GroupFun =
         fun({Key, Vals}, Map) ->
