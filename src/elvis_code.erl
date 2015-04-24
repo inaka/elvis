@@ -7,7 +7,9 @@
          find_by_location/2,
          code_zipper/1,
          code_zipper/2,
-         map/3
+         map/2,
+         fold/3,
+         content_zipper/1
         ]).
 
 %% Specific
@@ -129,20 +131,35 @@ is_at_location(Node = #{attrs := #{location := {Line, NodeCol}}},
 is_at_location(_, _) ->
     false.
 
--spec map(ktn_code:tree_node(), fun(), list()) -> ktn_code:tree_node().
-'map'(Root, Fun, Args) ->
-    Zipper = content_zipper(Root),
-    do_map(Fun, Args, Zipper).
+-spec fold(fun(), list(), ktn_code:tree_node()) -> ktn_code:tree_node().
+fold(Fun, Args, Zipper) ->
+    do_fold(Fun, Args, Zipper).
 
--spec do_map(zipper:zipper(), fun(), list()) -> ktn_code:tree_node().
-do_map(Fun, Args, Zipper) ->
+-spec do_fold(fun(), list(), zipper:zipper()) -> ktn_code:tree_node().
+do_fold(Fun, Args, Zipper) ->
     NewZipper = zipper:edit(Fun, Args, Zipper),
     NextZipper = zipper:next(NewZipper),
     case zipper:is_end(NextZipper) of
         true ->
             zipper:root(NewZipper);
         false ->
-            do_map(Fun, Args, NextZipper)
+            do_fold(Fun, Args, NextZipper)
+    end.
+
+-spec map(ktn_code:tree_node(), fun()) -> [ktn_code:tree_node()].
+'map'(Fun, Zipper) ->
+    do_map(Fun, [], Zipper).
+
+-spec do_map(fun(), list(), zipper:zipper()) -> [ktn_code:tree_node()].
+do_map(Fun, Results, Zipper) ->
+    NewNode = Fun(zipper:node(Zipper)),
+    NextZipper = zipper:next(Zipper),
+    NewResults = [NewNode | Results],
+    case zipper:is_end(NextZipper) of
+        true ->
+            lists:reverse(NewResults);
+        false ->
+            do_map(Fun, NewResults, NextZipper)
     end.
 
 %%% Processing functions
