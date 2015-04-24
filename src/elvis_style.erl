@@ -80,8 +80,8 @@
         "record and use that instead.").
 
 -define(DONT_REPEAT_YOURSELF,
-        "The code in line ~p and column ~p is the same code in line ~p "
-        "and column ~p.").
+        "The code in line ~p and column ~p is the same code as in the "
+        "following {line, column} locations: ~s.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -349,7 +349,20 @@ dont_repeat_yourself(Config, Target, RuleConfig) ->
     case find_repeated_nodes(Root, MinComplexity) of
         [] -> [];
         Nodes ->
-            ResultFun = result_node_line_col_fun(?DONT_REPEAT_YOURSELF),
+            LocationCat =
+                fun
+                    ({Line, Col}, "") ->
+                        io_lib:format("{~p, ~p}", [Line, Col]);
+                    ({Line, Col}, Str) ->
+                        io_lib:format("~s, {~p, ~p}", [Str, Line, Col])
+                end,
+            ResultFun =
+                fun([{Line, Col} | Locations]) ->
+                        LocationsStr = lists:foldl(LocationCat, "", Locations),
+                        Info = [Line, Col, LocationsStr],
+                        Msg = ?DONT_REPEAT_YOURSELF,
+                        elvis_result:new(item, Msg, Info, Line)
+                end,
             lists:map(ResultFun, Nodes)
     end.
 
@@ -360,21 +373,18 @@ dont_repeat_yourself(Config, Target, RuleConfig) ->
 %% Result building
 
 result_node_line_fun(Msg) ->
-    fun
-        (Node) ->
+    fun(Node) ->
             {Line, _} = ktn_code:attr(location, Node),
             Info = [Line],
             elvis_result:new(item, Msg, Info, Line)
     end.
 
 result_node_line_col_fun(Msg) ->
-    fun
-        (Node) ->
+    fun(Node) ->
             {Line, Col} = ktn_code:attr(location, Node),
             Info = [Line, Col],
             elvis_result:new(item, Msg, Info, Line)
     end.
-
 
 %%% Rule checking
 
@@ -469,8 +479,7 @@ check_macro_names(Line, Num, _Args) ->
                     no_result;
                 _ ->
                     Msg = ?INVALID_MACRO_NAME_MSG,
-                    Info = [MacroName, Num],
-                    Result = elvis_result:new(item, Msg, Info, Num),
+                    Result = elvis_result:new(item, Msg, [MacroName, Num], Num),
                     {ok, Result}
             end
     end.
@@ -517,8 +526,7 @@ apply_macro_module_names(Line, Num, Regex, Msg, Root) ->
                 true ->
                     [];
                 false ->
-                    Info = [MacroName, Num],
-                    Result = elvis_result:new(item, Msg, Info, Num),
+                    Result = elvis_result:new(item, Msg, [MacroName, Num], Num),
                     [Result]
             end
     end.
@@ -754,7 +762,9 @@ find_repeated_nodes(Root, MinComplexity) ->
 
     GroupedRepeated = lists:foldl(GroupFun, #{}, Repeated),
 
-    lists:map(fun sets:to_list/1, maps:values(GroupedRepeated)).
+    Locations = lists:map(fun sets:to_list/1, maps:values(GroupedRepeated)),
+
+    lists:map(fun lists:sort/1, Locations).
 
 -spec remove_attrs_zipper(zipper:zipper(), map()) -> ktn_code:tree_node().
 remove_attrs_zipper(Zipper, TypeAttrs) ->
@@ -763,21 +773,24 @@ remove_attrs_zipper(Zipper, TypeAttrs) ->
 -spec remove_attrs(ktn_code:tree_node(), map()) -> ktn_code:tree_node().
 remove_attrs(Nodes, TypeAttrs) when is_list(Nodes) ->
     ktn_lists:map(fun remove_attrs/2, [TypeAttrs], Nodes);
+remove_attrs(#{attrs := Attrs,
+               type := Type,
+               node_attr := NodeAttrs} = Node,
+             TypeAttrs) ->
+    AttrsName = maps:get(Type, TypeAttrs, [location]),
+    AttrsNoLoc = maps:without(AttrsName, Attrs),
+    NodeAttrsNoLoc =
+        [{ Key
+         , remove_attrs_zipper(elvis_code:content_zipper(Value),
+                               TypeAttrs)}
+         || {Key, Value} <- maps:to_list(NodeAttrs)],
+
+    Node#{attrs => AttrsNoLoc,
+          node_attrs => maps:from_list(NodeAttrsNoLoc)};
 remove_attrs(#{attrs := Attrs, type := Type} = Node, TypeAttrs) ->
     AttrsName = maps:get(Type, TypeAttrs, [location]),
     AttrsNoLoc = maps:without(AttrsName, Attrs),
-    case maps:get(node_attrs, Node, undefined) of
-        undefined ->
-            Node#{attrs => AttrsNoLoc};
-        NodeAttrs ->
-            NodeAttrsNoLoc =
-                [{ Key
-                 , remove_attrs_zipper(elvis_code:content_zipper(Value), TypeAttrs)}
-                 || {Key, Value} <- maps:to_list(NodeAttrs)],
-
-            Node#{attrs => AttrsNoLoc,
-                  node_attrs => maps:from_list(NodeAttrsNoLoc)}
-    end.
+    Node#{attrs => AttrsNoLoc}.
 
 -spec count_nodes(ktn_code:tree_node()) -> non_neg_integer().
 count_nodes(Node) ->
