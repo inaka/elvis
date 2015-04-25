@@ -9,7 +9,8 @@
          code_zipper/2,
          map/2,
          fold/3,
-         content_zipper/1
+         edit_all/3,
+         size/1
         ]).
 
 %% Specific
@@ -131,36 +132,39 @@ is_at_location(Node = #{attrs := #{location := {Line, NodeCol}}},
 is_at_location(_, _) ->
     false.
 
--spec fold(fun(), list(), ktn_code:tree_node()) -> ktn_code:tree_node().
-fold(Fun, Args, Zipper) ->
-    do_fold(Fun, Args, Zipper).
+-spec map(ktn_code:tree_node(), fun()) -> [ktn_code:tree_node()].
+map(Fun, Zipper) ->
+    ApplyAddFun = fun(X, Acc) -> [Fun(X) | Acc] end,
+    Result = fold(ApplyAddFun, [], Zipper),
+    lists:reverse(Result).
 
--spec do_fold(fun(), list(), zipper:zipper()) -> ktn_code:tree_node().
-do_fold(Fun, Args, Zipper) ->
+-spec fold(fun(), term(), zipper:zipper()) -> term().
+fold(Fun, Acc, Zipper) ->
+    case zipper:is_end(Zipper) of
+        true ->
+            Acc;
+        false ->
+            Node = zipper:node(Zipper),
+            NewAcc = Fun(Node, Acc),
+            fold(Fun, NewAcc, zipper:next(Zipper))
+    end.
+
+-spec edit_all(fun(), list(), zipper:zipper()) -> ktn_code:tree_node().
+edit_all(Fun, Args, Zipper) ->
     NewZipper = zipper:edit(Fun, Args, Zipper),
     NextZipper = zipper:next(NewZipper),
     case zipper:is_end(NextZipper) of
         true ->
             zipper:root(NewZipper);
         false ->
-            do_fold(Fun, Args, NextZipper)
+            edit_all(Fun, Args, NextZipper)
     end.
 
--spec map(ktn_code:tree_node(), fun()) -> [ktn_code:tree_node()].
-'map'(Fun, Zipper) ->
-    do_map(Fun, [], Zipper).
+-spec size(zipper:zipper()) -> non_neg_integer().
+size(Zipper) ->
+    IncFun = fun(_, Acc) -> Acc + 1 end,
+    elvis_code:fold(IncFun, 0, Zipper).
 
--spec do_map(fun(), list(), zipper:zipper()) -> [ktn_code:tree_node()].
-do_map(Fun, Results, Zipper) ->
-    NewNode = Fun(zipper:node(Zipper)),
-    NextZipper = zipper:next(Zipper),
-    NewResults = [NewNode | Results],
-    case zipper:is_end(NextZipper) of
-        true ->
-            lists:reverse(NewResults);
-        false ->
-            do_map(Fun, NewResults, NextZipper)
-    end.
 
 %%% Processing functions
 
