@@ -9,6 +9,7 @@
          code_zipper/2,
          map/2,
          fold/3,
+         filter/2,
          edit_all/3,
          size/1
         ]).
@@ -148,6 +149,16 @@ fold(Fun, Acc, Zipper) ->
             NewAcc = Fun(Node, Acc),
             fold(Fun, NewAcc, zipper:next(Zipper))
     end.
+
+-spec filter(fun(), zipper:zipper()) -> list().
+filter(Pred, Zipper) ->
+    FilterFun = fun(X, Acc) ->
+                        case Pred(X) of
+                            true -> [X | Acc];
+                            false -> Acc
+                        end
+                end,
+    fold(FilterFun, [], Zipper).
 
 -spec edit_all(fun(), list(), zipper:zipper()) -> ktn_code:tree_node().
 edit_all(Fun, Args, Zipper) ->

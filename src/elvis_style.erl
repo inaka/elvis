@@ -758,13 +758,9 @@ find_repeated_nodes(Root, MinComplexity) ->
     ZipperRoot = elvis_code:code_zipper(Root),
     Grouped = elvis_code:fold(FoldFun, #{}, ZipperRoot),
 
-    FilterFun = fun(LocationSet, Acc) ->
-                        case sets:size(LocationSet) of
-                            1 -> Acc;
-                            _ -> [sets:to_list(LocationSet) | Acc]
-                        end
-                end,
-    Locations = lists:foldl(FilterFun, [], maps:values(Grouped)),
+    Repeated = filter_repeated(Grouped),
+    LocationSets = maps:values(Repeated),
+    Locations = lists:map(fun sets:to_list/1, LocationSets),
 
     lists:map(fun lists:sort/1, Locations).
 
@@ -796,3 +792,24 @@ remove_attrs(#{attrs := Attrs, type := Type} = Node, TypeAttrs) ->
     Node#{attrs => AttrsNoLoc};
 remove_attrs(Node, _TypeAttrs) ->
     Node.
+
+-spec filter_repeated(map()) -> map().
+filter_repeated(NodesLocs) ->
+    NotRepeated = [Node
+                   || {Node, LocationSet} <- maps:to_list(NodesLocs),
+                      sets:size(LocationSet) == 1],
+
+    RepeatedMap = maps:without(NotRepeated, NodesLocs),
+
+    RepeatedNodes = maps:keys(RepeatedMap),
+    Nested = [Node
+              || Node <- RepeatedNodes,
+                 Parent <- RepeatedNodes,
+                 Node =/= Parent,
+                 is_children(Parent, Node)],
+
+    maps:without(Nested, RepeatedMap).
+
+is_children(Parent, Node) ->
+    Zipper = elvis_code:code_zipper(Parent),
+    [] =/= elvis_code:filter(fun(Child) -> Child == Node end, Zipper).
