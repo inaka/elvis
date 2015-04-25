@@ -80,8 +80,8 @@
         "record and use that instead.").
 
 -define(DONT_REPEAT_YOURSELF,
-        "The code in line ~p and column ~p is the same code as in the "
-        "following {line, column} locations: ~s.").
+        "The code in the following (LINE, COL) locations has "
+        "the same structure: ~s.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -352,18 +352,21 @@ dont_repeat_yourself(Config, Target, RuleConfig) ->
             LocationCat =
                 fun
                     ({Line, Col}, "") ->
-                        io_lib:format("{~p, ~p}", [Line, Col]);
+                        io_lib:format("(~p, ~p)", [Line, Col]);
                     ({Line, Col}, Str) ->
-                        io_lib:format("~s, {~p, ~p}", [Str, Line, Col])
+                        io_lib:format("~s, (~p, ~p)", [Str, Line, Col])
                 end,
             ResultFun =
-                fun([{Line, Col} | Locations]) ->
+                fun([{Line, _} | _] = Locations) ->
                         LocationsStr = lists:foldl(LocationCat, "", Locations),
-                        Info = [Line, Col, LocationsStr],
+                        Info = [LocationsStr],
                         Msg = ?DONT_REPEAT_YOURSELF,
                         elvis_result:new(item, Msg, Info, Line)
                 end,
-            lists:map(ResultFun, Nodes)
+            SortFun = fun(#{line_num := L1}, #{line_num := L2}) ->
+                              L1 =< L2
+                      end,
+            lists:sort(SortFun, lists:map(ResultFun, Nodes))
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -738,32 +741,34 @@ find_repeated_nodes(Root, MinComplexity) ->
                   'clause' => [location, text]},
     MapFun =
         fun(Node) ->
-                Loc = ktn_code:attr(location, Node),
                 Zipper = elvis_code:content_zipper(Node),
                 StrippedNode = remove_attrs_zipper(Zipper, TypeAttrs),
-                {Loc , StrippedNode}
+                Loc = ktn_code:attr(location, Node),
+                Count = count_nodes(StrippedNode),
+                {StrippedNode, Loc, Count}
         end,
 
     ZipperRoot = elvis_code:content_zipper(Root),
-    LocationNodePairs = elvis_code:map(MapFun, ZipperRoot),
-
-    Repeated = [{Node1, [Loc1, Loc2]}
-                || {Loc1, Node1} <- LocationNodePairs,
-                   {Loc2, Node2} <- LocationNodePairs,
-                   Loc1 =/= Loc2,
-                   Node1 == Node2,
-                   count_nodes(Node1) >= MinComplexity],
+    NodeTriples = elvis_code:map(MapFun, ZipperRoot),
 
     GroupFun =
-        fun({Key, Vals}, Map) ->
-                ValsSet = maps:get(Key, Map, sets:new()),
-                NewValsSet = lists:foldl(fun sets:add_element/2, ValsSet, Vals),
-                maps:put(Key, NewValsSet, Map)
+        fun({Node, Loc, Count}, Map) when Count >= MinComplexity ->
+                ValsSet = maps:get(Node, Map, sets:new()),
+                NewValsSet = sets:add_element(Loc, ValsSet),
+                maps:put(Node, NewValsSet, Map);
+           (_, Map) ->
+                Map
         end,
+    Grouped = lists:foldl(GroupFun, #{}, NodeTriples),
 
-    GroupedRepeated = lists:foldl(GroupFun, #{}, Repeated),
-
-    Locations = lists:map(fun sets:to_list/1, maps:values(GroupedRepeated)),
+    FilterFun =
+        fun(LocationSet, Acc) ->
+                case sets:size(LocationSet) of
+                    1 -> Acc;
+                    _ -> [sets:to_list(LocationSet) | Acc]
+                end
+        end,
+    Locations = lists:foldl(FilterFun, [], maps:values(Grouped)),
 
     lists:map(fun lists:sort/1, Locations).
 
@@ -792,11 +797,13 @@ remove_attrs(#{attrs := Attrs,
 remove_attrs(#{attrs := Attrs, type := Type} = Node, TypeAttrs) ->
     AttrsName = maps:get(Type, TypeAttrs, [location]),
     AttrsNoLoc = maps:without(AttrsName, Attrs),
-    Node#{attrs => AttrsNoLoc}.
+    Node#{attrs => AttrsNoLoc};
+remove_attrs(Node, _TypeAttrs) ->
+    Node.
 
 -spec count_nodes(ktn_code:tree_node()) -> non_neg_integer().
 count_nodes(Node) ->
+    OneFun = fun(_) -> 1 end,
     Zipper = elvis_code:content_zipper(Node),
-    lists:foldl(fun erlang:'+'/2,
-                0,
-                elvis_code:map(fun(_) -> 1 end, Zipper)).
+    Ones = elvis_code:map(OneFun, Zipper),
+    lists:foldl(fun erlang:'+'/2, 0, Ones).
