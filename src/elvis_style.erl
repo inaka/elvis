@@ -734,7 +734,8 @@ spec_includes_record(Node) ->
 -spec find_repeated_nodes(ktn_code:tree_node(), non_neg_integer()) ->
     [ktn_code:tree_node()].
 find_repeated_nodes(Root, MinComplexity) ->
-    TypeAttrs = #{var => [location, name, text]},
+    TypeAttrs = #{var => [location, name, text],
+                  'clause' => [location, text]},
     MapFun =
         fun(Node) ->
                 Loc = ktn_code:attr(location, Node),
@@ -770,12 +771,13 @@ find_repeated_nodes(Root, MinComplexity) ->
 remove_attrs_zipper(Zipper, TypeAttrs) ->
     elvis_code:fold(fun remove_attrs/2, [TypeAttrs], Zipper).
 
--spec remove_attrs(ktn_code:tree_node(), map()) -> ktn_code:tree_node().
+-spec remove_attrs(ktn_code:tree_node() | [ktn_code:tree_node()], map()) ->
+    ktn_code:tree_node().
 remove_attrs(Nodes, TypeAttrs) when is_list(Nodes) ->
     ktn_lists:map(fun remove_attrs/2, [TypeAttrs], Nodes);
 remove_attrs(#{attrs := Attrs,
                type := Type,
-               node_attr := NodeAttrs} = Node,
+               node_attrs := NodeAttrs} = Node,
              TypeAttrs) ->
     AttrsName = maps:get(Type, TypeAttrs, [location]),
     AttrsNoLoc = maps:without(AttrsName, Attrs),
