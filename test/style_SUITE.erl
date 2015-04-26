@@ -263,7 +263,12 @@ verify_module_naming_convention(_Config) ->
     PathFail = "fail_module_naming_1_convention_1.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
     [_] =
-        elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfig).
+        elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfig),
+
+    RuleConfigIgnore = RuleConfig#{ignore => [fail_module_naming_1_convention_1]},
+    [] =
+        elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfigIgnore).
+
 
 -spec verify_state_record_and_type(config()) -> any().
 verify_state_record_and_type(_Config) ->
