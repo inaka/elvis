@@ -302,5 +302,12 @@ verify_dont_repeat_yourself(_Config) ->
 
     PathFail = "fail_dont_repeat_yourself.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
-    RuleConfig = #{min_complexity => 5},
-    [_, _] = elvis_style:dont_repeat_yourself(ElvisConfig, FileFail, RuleConfig).
+    RuleConfig5 = #{min_complexity => 5},
+    [_, _] = elvis_style:dont_repeat_yourself(ElvisConfig, FileFail, RuleConfig5),
+
+    RuleConfig9 = #{min_complexity => 9},
+    [_] = elvis_style:dont_repeat_yourself(ElvisConfig, FileFail, RuleConfig9),
+
+    PathPass = "pass_dont_repeat_yourself.erl",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] = elvis_style:dont_repeat_yourself(ElvisConfig, FilePass, RuleConfig5).

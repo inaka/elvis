@@ -1,4 +1,4 @@
--module(fail_dont_repeat_yourself).
+-module(pass_dont_repeat_yourself).
 
 -export([
          repeated_complexity_5/2,
@@ -7,8 +7,8 @@
 
 repeated_complexity_5(X, Y) ->
     Z = X ++ [ok],
-    W = Y ++ [ok],
-    Z ++ W ++ [ok].
+    W = Y ++ [error],
+    Z ++ W ++ [something].
 
 repeated_complexity_10(X, Y) ->
     case X of
@@ -18,5 +18,5 @@ repeated_complexity_10(X, Y) ->
 
     case Y of
         X -> io:format("Y");
-        _ -> <<"ok">>
+        _ -> <<"error">>
     end.
