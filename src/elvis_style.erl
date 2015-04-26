@@ -743,7 +743,7 @@ find_repeated_nodes(Root, MinComplexity) ->
     FoldFun =
         fun(Node, Map) ->
                 Zipper = elvis_code:code_zipper(Node),
-                case elvis_code:size(Zipper) of
+                case zipper:size(Zipper) of
                     Count when Count >= MinComplexity ->
                         Loc = ktn_code:attr(location, Node),
                         StrippedNode = remove_attrs_zipper(Zipper, TypeAttrs),
@@ -756,7 +756,7 @@ find_repeated_nodes(Root, MinComplexity) ->
                 end
         end,
     ZipperRoot = elvis_code:code_zipper(Root),
-    Grouped = elvis_code:fold(FoldFun, #{}, ZipperRoot),
+    Grouped = zipper:fold(FoldFun, #{}, ZipperRoot),
 
     Repeated = filter_repeated(Grouped),
     LocationSets = maps:values(Repeated),
@@ -766,7 +766,7 @@ find_repeated_nodes(Root, MinComplexity) ->
 
 -spec remove_attrs_zipper(zipper:zipper(), map()) -> ktn_code:tree_node().
 remove_attrs_zipper(Zipper, TypeAttrs) ->
-    elvis_code:edit_all(fun remove_attrs/2, [TypeAttrs], Zipper).
+    zipper:edit_all(fun remove_attrs/2, [TypeAttrs], Zipper).
 
 -spec remove_attrs(ktn_code:tree_node() | [ktn_code:tree_node()], map()) ->
     ktn_code:tree_node().
@@ -812,4 +812,4 @@ filter_repeated(NodesLocs) ->
 
 is_children(Parent, Node) ->
     Zipper = elvis_code:code_zipper(Parent),
-    [] =/= elvis_code:filter(fun(Child) -> Child == Node end, Zipper).
+    [] =/= zipper:filter(fun(Child) -> Child == Node end, Zipper).

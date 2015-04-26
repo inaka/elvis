@@ -6,12 +6,7 @@
          find/3,
          find_by_location/2,
          code_zipper/1,
-         code_zipper/2,
-         map/2,
-         fold/3,
-         filter/2,
-         edit_all/3,
-         size/1
+         code_zipper/2
         ]).
 
 %% Specific
@@ -132,50 +127,6 @@ is_at_location(Node = #{attrs := #{location := {Line, NodeCol}}},
     (NodeCol =< Column) andalso (Column < NodeCol + Length);
 is_at_location(_, _) ->
     false.
-
--spec map(ktn_code:tree_node(), fun()) -> [ktn_code:tree_node()].
-map(Fun, Zipper) ->
-    ApplyAddFun = fun(X, Acc) -> [Fun(X) | Acc] end,
-    Result = fold(ApplyAddFun, [], Zipper),
-    lists:reverse(Result).
-
--spec fold(fun(), term(), zipper:zipper()) -> term().
-fold(Fun, Acc, Zipper) ->
-    case zipper:is_end(Zipper) of
-        true ->
-            Acc;
-        false ->
-            Node = zipper:node(Zipper),
-            NewAcc = Fun(Node, Acc),
-            fold(Fun, NewAcc, zipper:next(Zipper))
-    end.
-
--spec filter(fun(), zipper:zipper()) -> list().
-filter(Pred, Zipper) ->
-    FilterFun = fun(X, Acc) ->
-                        case Pred(X) of
-                            true -> [X | Acc];
-                            false -> Acc
-                        end
-                end,
-    fold(FilterFun, [], Zipper).
-
--spec edit_all(fun(), list(), zipper:zipper()) -> ktn_code:tree_node().
-edit_all(Fun, Args, Zipper) ->
-    NewZipper = zipper:edit(Fun, Args, Zipper),
-    NextZipper = zipper:next(NewZipper),
-    case zipper:is_end(NextZipper) of
-        true ->
-            zipper:root(NewZipper);
-        false ->
-            edit_all(Fun, Args, NextZipper)
-    end.
-
--spec size(zipper:zipper()) -> non_neg_integer().
-size(Zipper) ->
-    IncFun = fun(_, Acc) -> Acc + 1 end,
-    elvis_code:fold(IncFun, 0, Zipper).
-
 
 %%% Processing functions
 
