@@ -15,7 +15,8 @@
          no_behavior_info/3,
          module_naming_convention/3,
          state_record_and_type/3,
-         no_spec_with_records/3
+         no_spec_with_records/3,
+         dont_repeat_yourself/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -77,6 +78,10 @@
 -define(NO_SPEC_WITH_RECORDS,
         "The spec in line ~p uses a record, please define a type for the "
         "record and use that instead.").
+
+-define(DONT_REPEAT_YOURSELF,
+        "The code in the following (LINE, COL) locations has "
+        "the same structure: ~s.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -332,6 +337,38 @@ no_spec_with_records(Config, Target, _RuleConfig) ->
             lists:map(ResultFun, SpecNodes)
     end.
 
+-spec dont_repeat_yourself(elvis_config:config(),
+                           elvis_file:file(),
+                           empty_rule_config()) ->
+    [elvis_result:item()].
+dont_repeat_yourself(Config, Target, RuleConfig) ->
+    MinComplexity = maps:get(min_complexity, RuleConfig, 5),
+
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+
+    case find_repeated_nodes(Root, MinComplexity) of
+        [] -> [];
+        Nodes ->
+            LocationCat =
+                fun
+                    ({Line, Col}, "") ->
+                        io_lib:format("(~p, ~p)", [Line, Col]);
+                    ({Line, Col}, Str) ->
+                        io_lib:format("~s, (~p, ~p)", [Str, Line, Col])
+                end,
+            ResultFun =
+                fun([{Line, _} | _] = Locations) ->
+                        LocationsStr = lists:foldl(LocationCat, "", Locations),
+                        Info = [LocationsStr],
+                        Msg = ?DONT_REPEAT_YOURSELF,
+                        elvis_result:new(item, Msg, Info, Line)
+                end,
+            SortFun = fun(#{line_num := L1}, #{line_num := L2}) ->
+                              L1 =< L2
+                      end,
+            lists:sort(SortFun, lists:map(ResultFun, Nodes))
+    end.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -339,22 +376,22 @@ no_spec_with_records(Config, Target, _RuleConfig) ->
 %% Result building
 
 result_node_line_fun(Msg) ->
-    fun
-        (Node) ->
+    fun(Node) ->
             {Line, _} = ktn_code:attr(location, Node),
             Info = [Line],
             elvis_result:new(item, Msg, Info, Line)
     end.
 
 result_node_line_col_fun(Msg) ->
-    fun
-        (Node) ->
+    fun(Node) ->
             {Line, Col} = ktn_code:attr(location, Node),
             Info = [Line, Col],
             elvis_result:new(item, Msg, Info, Line)
     end.
 
-%% Rule checking
+%%% Rule checking
+
+%% Line Length
 
 -spec line_is_comment(binary()) -> true | false.
 line_is_comment(Line) ->
@@ -393,6 +430,8 @@ check_line_length(Line, Num, Limit) ->
             no_result
     end.
 
+%% No Tabs
+
 -spec check_no_tabs(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
 check_no_tabs(Line, Num, _Args) ->
@@ -405,6 +444,8 @@ check_no_tabs(Line, Num, _Args) ->
             Result = elvis_result:new(item, Msg, Info, Num),
             {ok, Result}
     end.
+
+%% No Trailing Whitespace
 
 -spec check_no_trailing_whitespace(binary(), integer(), map()) ->
     no_result | {ok, elvis_result:item()}.
@@ -426,6 +467,8 @@ check_no_trailing_whitespace(Line, Num, RuleConfig) ->
             {ok, Result}
     end.
 
+%% Macro Names
+
 -spec check_macro_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
 check_macro_names(Line, Num, _Args) ->
@@ -439,11 +482,12 @@ check_macro_names(Line, Num, _Args) ->
                     no_result;
                 _ ->
                     Msg = ?INVALID_MACRO_NAME_MSG,
-                    Info = [MacroName, Num],
-                    Result = elvis_result:new(item, Msg, Info, Num),
+                    Result = elvis_result:new(item, Msg, [MacroName, Num], Num),
                     {ok, Result}
             end
     end.
+
+%% Macro in Function Call as Module or Functon Name
 
 -spec check_macro_module_names(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item_result()}.
@@ -485,8 +529,7 @@ apply_macro_module_names(Line, Num, Regex, Msg, Root) ->
                 true ->
                     [];
                 false ->
-                    Info = [MacroName, Num],
-                    Result = elvis_result:new(item, Msg, Info, Num),
+                    Result = elvis_result:new(item, Msg, [MacroName, Num], Num),
                     [Result]
             end
     end.
@@ -514,6 +557,8 @@ has_remote_call_parent(Zipper) ->
         _ ->
             has_remote_call_parent(zipper:up(Zipper))
     end.
+
+%% Operator Spaces
 
 -spec check_operator_spaces(binary(), integer(), [{right|left, string()}]) ->
     no_result | {ok, elvis_result:item_result()}.
@@ -555,6 +600,8 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
             end
     end.
 
+%% Nesting Level
+
 -spec check_nesting_level(ktn_code:tree_node(), [integer()]) ->
     [elvis_result:item_result()].
 check_nesting_level(ParentNode, [MaxLevel]) ->
@@ -571,6 +618,8 @@ check_nesting_level(ParentNode, [MaxLevel]) ->
 
             lists:map(Fun, NestedNodes)
     end.
+
+%% Invalid Dynamic Calls
 
 -spec check_invalid_dynamic_calls(ktn_code:tree_node()) ->
     [elvis_result:item_result()].
@@ -599,6 +648,8 @@ is_dynamic_call(Node) ->
             false
     end.
 
+%% Ignored Variable
+
 -spec is_ignored_var(ktn_code:tree_node()) ->
     boolean().
 is_ignored_var(Zipper) ->
@@ -624,6 +675,8 @@ check_parent_match(Zipper) ->
                 _ -> check_parent_match(ParentZipper)
             end
     end.
+
+%% State record in OTP module
 
 -spec is_otp_module(ktn_code:tree_node()) -> boolean().
 is_otp_module(Root) ->
@@ -667,6 +720,8 @@ has_state_type(Root) ->
         end,
     elvis_code:find(IsStateType, Root) /= [].
 
+%% Spec includes records
+
 -spec spec_includes_record(ktn_code:tree_node()) -> boolean().
 spec_includes_record(Node) ->
     IsTypeRecord = fun(Child) ->
@@ -676,3 +731,85 @@ spec_includes_record(Node) ->
     Opts = #{traverse => all},
     (ktn_code:type(Node) == spec)
         and (elvis_code:find(IsTypeRecord, Node, Opts) /= []).
+
+%% Don't repeat yourself
+
+-spec find_repeated_nodes(ktn_code:tree_node(), non_neg_integer()) ->
+    [ktn_code:tree_node()].
+find_repeated_nodes(Root, MinComplexity) ->
+    TypeAttrs = #{var    => [location, name, text],
+                  clause => [location, text]},
+
+    FoldFun =
+        fun(Node, Map) ->
+                Zipper = elvis_code:code_zipper(Node),
+                case zipper:size(Zipper) of
+                    Count when Count >= MinComplexity ->
+                        Loc = ktn_code:attr(location, Node),
+                        StrippedNode = remove_attrs_zipper(Zipper, TypeAttrs),
+
+                        ValsSet = maps:get(StrippedNode, Map, sets:new()),
+                        NewValsSet = sets:add_element(Loc, ValsSet),
+                        maps:put(StrippedNode, NewValsSet, Map);
+                    _ ->
+                        Map
+                end
+        end,
+    ZipperRoot = elvis_code:code_zipper(Root),
+    Grouped = zipper:fold(FoldFun, #{}, ZipperRoot),
+
+    Repeated = filter_repeated(Grouped),
+    LocationSets = maps:values(Repeated),
+    Locations = lists:map(fun sets:to_list/1, LocationSets),
+
+    lists:map(fun lists:sort/1, Locations).
+
+-spec remove_attrs_zipper(zipper:zipper(), map()) -> ktn_code:tree_node().
+remove_attrs_zipper(Zipper, TypeAttrs) ->
+    zipper:edit_all(fun remove_attrs/2, [TypeAttrs], Zipper).
+
+-spec remove_attrs(ktn_code:tree_node() | [ktn_code:tree_node()], map()) ->
+    ktn_code:tree_node().
+remove_attrs(Nodes, TypeAttrs) when is_list(Nodes) ->
+    ktn_lists:map(fun remove_attrs/2, [TypeAttrs], Nodes);
+remove_attrs(#{attrs := Attrs,
+               type := Type,
+               node_attrs := NodeAttrs} = Node,
+             TypeAttrs) ->
+    AttrsName = maps:get(Type, TypeAttrs, [location]),
+    AttrsNoLoc = maps:without(AttrsName, Attrs),
+    NodeAttrsNoLoc =
+        [{ Key
+         , remove_attrs_zipper(elvis_code:code_zipper(Value),
+                               TypeAttrs)}
+         || {Key, Value} <- maps:to_list(NodeAttrs)],
+
+    Node#{attrs => AttrsNoLoc,
+          node_attrs => maps:from_list(NodeAttrsNoLoc)};
+remove_attrs(#{attrs := Attrs, type := Type} = Node, TypeAttrs) ->
+    AttrsName = maps:get(Type, TypeAttrs, [location]),
+    AttrsNoLoc = maps:without(AttrsName, Attrs),
+    Node#{attrs => AttrsNoLoc};
+remove_attrs(Node, _TypeAttrs) ->
+    Node.
+
+-spec filter_repeated(map()) -> map().
+filter_repeated(NodesLocs) ->
+    NotRepeated = [Node
+                   || {Node, LocationSet} <- maps:to_list(NodesLocs),
+                      sets:size(LocationSet) == 1],
+
+    RepeatedMap = maps:without(NotRepeated, NodesLocs),
+
+    RepeatedNodes = maps:keys(RepeatedMap),
+    Nested = [Node
+              || Node <- RepeatedNodes,
+                 Parent <- RepeatedNodes,
+                 Node =/= Parent,
+                 is_children(Parent, Node)],
+
+    maps:without(Nested, RepeatedMap).
+
+is_children(Parent, Node) ->
+    Zipper = elvis_code:code_zipper(Parent),
+    [] =/= zipper:filter(fun(Child) -> Child == Node end, Zipper).

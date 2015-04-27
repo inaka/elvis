@@ -21,7 +21,8 @@
          verify_no_behavior_info/1,
          verify_module_naming_convention/1,
          verify_state_record_and_type/1,
-         verify_no_spec_with_records/1
+         verify_no_spec_with_records/1,
+         verify_dont_repeat_yourself/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -262,7 +263,12 @@ verify_module_naming_convention(_Config) ->
     PathFail = "fail_module_naming_1_convention_1.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
     [_] =
-        elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfig).
+        elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfig),
+
+    RuleConfigIgnore = RuleConfig#{ignore => [fail_module_naming_1_convention_1]},
+    [] =
+        elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfigIgnore).
+
 
 -spec verify_state_record_and_type(config()) -> any().
 verify_state_record_and_type(_Config) ->
@@ -293,3 +299,20 @@ verify_no_spec_with_records(_Config) ->
     PathPass = "pass_no_spec_with_records.erl",
     {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
     [] = elvis_style:no_spec_with_records(ElvisConfig, FilePass, #{}).
+
+-spec verify_dont_repeat_yourself(config()) -> any().
+verify_dont_repeat_yourself(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    PathFail = "fail_dont_repeat_yourself.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    RuleConfig5 = #{min_complexity => 5},
+    [_, _] = elvis_style:dont_repeat_yourself(ElvisConfig, FileFail, RuleConfig5),
+
+    RuleConfig9 = #{min_complexity => 9},
+    [_] = elvis_style:dont_repeat_yourself(ElvisConfig, FileFail, RuleConfig9),
+
+    PathPass = "pass_dont_repeat_yourself.erl",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] = elvis_style:dont_repeat_yourself(ElvisConfig, FilePass, RuleConfig5).

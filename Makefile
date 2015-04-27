@@ -10,7 +10,7 @@ dep_meck = git git://github.com/eproxus/meck 0.8.2
 dep_jiffy = git git://github.com/davisp/jiffy 0.11.3
 dep_ibrowse = git git://github.com/cmullaparthi/ibrowse v4.1.1
 dep_aleppo = git git://github.com/inaka/aleppo 0.9.1
-dep_zipper = git git://github.com/inaka/zipper 0.1.0
+dep_zipper = git git://github.com/inaka/zipper 0.1.2
 dep_egithub = git git://github.com/inaka/erlang-github 0.1.7
 dep_katana =  git git://github.com/inaka/erlang-katana 0.2.4
 

@@ -117,9 +117,7 @@ new_position(Line, {Local, Global}) ->
             {Local + 1, NewGlobal - 1};
         deletion ->
             {Local + 1, Global};
-        addition ->
-            {Local + 1, Global + 1};
-        same ->
+        _ -> %% addition or same
             {Local + 1, Global + 1}
     end.
 
