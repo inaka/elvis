@@ -766,12 +766,12 @@ find_repeated_nodes(Root, MinComplexity) ->
 
 -spec remove_attrs_zipper(zipper:zipper(), map()) -> ktn_code:tree_node().
 remove_attrs_zipper(Zipper, TypeAttrs) ->
-    zipper:edit_all(fun remove_attrs/2, [TypeAttrs], Zipper).
+    zipper:fmap(fun remove_attrs/2, [TypeAttrs], Zipper).
 
 -spec remove_attrs(ktn_code:tree_node() | [ktn_code:tree_node()], map()) ->
     ktn_code:tree_node().
 remove_attrs(Nodes, TypeAttrs) when is_list(Nodes) ->
-    ktn_lists:map(fun remove_attrs/2, [TypeAttrs], Nodes);
+    [remove_attrs(Node, TypeAttrs) || Node <- Nodes];
 remove_attrs(#{attrs := Attrs,
                type := Type,
                node_attrs := NodeAttrs} = Node,
