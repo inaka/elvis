@@ -19,10 +19,16 @@ event(Cred, Request) -> egithub_webhook:event(?MODULE, Cred, Request).
   egithub:credentials(), egithub_webhook:req_data(),
   [egithub_webhook:file()]) ->
   {ok, [egithub_webhook:message()]} | {error, term()}.
-handle_pull_request(
-    Cred, #{<<"repository">> := Repository}, GithubFiles) ->
+handle_pull_request(Cred, Data, GithubFiles) ->
+    #{<<"repository">> := Repository} = Data,
+    BranchName = ktn_maps:get([<<"pull_request">>,
+                               <<"base">>,
+                               <<"repo">>,
+                               <<"default_branch">>],
+                              Data, <<"master">>),
     Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
-    Config = repo_config(Cred, Repo, elvis_config:default()),
+    Branch = binary_to_list(BranchName),
+    Config = repo_config(Cred, Repo, Branch, elvis_config:default()),
 
     GithubFiles1 = [F#{path => Path}
                     || F = #{<<"filename">> := Path} <- GithubFiles],
@@ -51,8 +57,8 @@ file_info(Cred, Repo,
       commit_id => CommitId,
       patch => Patch}.
 
-repo_config(Cred, Repo, LocalConfig) ->
-    case egithub:file_content(Cred, Repo, "master", "elvis.config") of
+repo_config(Cred, Repo, Branch, LocalConfig) ->
+    case egithub:file_content(Cred, Repo, Branch, "elvis.config") of
         {ok, ConfigContent} ->
             ConfigEval = ktn_code:eval(ConfigContent),
             RepoConfig = elvis_config:load(ConfigEval),
