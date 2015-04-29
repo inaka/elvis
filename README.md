@@ -55,7 +55,7 @@ on its pull requests. If the repo belongs to an organization, a **Services**
 team is created instead (if it doesn't exist already), then this team is added
 to the repo and the `elvisinaka` user is added to that team.
 
-When there's no `elvis.config` in the master branch of your repo a default
+When there's no `elvis.config` in the pull request's branch of your repo a default
 set of rules are run. The list of all the rules that are part of this set can be
 found [here](https://github.com/inaka/elvis/wiki/Default-Rules-in-Elvis-Webhook).
 
