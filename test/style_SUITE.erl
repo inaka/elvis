@@ -266,9 +266,11 @@ verify_module_naming_convention(_Config) ->
     [_] =
         elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfig),
 
-    RuleConfigIgnore = RuleConfig#{ignore => [fail_module_naming_1_convention_1]},
-    [] =
-        elvis_style:module_naming_convention(ElvisConfig, FileFail, RuleConfigIgnore).
+    RuleConfigIgnore =
+        RuleConfig#{ignore => [fail_module_naming_1_convention_1]},
+    [] = elvis_style:module_naming_convention(
+            ElvisConfig, FileFail, RuleConfigIgnore
+         ).
 
 
 -spec verify_state_record_and_type(config()) -> any().
@@ -309,7 +311,8 @@ verify_dont_repeat_yourself(_Config) ->
     PathFail = "fail_dont_repeat_yourself.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
     RuleConfig5 = #{min_complexity => 5},
-    [_, _] = elvis_style:dont_repeat_yourself(ElvisConfig, FileFail, RuleConfig5),
+    [_, _] =
+        elvis_style:dont_repeat_yourself(ElvisConfig, FileFail, RuleConfig5),
 
     RuleConfig9 = #{min_complexity => 9},
     [_] = elvis_style:dont_repeat_yourself(ElvisConfig, FileFail, RuleConfig9),
