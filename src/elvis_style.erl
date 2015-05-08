@@ -582,7 +582,7 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
         nomatch ->
             no_result;
         {match, [{Col, _} | _]} ->
-            Type = case elvis_code:find_by_location(Root, {Num, Col}) of
+            Type = case elvis_code:find_by_location(Root, {Num, Col + 1}) of
                        not_found -> undefined;
                        {ok, Node} -> ktn_code:type(Node)
                    end,
