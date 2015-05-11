@@ -100,10 +100,15 @@ verify_git_for_deps_erlang_mk(_Config) ->
                                                   File,
                                                   RuleConfig),
 
-    RuleConfig1 = #{ignore => [sync, meck]},
+    RuleConfig1 = #{ignore => [sync, meck], regex => "git://.*"},
     [_] = elvis_project:git_for_deps_erlang_mk(ElvisConfig,
                                                File,
-                                               RuleConfig1).
+                                               RuleConfig1),
+
+    RuleConfig2 = #{ignore => [sync], regex => "https://.*"},
+    [_, _, _, _, _] = elvis_project:git_for_deps_erlang_mk(ElvisConfig,
+                                                           File,
+                                                           RuleConfig2).
 
 -spec verify_git_for_deps_rebar(config()) -> any().
 verify_git_for_deps_rebar(_Config) ->
@@ -119,7 +124,11 @@ verify_git_for_deps_rebar(_Config) ->
     [_] = elvis_project:git_for_deps_rebar(ElvisConfig, File, RuleConfig),
 
     RuleConfig1 =  #{ignore => [getopt, lager]},
-    [] = elvis_project:git_for_deps_rebar(ElvisConfig, File, RuleConfig1).
+    [] = elvis_project:git_for_deps_rebar(ElvisConfig, File, RuleConfig1),
+
+    RuleConfig2 =  #{ignore => [meck], regex => "git@.*"},
+    [_, _, _, _] =
+        elvis_project:git_for_deps_rebar(ElvisConfig, File, RuleConfig2).
 
 -spec verify_old_config_format(config()) -> any().
 verify_old_config_format(_Config) ->

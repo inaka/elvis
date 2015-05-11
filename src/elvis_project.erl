@@ -14,8 +14,8 @@
         "commit.").
 
 -define(DEP_NO_GIT,
-        "Dependency '~s' is not using git protocol, "
-        "please change this to something like `git://...`").
+        "Dependency '~s' is not using appropriate protocol, "
+        "please change this to something like '~s'").
 
 -define(OLD_CONFIG_FORMAT,
         "The current Elvis configuration file has an outdated format. "
@@ -34,11 +34,13 @@
     [elvis_result:item()].
 git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
+    Regex = maps:get(regex, RuleConfig, "git://.*"),
     Deps = get_erlang_mk_deps(Target),
-    BadDeps = lists:filter(fun is_erlang_mk_not_git_dep/1, Deps),
+    BadDeps = lists:filter(fun(Dep) -> is_erlang_mk_not_git_dep(Dep, Regex) end,
+                           Deps),
     lists:flatmap(
         fun(Line) ->
-            erlang_mk_dep_to_result(Line, ?DEP_NO_GIT, IgnoreDeps)
+            erlang_mk_dep_to_result(Line, ?DEP_NO_GIT, {IgnoreDeps, Regex})
         end, BadDeps).
 
 -type git_for_deps_rebar_config() :: #{ignore => [module()]}.
@@ -49,11 +51,13 @@ git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
     [elvis_result:item()].
 git_for_deps_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
+    Regex = maps:get(regex, RuleConfig, "git://.*"),
     Deps = get_rebar_deps(Target),
-    BadDeps = lists:filter(fun is_rebar_not_git_dep/1, Deps),
+    BadDeps = lists:filter(fun(Dep) -> is_rebar_not_git_dep(Dep, Regex) end,
+                           Deps),
     lists:flatmap(
         fun(Line) ->
-            rebar_dep_to_result(Line, ?DEP_NO_GIT, IgnoreDeps)
+            rebar_dep_to_result(Line, ?DEP_NO_GIT, {IgnoreDeps, Regex})
         end, BadDeps).
 
 -type no_deps_master_erlang_mk_config() :: #{ignore => [module()]}.
@@ -130,15 +134,18 @@ is_rebar_master_dep({_AppName, _Vsn, {_SCM, _Location, {branch, "master"}}}) ->
 is_rebar_master_dep(_) ->
     false.
 
-is_rebar_not_git_dep({_AppName, _Vsn, {_SCM, "git://" ++ _, _Branch}}) -> false;
-is_rebar_not_git_dep(_) -> true.
+is_rebar_not_git_dep({_AppName, _Vsn, {_SCM, Url, _Branch}}, Regex) ->
+    nomatch == re:run(Url, Regex, []).
 
+rebar_dep_to_result({AppName, _, _}, Message, {IgnoreDeps, Regex}) ->
+    case lists:member(AppName, IgnoreDeps) of
+        true -> [];
+        false -> [elvis_result:new(item, Message, [AppName, Regex])]
+    end;
 rebar_dep_to_result({AppName, _, _}, Message, IgnoreDeps) ->
     case lists:member(AppName, IgnoreDeps) of
-        true ->
-            [];
-        false ->
-            [elvis_result:new(item, Message, [AppName])]
+        true -> [];
+        false -> [elvis_result:new(item, Message, [AppName])]
     end.
 
 
@@ -150,17 +157,13 @@ is_erlang_mk_master_dep(Line) ->
         _ -> true
     end.
 
-is_erlang_mk_not_git_dep(Line) ->
+is_erlang_mk_not_git_dep(Line, Regex) ->
     [_DepName, Dependency] = binary:split(Line, <<"=">>),
-    [Protocol, Url | _] =
+    [_Protocol, Url | _] =
         [Part
             || Part <- binary:split(Dependency, <<" ">>, [global, trim])
              , Part /= <<>>],
-    case {Protocol, Url} of
-        {<<"git">>, <<"git://", _/binary>>} -> false;
-        {<<"git">>, _} -> true;
-        {_NotGit, _} -> false
-    end.
+    nomatch == re:run(Url, Regex, []).
 
 get_erlang_mk_deps(File) ->
     {Src, _} = elvis_file:src(File),
@@ -168,15 +171,21 @@ get_erlang_mk_deps(File) ->
     IsDepsLine = fun(Line) -> re:run(Line, "dep_", []) /= nomatch end,
     lists:filter(IsDepsLine, Lines).
 
+erlang_mk_dep_to_result(Line, Message, {IgnoreDeps, Regex}) ->
+    Opts = [{capture, all_but_first, binary}],
+    {match, [Name]} = re:run(Line, "dep_([^ ]*)", Opts),
+    NameAtom = binary_to_atom(Name, utf8),
+    case lists:member(NameAtom, IgnoreDeps) of
+        true -> [];
+        false -> [elvis_result:new(item, Message, [Name, Regex])]
+    end;
 erlang_mk_dep_to_result(Line, Message, IgnoreDeps) ->
     Opts = [{capture, all_but_first, binary}],
     {match, [Name]} = re:run(Line, "dep_([^ ]*)", Opts),
     NameAtom = binary_to_atom(Name, utf8),
     case lists:member(NameAtom, IgnoreDeps) of
-        true ->
-            [];
-        false ->
-            [elvis_result:new(item, Message, [Name])]
+        true -> [];
+        false -> [elvis_result:new(item, Message, [Name])]
     end.
 
 %% Old config
