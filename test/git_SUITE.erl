@@ -27,8 +27,7 @@
 
 -spec all() -> [atom()].
 all() ->
-    Module = ?MODULE,
-    Exports = Module:module_info(exports),
+    Exports = ?MODULE:module_info(exports),
     [F || {F, _} <- Exports, not lists:member(F, ?EXCLUDED_FUNS)].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
