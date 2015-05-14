@@ -22,7 +22,8 @@
          verify_module_naming_convention/1,
          verify_state_record_and_type/1,
          verify_no_spec_with_records/1,
-         verify_dont_repeat_yourself/1
+         verify_dont_repeat_yourself/1,
+         verify_order_line_results/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -320,3 +321,30 @@ verify_dont_repeat_yourself(_Config) ->
     PathPass = "pass_dont_repeat_yourself.erl",
     {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
     [] = elvis_style:dont_repeat_yourself(ElvisConfig, FilePass, RuleConfig5).
+
+-spec verify_order_line_results(config()) -> any().
+verify_order_line_results(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    {fail, Results} = elvis:rock(ElvisConfig),
+    true = lists:all(fun(X) -> X end, is_item_line_sort(Results)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Private
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-spec is_item_line_sort(any()) -> [bolean()].
+is_item_line_sort(Result) ->
+    Items = [Items
+             || #{rules := Rules} <- Result,
+                #{items := Items} <- Rules],
+    lists:map(fun is_list_sort/1, Items).
+
+-spec is_list_sort([any()]) -> bolean().
+is_list_sort([_]) -> true;
+is_list_sort([]) -> true;
+is_list_sort([#{line_num := Line1} | T1]) ->
+    [#{line_num := Line2} | _] = T1,
+    case Line1 =< Line2 of
+        true -> is_list_sort(T1);
+        false -> false
+    end.

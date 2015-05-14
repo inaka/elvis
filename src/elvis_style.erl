@@ -363,10 +363,7 @@ dont_repeat_yourself(Config, Target, RuleConfig) ->
                         Msg = ?DONT_REPEAT_YOURSELF,
                         elvis_result:new(item, Msg, Info, Line)
                 end,
-            SortFun = fun(#{line_num := L1}, #{line_num := L2}) ->
-                              L1 =< L2
-                      end,
-            lists:sort(SortFun, lists:map(ResultFun, Nodes))
+            lists:map(ResultFun, Nodes)
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
