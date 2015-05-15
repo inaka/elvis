@@ -332,14 +332,14 @@ verify_order_line_results(_Config) ->
 %% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec is_item_line_sort(any()) -> [bolean()].
+-spec is_item_line_sort(any()) -> [boolean()].
 is_item_line_sort(Result) ->
     Items = [Items
              || #{rules := Rules} <- Result,
                 #{items := Items} <- Rules],
     lists:map(fun is_list_sort/1, Items).
 
--spec is_list_sort([any()]) -> bolean().
+-spec is_list_sort([any()]) -> boolean().
 is_list_sort([_]) -> true;
 is_list_sort([]) -> true;
 is_list_sort([#{line_num := Line1} | T1]) ->
