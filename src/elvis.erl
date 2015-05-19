@@ -199,10 +199,14 @@ option_spec_list() ->
     Commands = "Provide the path to the configuration file. "
                ++ "When none is provided elvis checks if there's "
                ++ "an elvis.config file.",
+    OutputFormat = "It allows you to display the results in plain text. When "
+                   ++ "none is provided elvis displays the results in colors. "
+                   ++ "The options allowed are (plain | colors).",
     [
      {help, $h, "help", undefined, "Show this help information."},
      {config, $c, "config", string, Commands},
      {commands, undefined, "commands", undefined, "Show available commands."},
+     {output_format, undefined, "output-format", string, OutputFormat},
      {code_path, $p, "code-path", string, "Add the directory in the code path."}
     ].
 
@@ -226,6 +230,9 @@ process_options([{config, Path} | Opts], Cmds, _) ->
     process_options(Opts, Cmds, Config);
 process_options([commands | Opts], Cmds, Config) ->
     commands(),
+    process_options(Opts, Cmds, Config);
+process_options([{output_format, Format} | Opts], Cmds, Config) ->
+    ok = application:set_env(elvis, output_format, list_to_atom(Format)),
     process_options(Opts, Cmds, Config);
 process_options([{code_path, Path} | Opts], Cmds, Config) ->
     code:add_path(Path),

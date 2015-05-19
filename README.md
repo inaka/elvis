@@ -195,6 +195,8 @@ environment values in your [configuration][config] file:
        }
      ]
     },
+    %% Optional to select the output format, the default is colors
+    {output_format, plain},
     %% Only necessary for the 'webhook' functionality
     {github_user, "user"},
     {github_password, "password"}

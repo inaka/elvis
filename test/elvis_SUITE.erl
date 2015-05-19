@@ -15,6 +15,7 @@
          rock_with_file_config/1,
          rock_with_old_config/1,
          rock_this/1,
+         rock_without_colors/1,
          %% Webhook
          run_webhook/1,
          run_webhook_ping/1,
@@ -170,6 +171,18 @@ rock_this(_Config) ->
     {fail, _} = elvis:rock_this(Path),
 
     ok.
+
+-spec rock_without_colors(config()) -> ok.
+rock_without_colors(_Config) ->
+    ConfigPath = "../../config/test.config",
+    ElvisConfig = elvis_config:load_file(ConfigPath),
+    Fun = fun() -> elvis:rock(ElvisConfig) end,
+    Expected = "\\e.*?m",
+    ok = try check_some_line_output(Fun, Expected, fun matches_regex/2) of
+             Result -> ct:fail("Unexpected result ~p", [Result])
+         catch
+             _:{badmatch, []} -> ok
+         end.
 
 %%%%%%%%%%%%%%%
 %%% Webhook
