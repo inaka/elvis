@@ -170,12 +170,17 @@ parse_colors(Message) ->
                "white-bold" => "\e[1;37m",
                "reset" => "\e[0m"},
     Opts = [global, {return, list}],
-    Fun = fun(Key, Acc) ->
-                  Regex = ["{{", Key, "}}"],
-                  Color = maps:get(Key, Colors),
-                  re:replace(Acc, Regex, Color, Opts)
-          end,
-    lists:foldl(Fun, Message, maps:keys(Colors)).
+    case application:get_env(elvis, output_format, colors) of
+        plain ->
+            re:replace(Message, "{{.*?}}", "", Opts);
+        colors ->
+            Fun = fun(Key, Acc) ->
+                          Regex = ["{{", Key, "}}"],
+                          Color = maps:get(Key, Colors),
+                          re:replace(Acc, Regex, Color, Opts)
+                  end,
+            lists:foldl(Fun, Message, maps:keys(Colors))
+    end.
 
 -spec escape_format_str(string()) -> string().
 escape_format_str(String) ->
