@@ -106,7 +106,7 @@ verify_no_spaces_rule(_Config) ->
     File = "fail_no_spaces.erl",
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
-    [_, _] = elvis_style:no_spaces(ElvisConfig, Path, #{}).
+    [_, _, _, _, _, _] = elvis_style:no_spaces(ElvisConfig, Path, #{}).
 
 -spec verify_no_trailing_whitespace_rule(config()) -> any().
 verify_no_trailing_whitespace_rule(_Config) ->

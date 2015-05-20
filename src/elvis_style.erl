@@ -458,7 +458,7 @@ check_no_tabs(Line, Num, _Args) ->
 -spec check_no_spaces(binary(), integer(), [term()]) ->
     no_result | {ok, elvis_result:item()}.
 check_no_spaces(Line, Num, _Args) ->
-    case binary:match(Line, <<"  ">>) of
+    case re:run(Line, <<"^\t* ">>) of
         nomatch ->
             no_result;
         {Index, _} ->
