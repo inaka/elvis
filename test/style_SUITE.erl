@@ -9,6 +9,7 @@
 -export([
          verify_line_length_rule/1,
          verify_no_tabs_rule/1,
+         verify_no_spaces_rule/1,
          verify_no_trailing_whitespace_rule/1,
          verify_macro_names_rule/1,
          verify_macro_module_names/1,
@@ -96,6 +97,16 @@ verify_no_tabs_rule(_Config) ->
     {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
 
     [_, _] = elvis_style:no_tabs(ElvisConfig, Path, #{}).
+
+-spec verify_no_spaces_rule(config()) -> any().
+verify_no_spaces_rule(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    File = "fail_no_spaces.erl",
+    {ok, Path} = elvis_test_utils:find_file(SrcDirs, File),
+
+    [_, _, _, _, _, _] = elvis_style:no_spaces(ElvisConfig, Path, #{}).
 
 -spec verify_no_trailing_whitespace_rule(config()) -> any().
 verify_no_trailing_whitespace_rule(_Config) ->
