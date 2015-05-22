@@ -28,6 +28,7 @@
          main_help/1,
          main_commands/1,
          main_config/1,
+         main_version/1,
          main_rock/1,
          main_git_hook_fail/1,
          main_git_hook_ok/1,
@@ -301,6 +302,17 @@ main_config(_Config) ->
 
     ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
     check_empty_output(ConfigFun),
+    ok.
+
+-spec main_version(config()) -> ok.
+main_version(_Config) ->
+    {ok, AppConfig} = application:get_all_key(elvis),
+    Version = proplists:get_value(vsn, AppConfig),
+
+    Expected = ".*Version: " ++ Version,
+    OptFun = fun() -> elvis:main("--version") end,
+
+    check_some_line_output(OptFun, Expected, fun matches_regex/2),
     ok.
 
 -spec main_rock(config()) -> any().

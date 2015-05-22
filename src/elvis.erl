@@ -31,6 +31,9 @@ start() ->
 
 -spec main([string()]) -> ok.
 main(Args) ->
+    %% Load the application to be able to access its information
+    %% (e.g. --version option)
+    application:load(elvis),
     OptSpecList = option_spec_list(),
     case getopt:parse(OptSpecList, Args) of
         {ok, {[], []}} ->
@@ -207,6 +210,7 @@ option_spec_list() ->
      {config, $c, "config", string, Commands},
      {commands, undefined, "commands", undefined, "Show available commands."},
      {output_format, undefined, "output-format", string, OutputFormat},
+     {version, $v, "version", undefined, "Specify the elvis current version."},
      {code_path, $p, "code-path", string, "Add the directory in the code path."}
     ].
 
@@ -233,6 +237,9 @@ process_options([commands | Opts], Cmds, Config) ->
     process_options(Opts, Cmds, Config);
 process_options([{output_format, Format} | Opts], Cmds, Config) ->
     ok = application:set_env(elvis, output_format, list_to_atom(Format)),
+    process_options(Opts, Cmds, Config);
+process_options([version | Opts], Cmds, Config) ->
+    version(),
     process_options(Opts, Cmds, Config);
 process_options([{code_path, Path} | Opts], Cmds, Config) ->
     code:add_path(Path),
@@ -288,6 +295,17 @@ install git-hook
                 directory, which should be a git repository.
 ">>,
    io:put_chars(Commands).
+
+-spec version() -> ok.
+version() ->
+    {ok, AppConfig} = application:get_all_key(elvis),
+    Vsn = proplists:get_value(vsn, AppConfig),
+    Version = "   ______     _   \n"
+              "  / __/ /  __(_)__\n"
+              " / _// / |/ / (_-<\n"
+              "/___/_/|___/_/___/\n"
+              "Version: ~s\n",
+    io:format(Version, [Vsn]).
 
 -spec github_credentials() -> egithub:credentials().
 github_credentials() ->
