@@ -11,12 +11,12 @@ repeated_complexity_5(X, Y) ->
     Z ++ W ++ [something].
 
 repeated_complexity_10(X, Y) ->
-    case X of
-        Y -> io:format("Y");
-        _ -> <<"ok">>
-    end,
+    Z = case X of
+            Y -> io:format("Y");
+            _ -> <<"ok">>
+        end,
 
-    case Y of
+    case Z of
         X -> io:format("Y");
         _ -> <<"error">>
     end.
