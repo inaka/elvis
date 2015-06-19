@@ -10,13 +10,16 @@ repeated_complexity_5(X, Y) ->
     W = Y ++ [ok],
     Z ++ W ++ [ok].
 
+-spec repeated_complexity_10(any(), any()) -> fun((...) -> any()).
 repeated_complexity_10(X, Y) ->
-    case X of
-        Y -> io:format("Y");
-        _ -> <<"ok">>
-    end,
+    Z = case X of
+            Y -> io:format("Y");
+            _ -> <<"ok">>
+        end,
 
-    case Y of
-        X -> io:format("Y");
-        _ -> <<"ok">>
-    end.
+    W = case Z of
+            X -> io:format("Y");
+            _ -> <<"ok">>
+        end,
+
+    fun(_) -> W end.
