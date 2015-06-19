@@ -1,6 +1,6 @@
 -module(fail_operator_spaces).
 
--export([function1/2,function2/2, function3/2, function4/2, function5/0]).
+-export([function1/2,function2/2, function3/2, function4/2, function5/0, tag_filters/2]).
 
 %% No space before and after coma,on a comment.
 
@@ -23,4 +23,24 @@ function4(Should, <<_:10/binary, ",", _/binary>>) ->
 
 function5() ->
     User = #{name => <<"Juan">>, email => <<"juan@inaka.com">>},
-    <<"juan@inaka.com">> = maps:get(email,User).
+  <<"juan@inaka.com">> = maps:get(email,User).
+
+tag_filters(DocName, #{conn := Conn} = State) ->
+  TableName = atom_to_list(DocName),
+  Sql = ["SELECT "
+         " 'tag' AS \"type\", "
+         " tag_name AS value, "
+         " COUNT(1) AS \"count\" "
+         "FROM ( "
+         " SELECT unnest(regexp_split_to_array(tags, ',')) AS tag_name"
+         " FROM ", TableName, " "
+         ") AS tags "
+         "GROUP BY tag_name "
+         "ORDER BY tag_name "],
+  Values = [],
+  case {Conn, Sql, Values} of
+    {ok, Maps} ->
+      {ok, {raw, Maps}, State};
+    {error, Error} ->
+      {error, Error, State}
+  end.

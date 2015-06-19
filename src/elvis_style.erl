@@ -615,6 +615,15 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                 string -> [];
                 char -> [];
                 comment -> [];
+                undefined ->
+                    case is_between_quotes(1, {1, 1}) of
+                        true -> no_result;
+                        false ->
+                            Msg = ?OPERATOR_SPACE_MSG,
+                            Info = [Label, Operator, Num],
+                            Result = elvis_result:new(item, Msg, Info, Num),
+                            {ok, Result}
+                    end;
                 _ ->
                     Msg = ?OPERATOR_SPACE_MSG,
                     Info = [Label, Operator, Num],
@@ -623,10 +632,14 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
             end
     end.
 
+-spec is_between_quotes(binary(), {integer(), integer()}) -> boolean().
+is_between_quotes(_Content, {_Line, _Col}) ->
+    false.
+
 %% Nesting Level
 
 -spec check_nesting_level(ktn_code:tree_node(), [integer()]) ->
-    [elvis_result:item_result()].
+                                 [elvis_result:item_result()].
 check_nesting_level(ParentNode, [MaxLevel]) ->
     case elvis_code:past_nesting_limit(ParentNode, MaxLevel) of
         [] -> [];
