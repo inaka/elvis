@@ -34,7 +34,7 @@
     [elvis_result:item()].
 git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
-    Regex = maps:get(regex, RuleConfig, "git://.*"),
+    Regex = maps:get(regex, RuleConfig, "https://.*"),
     Deps = get_erlang_mk_deps(Target),
     BadDeps = lists:filter(fun(Dep) -> is_erlang_mk_not_git_dep(Dep, Regex) end,
                            Deps),
@@ -51,7 +51,7 @@ git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
     [elvis_result:item()].
 git_for_deps_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
-    Regex = maps:get(regex, RuleConfig, "git://.*"),
+    Regex = maps:get(regex, RuleConfig, "https://.*"),
     Deps = get_rebar_deps(Target),
     BadDeps = lists:filter(fun(Dep) -> is_rebar_not_git_dep(Dep, Regex) end,
                            Deps),
