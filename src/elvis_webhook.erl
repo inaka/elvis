@@ -22,9 +22,8 @@ event(Cred, Request) -> egithub_webhook:event(?MODULE, Cred, Request).
 handle_pull_request(Cred, Data, GithubFiles) ->
     #{<<"repository">> := Repository} = Data,
     BranchName = ktn_maps:get([<<"pull_request">>,
-                               <<"base">>,
-                               <<"repo">>,
-                               <<"default_branch">>],
+                               <<"head">>,
+                               <<"ref">>],
                               Data, <<"master">>),
     Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
     Branch = binary_to_list(BranchName),
