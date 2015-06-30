@@ -97,8 +97,8 @@ no_deps_master_rebar(_Config, Target, RuleConfig) ->
                                empty_rule_config()) ->
     [elvis_result:item()].
 old_configuration_format(_Config, Target, _RuleConfig) ->
-    Path = elvis_file:path(Target),
-    {ok, [AllConfig]} = file:consult(Path),
+    {Content, _} = elvis_file:src(Target),
+    [AllConfig] = ktn_code:consult(Content),
     case proplists:get_value(elvis, AllConfig) of
         undefined -> [];
         ElvisConfig ->
