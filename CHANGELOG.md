@@ -1,5 +1,25 @@
 # Change Log
 
+## [0.2.5-beta3](https://github.com/inaka/elvis/tree/0.2.5-beta3) (2015-06-30)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta2...0.2.5-beta3)
+
+**Fixed bugs:**
+
+- old\_configuration\_format rule not working for PRs [\#244](https://github.com/inaka/elvis/issues/244)
+
+- Not using elvis.config from the PR branch [\#242](https://github.com/inaka/elvis/issues/242)
+
+- Unhandled abstract form issue with fun\(\(...\)  [\#239](https://github.com/inaka/elvis/issues/239)
+
+**Merged pull requests:**
+
+- \[Closes \#244\] Use ktn\_code:consult/1 instead of file:consult/1 [\#245](https://github.com/inaka/elvis/pull/245) ([jfacorro](https://github.com/jfacorro))
+
+- \[Closes \#242\] Use the branch from the PR [\#243](https://github.com/inaka/elvis/pull/243) ([jfacorro](https://github.com/jfacorro))
+
+- \[Closes \#239\] Updated katana dep to 0.2.7, add spec with fun\(\(...\) -\> ok\) [\#240](https://github.com/inaka/elvis/pull/240) ([jfacorro](https://github.com/jfacorro))
+
 ## [0.2.5-beta2](https://github.com/inaka/elvis/tree/0.2.5-beta2) (2015-06-19)
 
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta...0.2.5-beta2)
@@ -24,7 +44,13 @@
 
 - White output [\#209](https://github.com/inaka/elvis/issues/209)
 
+- Don't use spaces for indentation [\#178](https://github.com/inaka/elvis/issues/178)
+
+- DRY [\#28](https://github.com/inaka/elvis/issues/28)
+
 **Merged pull requests:**
+
+- Version bump to 0.2.5-beta2 [\#237](https://github.com/inaka/elvis/pull/237) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
 - Updated license [\#235](https://github.com/inaka/elvis/pull/235) ([spike886](https://github.com/spike886))
 
@@ -74,7 +100,15 @@
 
 - Fix the specs on elvis\_style and elvis\_project [\#162](https://github.com/inaka/elvis/issues/162)
 
+- No Trailing Whitespace [\#147](https://github.com/inaka/elvis/issues/147)
+
+- Don't let modules loose [\#29](https://github.com/inaka/elvis/issues/29)
+
+- Exported vs. Non-exported [\#27](https://github.com/inaka/elvis/issues/27)
+
 **Merged pull requests:**
+
+- Generate 0.2.5-beta release [\#217](https://github.com/inaka/elvis/pull/217) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
 - Add rule checking for trailing whitespace [\#215](https://github.com/inaka/elvis/pull/215) ([dvaergiller](https://github.com/dvaergiller))
 
@@ -108,11 +142,19 @@
 
 **Merged pull requests:**
 
+- Move to egithub 0.1.5 [\#200](https://github.com/inaka/elvis/pull/200) ([elbrujohalcon](https://github.com/elbrujohalcon))
+
+- Fix elvis\_webhook according to the new version of egithub\_webhook [\#197](https://github.com/inaka/elvis/pull/197) ([elbrujohalcon](https://github.com/elbrujohalcon))
+
 - Revert "Bypass operator\_spaces when unable to find node type" [\#196](https://github.com/inaka/elvis/pull/196) ([elbrujohalcon](https://github.com/elbrujohalcon))
+
+- Migrate elvis\_webhook [\#195](https://github.com/inaka/elvis/pull/195) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
 - Ensure that 'elvis git-hook' does not check deleted files [\#194](https://github.com/inaka/elvis/pull/194) ([bullno1](https://github.com/bullno1))
 
 - Bypass operator\_spaces when unable to find node type [\#189](https://github.com/inaka/elvis/pull/189) ([andreineculau](https://github.com/andreineculau))
+
+- Rule to enforce dependency url fetch protocol [\#185](https://github.com/inaka/elvis/pull/185) ([igaray](https://github.com/igaray))
 
 ## [0.2.4](https://github.com/inaka/elvis/tree/0.2.4) (2015-01-05)
 
@@ -156,6 +198,8 @@
 
 - Allow user defined rules to be run from the escript [\#100](https://github.com/inaka/elvis/issues/100)
 
+- Indentation Format [\#15](https://github.com/inaka/elvis/issues/15)
+
 **Merged pull requests:**
 
 - \[\#191\] Bump to 0.2.4 [\#192](https://github.com/inaka/elvis/pull/192) ([jfacorro](https://github.com/jfacorro))
@@ -192,6 +236,8 @@
 
 - \[Closes \#143\] Added install target [\#145](https://github.com/inaka/elvis/pull/145) ([jfacorro](https://github.com/jfacorro))
 
+- removed ssh addressed repos [\#182](https://github.com/inaka/elvis/pull/182) ([sjmackenzie](https://github.com/sjmackenzie))
+
 ## [0.2.3](https://github.com/inaka/elvis/tree/0.2.3) (2014-10-16)
 
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.2...0.2.3)
@@ -211,6 +257,8 @@
 **Merged pull requests:**
 
 - \[Closes \#140\] Udpated erlang-github version and rebar.config. [\#141](https://github.com/inaka/elvis/pull/141) ([jfacorro](https://github.com/jfacorro))
+
+- Add a Gitter chat badge to README.md [\#139](https://github.com/inaka/elvis/pull/139) ([gitter-badger](https://github.com/gitter-badger))
 
 ## [0.2.2](https://github.com/inaka/elvis/tree/0.2.2) (2014-09-26)
 
@@ -296,6 +344,16 @@
 
 - Elvis tries to parse all files, even non erlang ones [\#108](https://github.com/inaka/elvis/issues/108)
 
+**Closed issues:**
+
+- Don't use old configuration format [\#103](https://github.com/inaka/elvis/issues/103)
+
+- iolists vs. strings vs. binaries [\#25](https://github.com/inaka/elvis/issues/25)
+
+- Records in Specs [\#23](https://github.com/inaka/elvis/issues/23)
+
+- \#state records [\#21](https://github.com/inaka/elvis/issues/21)
+
 **Merged pull requests:**
 
 - \[Fixes \#108\] Avoid parsing non erlang files [\#111](https://github.com/inaka/elvis/pull/111) ([jfacorro](https://github.com/jfacorro))
@@ -303,6 +361,8 @@
 - \[\#105\] Updated README. Fixed typos. [\#110](https://github.com/inaka/elvis/pull/110) ([jfacorro](https://github.com/jfacorro))
 
 - \[Closes \#103\] Check old Elvis configuration format [\#109](https://github.com/inaka/elvis/pull/109) ([jfacorro](https://github.com/jfacorro))
+
+- \[Closes \#23\] No specs with records. [\#106](https://github.com/inaka/elvis/pull/106) ([jfacorro](https://github.com/jfacorro))
 
 - \[\#21\] State records in OTP modules. [\#104](https://github.com/inaka/elvis/pull/104) ([jfacorro](https://github.com/jfacorro))
 
@@ -361,6 +421,30 @@
 - http://elvis.inakalabs.com doesn't advertise character encoding [\#74](https://github.com/inaka/elvis/issues/74)
 
 - Comment position has to be relative to the diff [\#56](https://github.com/inaka/elvis/issues/56)
+
+- if [\#26](https://github.com/inaka/elvis/issues/26)
+
+- Ignored variables [\#22](https://github.com/inaka/elvis/issues/22)
+
+- -callback [\#20](https://github.com/inaka/elvis/issues/20)
+
+- Naming convention [\#19](https://github.com/inaka/elvis/issues/19)
+
+- master in deps [\#18](https://github.com/inaka/elvis/issues/18)
+
+- Dynamic Functions [\#17](https://github.com/inaka/elvis/issues/17)
+
+- God Modules [\#16](https://github.com/inaka/elvis/issues/16)
+
+- Nesting Level [\#14](https://github.com/inaka/elvis/issues/14)
+
+- Code width [\#13](https://github.com/inaka/elvis/issues/13)
+
+- Surround operators and commas with spaces [\#12](https://github.com/inaka/elvis/issues/12)
+
+- Macros in module/function names [\#11](https://github.com/inaka/elvis/issues/11)
+
+- Macro Names [\#10](https://github.com/inaka/elvis/issues/10)
 
 - Rules wiki page [\#8](https://github.com/inaka/elvis/issues/8)
 
@@ -444,13 +528,21 @@
 
 - \[\#5\] Implemented GitHub Integration [\#37](https://github.com/inaka/elvis/pull/37) ([jfacorro](https://github.com/jfacorro))
 
+- Fixes \#12: Operator Spaces [\#36](https://github.com/inaka/elvis/pull/36) ([elbrujohalcon](https://github.com/elbrujohalcon))
+
+- Fixes \#11: Macros in module/function names [\#35](https://github.com/inaka/elvis/pull/35) ([elbrujohalcon](https://github.com/elbrujohalcon))
+
 - \[\#4\] Added git-hook command [\#33](https://github.com/inaka/elvis/pull/33) ([jfacorro](https://github.com/jfacorro))
+
+- \[Fixes \#10\] Macro Names [\#32](https://github.com/inaka/elvis/pull/32) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
 - \[\#3\] Implemented a command line interface for Elvis. [\#31](https://github.com/inaka/elvis/pull/31) ([jfacorro](https://github.com/jfacorro))
 
 - \[\#2\] Implemented elvis for console usage [\#9](https://github.com/inaka/elvis/pull/9) ([jfacorro](https://github.com/jfacorro))
 
 - \[\#1\] Rebar and erlang.mk configuration files and other application structure files. [\#7](https://github.com/inaka/elvis/pull/7) ([jfacorro](https://github.com/jfacorro))
+
+- Dummy PR \[Do not merge\] [\#54](https://github.com/inaka/elvis/pull/54) ([jfacorro](https://github.com/jfacorro))
 
 
 
