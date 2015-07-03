@@ -3,7 +3,9 @@
 -export([
          no_deps_master_erlang_mk/3,
          no_deps_master_rebar/3,
+         protocol_for_deps_erlang_mk/3,
          git_for_deps_erlang_mk/3,
+         protocol_for_deps_rebar/3,
          git_for_deps_rebar/3,
          old_configuration_format/3
         ]).
@@ -26,15 +28,23 @@
 %% Rules
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--type git_for_deps_erlang_mk_config() :: #{ignore => [module()]}.
+-type protocol_for_deps_erlang_mk_config() :: #{ignore => [module()]}.
 
+%% Deprecated
 -spec git_for_deps_erlang_mk(elvis_config:config(),
                              elvis_file:file(),
-                             git_for_deps_erlang_mk_config()) ->
+                             protocol_for_deps_erlang_mk_config()) ->
     [elvis_result:item()].
-git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
+git_for_deps_erlang_mk(Config, Target, RuleConfig) ->
+    protocol_for_deps_erlang_mk(Config, Target, RuleConfig).
+
+-spec protocol_for_deps_erlang_mk(elvis_config:config(),
+                             elvis_file:file(),
+                             protocol_for_deps_erlang_mk_config()) ->
+    [elvis_result:item()].
+protocol_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
-    Regex = maps:get(regex, RuleConfig, "git://.*"),
+    Regex = maps:get(regex, RuleConfig, "https://.*"),
     Deps = get_erlang_mk_deps(Target),
     BadDeps = lists:filter(fun(Dep) -> is_erlang_mk_not_git_dep(Dep, Regex) end,
                            Deps),
@@ -43,13 +53,20 @@ git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
             erlang_mk_dep_to_result(Line, ?DEP_NO_GIT, {IgnoreDeps, Regex})
         end, BadDeps).
 
--type git_for_deps_rebar_config() :: #{ignore => [module()]}.
+-type protocol_for_deps_rebar_config() :: #{ignore => [module()]}.
 
 -spec git_for_deps_rebar(elvis_config:config(),
                          elvis_file:file(),
-                         git_for_deps_rebar_config()) ->
+                         protocol_for_deps_rebar_config()) ->
     [elvis_result:item()].
-git_for_deps_rebar(_Config, Target, RuleConfig) ->
+git_for_deps_rebar(Config, Target, RuleConfig) ->
+    protocol_for_deps_rebar(Config, Target, RuleConfig).
+
+-spec protocol_for_deps_rebar(elvis_config:config(),
+                         elvis_file:file(),
+                         protocol_for_deps_rebar_config()) ->
+    [elvis_result:item()].
+protocol_for_deps_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
     Regex = maps:get(regex, RuleConfig, "git://.*"),
     Deps = get_rebar_deps(Target),
