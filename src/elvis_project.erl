@@ -36,7 +36,7 @@ git_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
     Regex = maps:get(regex, RuleConfig, "git://.*"),
     Deps = get_erlang_mk_deps(Target),
-    BadDeps = lists:filter(fun(Dep) -> is_erlang_mk_not_git_dep(Dep, Regex) end,
+    BadDeps = lists:filter(fun(Dep) -> is_erlang_mk_not_http_dep(Dep, Regex) end,
                            Deps),
     lists:flatmap(
         fun(Line) ->
@@ -53,7 +53,7 @@ git_for_deps_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
     Regex = maps:get(regex, RuleConfig, "git://.*"),
     Deps = get_rebar_deps(Target),
-    BadDeps = lists:filter(fun(Dep) -> is_rebar_not_git_dep(Dep, Regex) end,
+    BadDeps = lists:filter(fun(Dep) -> is_rebar_not_http_dep(Dep, Regex) end,
                            Deps),
     lists:flatmap(
         fun(Line) ->
@@ -134,7 +134,7 @@ is_rebar_master_dep({_AppName, _Vsn, {_SCM, _Location, {branch, "master"}}}) ->
 is_rebar_master_dep(_) ->
     false.
 
-is_rebar_not_git_dep({_AppName, _Vsn, {_SCM, Url, _Branch}}, Regex) ->
+is_rebar_not_http_dep({_AppName, _Vsn, {_SCM, Url, _Branch}}, Regex) ->
     nomatch == re:run(Url, Regex, []).
 
 rebar_dep_to_result({AppName, _, _}, Message, {IgnoreDeps, Regex}) ->
@@ -157,7 +157,7 @@ is_erlang_mk_master_dep(Line) ->
         _ -> true
     end.
 
-is_erlang_mk_not_git_dep(Line, Regex) ->
+is_erlang_mk_not_http_dep(Line, Regex) ->
     [_DepName, Dependency] = binary:split(Line, <<"=">>),
     [_Protocol, Url | _] =
         [Part
