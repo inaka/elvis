@@ -36,6 +36,8 @@
                              protocol_for_deps_erlang_mk_config()) ->
     [elvis_result:item()].
 git_for_deps_erlang_mk(Config, Target, RuleConfig) ->
+    elvis_utils:error_prn("This rule has been deprecated please use "
+                          "'protocol_for_deps_erlang_mk'."),
     protocol_for_deps_erlang_mk(Config, Target, RuleConfig).
 
 -spec protocol_for_deps_erlang_mk(elvis_config:config(),
@@ -60,6 +62,8 @@ protocol_for_deps_erlang_mk(_Config, Target, RuleConfig) ->
                          protocol_for_deps_rebar_config()) ->
     [elvis_result:item()].
 git_for_deps_rebar(Config, Target, RuleConfig) ->
+    elvis_utils:error_prn("This rule has been deprecated please use "
+                          "'protocol_for_deps_rebar'."),
     protocol_for_deps_rebar(Config, Target, RuleConfig).
 
 -spec protocol_for_deps_rebar(elvis_config:config(),
