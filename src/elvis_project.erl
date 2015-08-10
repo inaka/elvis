@@ -72,7 +72,7 @@ git_for_deps_rebar(Config, Target, RuleConfig) ->
     [elvis_result:item()].
 protocol_for_deps_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
-    Regex = maps:get(regex, RuleConfig, "git://.*"),
+    Regex = maps:get(regex, RuleConfig, "https://.*"),
     Deps = get_rebar_deps(Target),
     BadDeps = lists:filter(fun(Dep) -> is_rebar_not_git_dep(Dep, Regex) end,
                            Deps),
