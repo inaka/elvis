@@ -127,10 +127,11 @@ new_position(Line, {Local, Global}) ->
 patch_line_type(Line) ->
     [Head | _] = elvis_utils:to_str(Line),
     case Head of
-        $@ -> patch;
-        $+ -> addition;
-        $- -> deletion;
-        $  -> same
+        $@  -> patch;
+        $+  -> addition;
+        $-  -> deletion;
+        $\\ -> same;
+        $   -> same %space
     end.
 
 %% @private
