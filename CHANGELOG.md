@@ -1,5 +1,29 @@
 # Change Log
 
+## [0.2.5-beta4](https://github.com/inaka/elvis/tree/HEAD)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta3...HEAD)
+
+**Closed issues:**
+
+- Error analyzing PR when Github appended this line <<"\\ No newline at end of file"\>\> [\#253](https://github.com/inaka/elvis/issues/253)
+
+- The default for git\_for\_deps\_erlang\_mk should be https [\#238](https://github.com/inaka/elvis/issues/238)
+
+**Merged pull requests:**
+
+- Added '\' to patch\_line\_type\(\) function [\#254](https://github.com/inaka/elvis/pull/254) ([davecaos](https://github.com/davecaos))
+
+- ibrowse does not build under R18. This is fixed in current ibrowse. [\#251](https://github.com/inaka/elvis/pull/251) ([technion](https://github.com/technion))
+
+- Update Jiffy, as the previous version does not compile on GCC 5.1.0 [\#250](https://github.com/inaka/elvis/pull/250) ([technion](https://github.com/technion))
+
+- Use https instead of git remotes [\#249](https://github.com/inaka/elvis/pull/249) ([guilleiguaran](https://github.com/guilleiguaran))
+
+- \[Close \#238\] change https protocol as default for deps rule [\#248](https://github.com/inaka/elvis/pull/248) ([Euen](https://github.com/Euen))
+
+- The default git\_for\_deps\_erlang\_mk should be https [\#241](https://github.com/inaka/elvis/pull/241) ([davecaos](https://github.com/davecaos))
+
 ## [0.2.5-beta3](https://github.com/inaka/elvis/tree/0.2.5-beta3) (2015-06-30)
 
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta2...0.2.5-beta3)
@@ -12,7 +36,13 @@
 
 - Unhandled abstract form issue with fun\(\(...\)  [\#239](https://github.com/inaka/elvis/issues/239)
 
+**Closed issues:**
+
+- Pre-release 0.2.5-beta3 [\#246](https://github.com/inaka/elvis/issues/246)
+
 **Merged pull requests:**
+
+- \[Closes \#246\] Updated changelog [\#247](https://github.com/inaka/elvis/pull/247) ([jfacorro](https://github.com/jfacorro))
 
 - \[Closes \#244\] Use ktn\_code:consult/1 instead of file:consult/1 [\#245](https://github.com/inaka/elvis/pull/245) ([jfacorro](https://github.com/jfacorro))
 
