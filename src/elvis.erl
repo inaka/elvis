@@ -19,6 +19,9 @@
 
 -define(APP_NAME, "elvis").
 
+-type source_filename() :: nonempty_string().
+-type target() :: source_filename() | module().
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -59,13 +62,13 @@ rock(Config) ->
     Results = lists:map(fun do_rock/1, NewConfig),
     lists:foldl(fun combine_results/2, ok, Results).
 
--spec rock_this(elvis_config:config()) ->
+-spec rock_this(target()) ->
     ok | {fail, elvis_result:file()}.
 rock_this(Target) ->
     Config = elvis_config:default(),
     rock_this(Target, Config).
 
--spec rock_this(atom() | string(), elvis_config:config()) ->
+-spec rock_this(target(), elvis_config:config()) ->
     ok | {fail, elvis_result:file()}.
 rock_this(Module, Config) when is_atom(Module) ->
     ModuleInfo = Module:module_info(compile),
