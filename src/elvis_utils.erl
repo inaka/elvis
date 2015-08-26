@@ -95,7 +95,7 @@ check_nodes([Node | Nodes], Fun, Args, Results) ->
     end.
 
 %% @doc This is defined so tht it an be mocked for tests.
--spec erlang_halt(integer()) -> any().
+-spec erlang_halt(integer()) -> no_return().
 erlang_halt(Code) ->
     halt(Code).
 
