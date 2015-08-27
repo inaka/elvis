@@ -609,21 +609,18 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                        not_found -> undefined;
                        {ok, Node} -> ktn_code:type(Node)
                    end,
-            case Type of
-                atom -> [];
-                binary_element -> [];
-                string -> [];
-                char -> [];
-                comment -> [];
-                undefined ->
-                    case is_between_quotes(1, {1, 1}) of
-                        true -> no_result;
-                        false ->
-                            Msg = ?OPERATOR_SPACE_MSG,
-                            Info = [Label, Operator, Num],
-                            Result = elvis_result:new(item, Msg, Info, Num),
-                            {ok, Result}
-                    end;
+            TokenType = case elvis_code:find_token(Root, {Num, Col}) of
+                            not_found -> undefined;
+                            {ok, Token} -> ktn_code:type(Token)
+                        end,
+            erlang:display({Type, TokenType, {Num, Col}}),
+            case {Type, TokenType} of
+                {atom, _}           -> [];
+                {binary_element, _} -> [];
+                {string, _}         -> [];
+                {char, _}           -> [];
+                {comment, _}        -> [];
+                {_, string}         -> [];
                 _ ->
                     Msg = ?OPERATOR_SPACE_MSG,
                     Info = [Label, Operator, Num],
@@ -631,10 +628,6 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                     {ok, Result}
             end
     end.
-
--spec is_between_quotes(binary(), {integer(), integer()}) -> boolean().
-is_between_quotes(_Content, {_Line, _Col}) ->
-    false.
 
 %% Nesting Level
 

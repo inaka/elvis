@@ -33,7 +33,7 @@ escript: all
 	./elvis help
 
 shell: app
-	erl -pa ebin -pa deps/*/ebin -s sync -s elvis -s lager -config config/elvis.config
+	erl -pa ebin -pa deps/*/ebin -name elvis@`hostname` -s sync -s elvis -s lager -config config/elvis.config
 
 test-shell: build-ct-suites app
 	erl -pa ebin -pa deps/*/ebin -pa test -s sync -s elvis -s lager -config config/elvis.config
