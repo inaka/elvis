@@ -23,7 +23,7 @@ function4(Should, <<_:10/binary, ",", _/binary>>) ->
 
 function5() ->
     User = #{name => <<"Juan">>, email => <<"juan@inaka.com">>},
-  <<"juan@inaka.com">> = maps:get(email,User).
+    <<"juan@inaka.com">> = maps:get(email,User).
 
 tag_filters(DocName, #{conn := Conn} = State) ->
   TableName = atom_to_list(DocName),

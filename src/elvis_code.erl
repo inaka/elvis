@@ -130,7 +130,7 @@ is_at_location(_, _) ->
     false.
 
 -spec find_token(ktn_code:tree_node(), {integer(), integer()}) ->
-    undefined | {ok, map()}.
+    not_found | {ok, map()}.
 find_token(Root, Location) ->
     Fun = fun (Token) -> is_at_location(Token, Location) end,
     Tokens = ktn_code:attr(tokens, Root),
