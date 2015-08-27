@@ -632,7 +632,7 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
 %% Nesting Level
 
 -spec check_nesting_level(ktn_code:tree_node(), [integer()]) ->
-                                 [elvis_result:item_result()].
+    [elvis_result:item_result()].
 check_nesting_level(ParentNode, [MaxLevel]) ->
     case elvis_code:past_nesting_limit(ParentNode, MaxLevel) of
         [] -> [];
