@@ -613,7 +613,6 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                             not_found -> undefined;
                             {ok, Token} -> ktn_code:type(Token)
                         end,
-            erlang:display({Type, TokenType, {Num, Col}}),
             case {Type, TokenType} of
                 {atom, _}           -> [];
                 {binary_element, _} -> [];
