@@ -12,7 +12,7 @@ dep_ibrowse = git https://github.com/cmullaparthi/ibrowse v4.1.2
 dep_aleppo = git https://github.com/inaka/aleppo 0.9.1
 dep_zipper = git https://github.com/inaka/zipper 0.1.2
 dep_egithub = git https://github.com/inaka/erlang-github 0.1.7
-dep_katana =  git https://github.com/inaka/erlang-katana 0.2.7
+dep_katana =  git git://github.com/inaka/erlang-katana 0.2.10
 
 include erlang.mk
 
@@ -32,7 +32,7 @@ escript: all
 	./elvis help
 
 shell: app
-	erl -pa ebin -pa deps/*/ebin -s sync -s elvis -s lager -config config/elvis.config
+	erl -pa ebin -pa deps/*/ebin -name elvis@`hostname` -s sync -s elvis -s lager -config config/elvis.config
 
 test-shell: build-ct-suites app
 	erl -pa ebin -pa deps/*/ebin -pa test -s sync -s elvis -s lager -config config/elvis.config

@@ -609,12 +609,17 @@ check_operator_spaces_rule(Line, Num, {Position, Operator}, Root) ->
                        not_found -> undefined;
                        {ok, Node} -> ktn_code:type(Node)
                    end,
-            case Type of
-                atom -> [];
-                binary_element -> [];
-                string -> [];
-                char -> [];
-                comment -> [];
+            TokenType = case elvis_code:find_token(Root, {Num, Col}) of
+                            not_found -> undefined;
+                            {ok, Token} -> ktn_code:type(Token)
+                        end,
+            case {Type, TokenType} of
+                {atom, _}           -> [];
+                {binary_element, _} -> [];
+                {string, _}         -> [];
+                {char, _}           -> [];
+                {comment, _}        -> [];
+                {_, string}         -> [];
                 _ ->
                     Msg = ?OPERATOR_SPACE_MSG,
                     Info = [Label, Operator, Num],

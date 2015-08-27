@@ -5,6 +5,7 @@
          find/2,
          find/3,
          find_by_location/2,
+         find_token/2,
          code_zipper/1,
          code_zipper/2
         ]).
@@ -127,6 +128,16 @@ is_at_location(Node = #{attrs := #{location := {Line, NodeCol}}},
     (NodeCol =< Column) andalso (Column < NodeCol + Length);
 is_at_location(_, _) ->
     false.
+
+-spec find_token(ktn_code:tree_node(), {integer(), integer()}) ->
+    undefined | {ok, map()}.
+find_token(Root, Location) ->
+    Fun = fun (Token) -> is_at_location(Token, Location) end,
+    Tokens = ktn_code:attr(tokens, Root),
+    case lists:filter(Fun, Tokens) of
+        [] -> not_found;
+        [Token | _] -> {ok, Token}
+    end.
 
 %%% Processing functions
 
