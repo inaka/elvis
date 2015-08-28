@@ -17,7 +17,8 @@
          module_naming_convention/3,
          state_record_and_type/3,
          no_spec_with_records/3,
-         dont_repeat_yourself/3
+         dont_repeat_yourself/3,
+         max_module_length/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -85,6 +86,10 @@
 -define(DONT_REPEAT_YOURSELF,
         "The code in the following (LINE, COL) locations has "
         "the same structure: ~s.").
+
+-define(MAX_MODULE_LENGTH,
+        "The code for module ~p has ~p lines which exceeds the "
+        "maximum of ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -375,6 +380,31 @@ dont_repeat_yourself(Config, Target, RuleConfig) ->
                         elvis_result:new(item, Msg, Info, Line)
                 end,
             lists:map(ResultFun, Nodes)
+    end.
+
+-spec max_module_length(elvis_config:config(),
+                        elvis_file:file(),
+                        empty_rule_config()) ->
+    [elvis_result:item()].
+max_module_length(Config, Target, RuleConfig) ->
+    MaxLength = maps:get(max_length, RuleConfig, 500),
+    IgnoreModules = maps:get(ignore, RuleConfig, []),
+
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+    {Src, _} = elvis_file:src(Target),
+
+    ModuleName = elvis_code:module_name(Root),
+    Lines = binary:split(Src, <<"\n">>, [global, trim]),
+    Ignored = lists:member(ModuleName, IgnoreModules),
+
+    case length(Lines) of
+        L when L > MaxLength, not Ignored ->
+            Info = [ModuleName, L, MaxLength],
+            Msg = ?MAX_MODULE_LENGTH,
+            Result = elvis_result:new(item, Msg, Info, 0),
+            [Result];
+        _ ->
+            []
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -39,8 +39,8 @@ tag_filters(DocName, #{conn := Conn} = State) ->
          "ORDER BY tag_name "],
   Values = [],
   case {Conn, Sql, Values} of
-    {ok, Maps} ->
+    {ok, Maps, _} ->
       {ok, {raw, Maps}, State};
-    {error, Error} ->
+    {error, Error, _} ->
       {error, Error, State}
   end.

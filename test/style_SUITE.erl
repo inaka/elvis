@@ -24,7 +24,9 @@
          verify_state_record_and_type/1,
          verify_no_spec_with_records/1,
          verify_dont_repeat_yourself/1,
-         verify_order_line_results/1
+         verify_max_module_length/1,
+         %% Non-rule
+         results_are_ordered_by_line/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -333,8 +335,24 @@ verify_dont_repeat_yourself(_Config) ->
     {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
     [] = elvis_style:dont_repeat_yourself(ElvisConfig, FilePass, RuleConfig5).
 
--spec verify_order_line_results(config()) -> any().
-verify_order_line_results(_Config) ->
+-spec verify_max_module_length(config()) -> any().
+verify_max_module_length(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    PathFail = "fail_max_module_length.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    RuleConfig = #{max_length => 10},
+    [_] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig),
+
+    RuleConfig1 = #{max_length => 14},
+    [_] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig1),
+
+    RuleConfig2 = #{max_length => 15},
+    [] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig2).
+
+-spec results_are_ordered_by_line(config()) -> any().
+results_are_ordered_by_line(_Config) ->
     ElvisConfig = elvis_config:default(),
     {fail, Results} = elvis:rock(ElvisConfig),
     true = lists:all(fun(X) -> X end, is_item_line_sort(Results)).
