@@ -18,7 +18,8 @@
          state_record_and_type/3,
          no_spec_with_records/3,
          dont_repeat_yourself/3,
-         max_module_length/3
+         max_module_length/3,
+         max_function_length/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -89,6 +90,10 @@
 
 -define(MAX_MODULE_LENGTH,
         "The code for module ~p has ~p lines which exceeds the "
+        "maximum of ~p.").
+
+-define(MAX_FUNCTION_LENGTH,
+        "The code for function ~p has ~p lines which exceeds the "
         "maximum of ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -406,6 +411,44 @@ max_module_length(Config, Target, RuleConfig) ->
         _ ->
             []
     end.
+
+-spec max_function_length(elvis_config:config(),
+                          elvis_file:file(),
+                          empty_rule_config()) ->
+    [elvis_result:item()].
+max_function_length(Config, Target, RuleConfig) ->
+    MaxLength = maps:get(max_length, RuleConfig, 30),
+
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+
+    IsFunction = fun(Node) -> ktn_code:type(Node) == function end,
+    Functions = elvis_code:find(IsFunction, Root),
+    PairFun =
+        fun(FunctionNode) ->
+                Name = ktn_code:attr(name, FunctionNode),
+                L = function_line_length(FunctionNode),
+                {Name, L}
+        end,
+    FunLenPairs = lists:map(PairFun, Functions),
+    MaxLengthPred = fun({_, L}) -> L > MaxLength end,
+    FunLenMaxPairs = lists:filter(MaxLengthPred, FunLenPairs),
+
+    ResultFun =
+        fun({Name, L}) ->
+                Info = [Name, L, MaxLength],
+                Msg = ?MAX_FUNCTION_LENGTH,
+                elvis_result:new(item, Msg, Info, 0)
+        end,
+    lists:map(ResultFun, FunLenMaxPairs).
+
+-spec function_line_length(ktn_code:tree_node())-> [{atom(), integer()}].
+function_line_length(FunctionNode) ->
+    Zipper = elvis_code:code_zipper(FunctionNode),
+    LineFun = fun(N) -> {L, _} = ktn_code:attr(location, N), L end,
+    LineNums = zipper:map(LineFun, Zipper),
+    Max = lists:max(LineNums),
+    Min = lists:min(LineNums),
+    (Max - Min) + 1.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
