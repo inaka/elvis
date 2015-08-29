@@ -25,6 +25,7 @@
          verify_no_spec_with_records/1,
          verify_dont_repeat_yourself/1,
          verify_max_module_length/1,
+         verify_max_function_length/1,
          %% Non-rule
          results_are_ordered_by_line/1
         ]).
@@ -350,6 +351,27 @@ verify_max_module_length(_Config) ->
 
     RuleConfig2 = #{max_length => 15},
     [] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig2).
+
+-spec verify_max_function_length(config()) -> any().
+verify_max_function_length(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    PathFail = "fail_max_function_length.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    RuleConfig = #{max_length => 4},
+    [_, _, _] =
+         elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig),
+
+    RuleConfig1 = #{max_length => 9},
+    [_, _] =
+        elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig1),
+
+    RuleConfig2 = #{max_length => 14},
+    [_] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig2),
+
+    RuleConfig3 = #{max_length => 15},
+    [] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig3).
 
 -spec results_are_ordered_by_line(config()) -> any().
 results_are_ordered_by_line(_Config) ->
