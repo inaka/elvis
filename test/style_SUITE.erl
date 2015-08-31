@@ -409,10 +409,12 @@ verify_max_function_length(_Config) ->
     WhitespaceRuleConfig = CountAllRuleConfig#{count_whitespace => false},
 
     RuleConfig4 = WhitespaceRuleConfig#{max_length => 3},
-    [_, _, _] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig4),
+    [_, _, _] =
+        elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig4),
 
     RuleConfig5 = WhitespaceRuleConfig#{max_length => 7},
-    [_, _] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig5),
+    [_, _] =
+        elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig5),
 
     RuleConfig6 = WhitespaceRuleConfig#{max_length => 8},
     [_] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig6),
@@ -427,7 +429,8 @@ verify_max_function_length(_Config) ->
     NoCountRuleConfig = WhitespaceRuleConfig#{count_comments => false},
 
     RuleConfig9 = NoCountRuleConfig#{max_length => 1},
-    [_, _, _] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig9),
+    [_, _, _] =
+        elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig9),
 
     RuleConfig10 = NoCountRuleConfig#{max_length => 2},
     [] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig10).
