@@ -394,13 +394,26 @@ dont_repeat_yourself(Config, Target, RuleConfig) ->
 max_module_length(Config, Target, RuleConfig) ->
     MaxLength = maps:get(max_length, RuleConfig, 500),
     IgnoreModules = maps:get(ignore, RuleConfig, []),
+    CountComments = maps:get(count_comments, RuleConfig, false),
+    CountWhitespace = maps:get(count_whitespace, RuleConfig, false),
 
     {Root, _} = elvis_file:parse_tree(Config, Target),
     {Src, _} = elvis_file:src(Target),
 
+
     ModuleName = elvis_code:module_name(Root),
-    Lines = binary:split(Src, <<"\n">>, [global, trim]),
     Ignored = lists:member(ModuleName, IgnoreModules),
+
+    FilterFun =
+        fun(Line) ->
+                (CountComments orelse (not line_is_comment(Line)))
+                    andalso (CountWhitespace
+                             orelse (not line_is_whitespace(Line)))
+        end,
+    Lines = case binary:split(Src, <<"\n">>, [global, trim]) of
+                Ls when CountComments andalso CountWhitespace -> Ls;
+                Ls -> lists:filter(FilterFun, Ls)
+            end,
 
     case length(Lines) of
         L when L > MaxLength, not Ignored ->
@@ -426,7 +439,8 @@ max_function_length(Config, Target, RuleConfig) ->
     PairFun =
         fun(FunctionNode) ->
                 Name = ktn_code:attr(name, FunctionNode),
-                L = function_line_length(FunctionNode),
+                {Min, Max} = node_line_limits(FunctionNode),
+                L = (Max - Min) + 1,
                 {Name, L}
         end,
     FunLenPairs = lists:map(PairFun, Functions),
@@ -441,14 +455,15 @@ max_function_length(Config, Target, RuleConfig) ->
         end,
     lists:map(ResultFun, FunLenMaxPairs).
 
--spec function_line_length(ktn_code:tree_node())-> [{atom(), integer()}].
-function_line_length(FunctionNode) ->
+-spec node_line_limits(ktn_code:tree_node())->
+    {Min :: integer(), Max :: integer()}.
+node_line_limits(FunctionNode) ->
     Zipper = elvis_code:code_zipper(FunctionNode),
     LineFun = fun(N) -> {L, _} = ktn_code:attr(location, N), L end,
     LineNums = zipper:map(LineFun, Zipper),
     Max = lists:max(LineNums),
     Min = lists:min(LineNums),
-    (Max - Min) + 1.
+    {Min, Max}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
@@ -474,9 +489,16 @@ result_node_line_col_fun(Msg) ->
 
 %% Line Length
 
--spec line_is_comment(binary()) -> true | false.
+-spec line_is_comment(binary()) -> boolean().
 line_is_comment(Line) ->
     case re:run(Line, "^[ \t]*%") of
+        nomatch    -> false;
+        {match, _} -> true
+    end.
+
+-spec line_is_whitespace(binary()) -> boolean().
+line_is_whitespace(Line) ->
+    case re:run(Line, "^[ \t]*$") of
         nomatch    -> false;
         {match, _} -> true
     end.
@@ -547,11 +569,11 @@ check_no_spaces(Line, Num, _Args) ->
     no_result | {ok, elvis_result:item()}.
 check_no_trailing_whitespace(Line, Num, RuleConfig) ->
     Regex =
-      case RuleConfig of
-        %% Lookbehind assertion: http://erlang.org/doc/man/re.html#sect17
-        #{ignore_empty_lines := true} -> "(?<=\\S)\\s+$";
-        _AnythingElse                 -> "\\s+$"
-      end,
+        case RuleConfig of
+            %% Lookbehind assertion: http://erlang.org/doc/man/re.html#sect17
+            #{ignore_empty_lines := true} -> "(?<=\\S)\\s+$";
+            _AnythingElse                 -> "\\s+$"
+        end,
 
     case re:run(Line, Regex) of
         nomatch ->
@@ -637,8 +659,8 @@ is_remote_call({Num, Col}, Root) ->
         {ok, Node0} ->
             Pred =
                 fun(Zipper) ->
-                    (Node0 == zipper:node(Zipper))
-                    andalso has_remote_call_parent(Zipper)
+                        (Node0 == zipper:node(Zipper))
+                            andalso has_remote_call_parent(Zipper)
                 end,
             [] =/= elvis_code:find(Pred, Root, #{mode => zipper})
     end.
@@ -712,9 +734,9 @@ check_nesting_level(ParentNode, [MaxLevel]) ->
             Msg = ?NESTING_LEVEL_MSG,
 
             Fun = fun(Node) ->
-                      {Line, Col} = ktn_code:attr(location, Node),
-                      Info = [Line, Col, MaxLevel],
-                      elvis_result:new(item, Msg, Info, Line)
+                          {Line, Col} = ktn_code:attr(location, Node),
+                          Info = [Line, Col, MaxLevel],
+                          elvis_result:new(item, Msg, Info, Line)
                   end,
 
             lists:map(Fun, NestedNodes)
@@ -732,8 +754,7 @@ check_invalid_dynamic_calls(Root) ->
             lists:map(ResultFun, InvalidCalls)
     end.
 
--spec is_dynamic_call(ktn_code:tree_node()) ->
-    boolean().
+-spec is_dynamic_call(ktn_code:tree_node()) -> boolean().
 is_dynamic_call(Node) ->
     case ktn_code:type(Node) of
         call ->
