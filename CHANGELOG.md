@@ -1,16 +1,56 @@
 # Change Log
 
-## [0.2.5-beta4](https://github.com/inaka/elvis/tree/HEAD)
+## [0.2.5](https://github.com/inaka/elvis/tree/0.2.5) (2015-08-31)
 
-[Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta3...HEAD)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta4...0.2.5)
+
+**Implemented enhancements:**
+
+- `max\_function\_len` rule should ignore whitespace and comments [\#263](https://github.com/inaka/elvis/issues/263)
+
+- Options for max\_module\_length [\#261](https://github.com/inaka/elvis/issues/261)
+
+**Fixed bugs:**
+
+- Possible false positive? [\#236](https://github.com/inaka/elvis/issues/236)
+
+- Missing space after comma inside a string being reported  [\#233](https://github.com/inaka/elvis/issues/233)
 
 **Closed issues:**
+
+- New rule: max\_function\_length [\#153](https://github.com/inaka/elvis/issues/153)
+
+- New rule: max\_module\_length [\#152](https://github.com/inaka/elvis/issues/152)
+
+**Merged pull requests:**
+
+- \[Closes \#263\] Options for max function length [\#265](https://github.com/inaka/elvis/pull/265) ([jfacorro](https://github.com/jfacorro))
+
+- \[Closes \#261\] Options for max module line length [\#264](https://github.com/inaka/elvis/pull/264) ([jfacorro](https://github.com/jfacorro))
+
+- \[Closes \#153\] Max function length rule [\#262](https://github.com/inaka/elvis/pull/262) ([jfacorro](https://github.com/jfacorro))
+
+- \[Closes \#152\] Max module length rule [\#260](https://github.com/inaka/elvis/pull/260) ([jfacorro](https://github.com/jfacorro))
+
+- \[Closes \#236\] Operator space false positive [\#259](https://github.com/inaka/elvis/pull/259) ([jfacorro](https://github.com/jfacorro))
+
+- Fix typo in specs [\#257](https://github.com/inaka/elvis/pull/257) ([NOMORECOFFEE](https://github.com/NOMORECOFFEE))
+
+## [0.2.5-beta4](https://github.com/inaka/elvis/tree/0.2.5-beta4) (2015-08-20)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta3...0.2.5-beta4)
+
+**Closed issues:**
+
+- Create bump Version  0.2.5-beta4  [\#255](https://github.com/inaka/elvis/issues/255)
 
 - Error analyzing PR when Github appended this line <<"\\ No newline at end of file"\>\> [\#253](https://github.com/inaka/elvis/issues/253)
 
 - The default for git\_for\_deps\_erlang\_mk should be https [\#238](https://github.com/inaka/elvis/issues/238)
 
 **Merged pull requests:**
+
+- Version bump 0.2.5-beta4 [\#256](https://github.com/inaka/elvis/pull/256) ([davecaos](https://github.com/davecaos))
 
 - Added '\' to patch\_line\_type\(\) function [\#254](https://github.com/inaka/elvis/pull/254) ([davecaos](https://github.com/davecaos))
 
