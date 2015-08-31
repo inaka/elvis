@@ -8,7 +8,7 @@
 
          find_files/2,
          find_files/3,
-         filter_files/2
+         filter_files/3
         ]).
 
 -export_type([file/0]).
@@ -81,13 +81,20 @@ find_files(Dirs, Pattern, Option) ->
     [#{path => Path} || Path <- lists:flatmap(Fun, Dirs)].
 
 %% @doc Filter files based on the glob provided.
--spec filter_files([file()], string()) -> [file()].
-filter_files(Files, Filter) ->
-    Regex = glob_to_regex(Filter),
-    FilterFun = fun(#{path := Path}) ->
-                        match == re:run(Path, Regex, [{capture, none}])
-                end,
-    lists:filter(FilterFun, Files).
+-spec filter_files([file()], [string()], string()) -> [file()].
+filter_files(Files, Dirs, Filter) ->
+    FullFilters = lists:map(fun(Dir) -> Dir ++ "/" ++ Filter end, Dirs),
+    Regexes = lists:map(fun glob_to_regex/1, FullFilters),
+    FlatmapFun =
+        fun(Regex) ->
+                FilterFun =
+                    fun(#{path := Path}) ->
+                            match == re:run(Path, Regex, [{capture, none}])
+                    end,
+                lists:filter(FilterFun, Files)
+        end,
+
+    lists:flatmap(FlatmapFun, Regexes).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
