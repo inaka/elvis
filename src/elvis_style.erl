@@ -431,27 +431,42 @@ max_module_length(Config, Target, RuleConfig) ->
     [elvis_result:item()].
 max_function_length(Config, Target, RuleConfig) ->
     MaxLength = maps:get(max_length, RuleConfig, 30),
+    CountComments = maps:get(count_comments, RuleConfig, false),
+    CountWhitespace = maps:get(count_whitespace, RuleConfig, false),
 
     {Root, _} = elvis_file:parse_tree(Config, Target),
+    {Src, _} = elvis_file:src(Target),
+    Lines = binary:split(Src, <<"\n">>, [global, trim]),
 
     IsFunction = fun(Node) -> ktn_code:type(Node) == function end,
     Functions = elvis_code:find(IsFunction, Root),
+
+    FilterFun =
+        fun(Line) ->
+                (CountComments orelse (not line_is_comment(Line)))
+                    andalso (CountWhitespace
+                             orelse (not line_is_whitespace(Line)))
+        end,
+
     PairFun =
         fun(FunctionNode) ->
                 Name = ktn_code:attr(name, FunctionNode),
                 {Min, Max} = node_line_limits(FunctionNode),
-                L = (Max - Min) + 1,
-                {Name, L}
+                FunLines = lists:sublist(Lines, Min, Max - Min + 1),
+                FilteredLines = lists:filter(FilterFun, FunLines),
+                L = length(FilteredLines),
+                {Name, Min, L}
         end,
-    FunLenPairs = lists:map(PairFun, Functions),
-    MaxLengthPred = fun({_, L}) -> L > MaxLength end,
-    FunLenMaxPairs = lists:filter(MaxLengthPred, FunLenPairs),
+
+    FunLenInfos = lists:map(PairFun, Functions),
+    MaxLengthPred = fun({_, _, L}) -> L > MaxLength end,
+    FunLenMaxPairs = lists:filter(MaxLengthPred, FunLenInfos),
 
     ResultFun =
-        fun({Name, L}) ->
+        fun({Name, StartPos, L}) ->
                 Info = [Name, L, MaxLength],
                 Msg = ?MAX_FUNCTION_LENGTH,
-                elvis_result:new(item, Msg, Info, 0)
+                elvis_result:new(item, Msg, Info, StartPos)
         end,
     lists:map(ResultFun, FunLenMaxPairs).
 

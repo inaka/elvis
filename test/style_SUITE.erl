@@ -387,19 +387,50 @@ verify_max_function_length(_Config) ->
 
     PathFail = "fail_max_function_length.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
-    RuleConfig = #{max_length => 4},
-    [_, _, _] =
-         elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig),
 
-    RuleConfig1 = #{max_length => 9},
+    CountAllRuleConfig = #{count_comments => true, count_whitespace => true},
+
+    ct:comment("Count whitespace and comment lines"),
+    RuleConfig = CountAllRuleConfig#{max_length => 4},
+    [_, _, _] =
+        elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig),
+
+    RuleConfig1 = CountAllRuleConfig#{max_length => 9},
     [_, _] =
         elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig1),
 
-    RuleConfig2 = #{max_length => 14},
+    RuleConfig2 = CountAllRuleConfig#{max_length => 14},
     [_] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig2),
 
-    RuleConfig3 = #{max_length => 15},
-    [] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig3).
+    RuleConfig3 = CountAllRuleConfig#{max_length => 15},
+    [] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig3),
+
+    ct:comment("Don't count whitespace lines"),
+    WhitespaceRuleConfig = CountAllRuleConfig#{count_whitespace => false},
+
+    RuleConfig4 = WhitespaceRuleConfig#{max_length => 3},
+    [_, _, _] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig4),
+
+    RuleConfig5 = WhitespaceRuleConfig#{max_length => 7},
+    [_, _] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig5),
+
+    RuleConfig6 = WhitespaceRuleConfig#{max_length => 8},
+    [_] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig6),
+
+    RuleConfig7 = WhitespaceRuleConfig#{max_length => 11},
+    [_] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig7),
+
+    RuleConfig8 = WhitespaceRuleConfig#{max_length => 12},
+    [] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig8),
+
+    ct:comment("Don't count comment or whitespace lines"),
+    NoCountRuleConfig = WhitespaceRuleConfig#{count_comments => false},
+
+    RuleConfig9 = NoCountRuleConfig#{max_length => 1},
+    [_, _, _] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig9),
+
+    RuleConfig10 = NoCountRuleConfig#{max_length => 2},
+    [] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig10).
 
 -spec results_are_ordered_by_line(config()) -> any().
 results_are_ordered_by_line(_Config) ->
