@@ -343,14 +343,42 @@ verify_max_module_length(_Config) ->
 
     PathFail = "fail_max_module_length.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
-    RuleConfig = #{max_length => 10},
+
+    CountAllRuleConfig = #{count_comments => true, count_whitespace => true},
+
+    ct:comment("Count whitespace and comment lines"),
+    RuleConfig = CountAllRuleConfig#{max_length => 10},
     [_] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig),
 
-    RuleConfig1 = #{max_length => 14},
+    RuleConfig1 = CountAllRuleConfig#{max_length => 14},
     [_] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig1),
 
-    RuleConfig2 = #{max_length => 15},
-    [] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig2).
+    RuleConfig2 = CountAllRuleConfig#{max_length => 15},
+    [] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig2),
+
+    ct:comment("Don't count whitespace lines"),
+    WhitespaceRuleConfig = CountAllRuleConfig#{count_whitespace => false},
+
+    RuleConfig3 = WhitespaceRuleConfig#{max_length => 3},
+    [_] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig3),
+
+    RuleConfig4 = WhitespaceRuleConfig#{max_length => 4},
+    [_] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig4),
+
+    RuleConfig5 = WhitespaceRuleConfig#{max_length => 5},
+    [] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig5),
+
+    ct:comment("Don't count comment or whitespace lines"),
+    NoCountRuleConfig = WhitespaceRuleConfig#{count_comments => false},
+
+    RuleConfig6 = NoCountRuleConfig#{max_length => 1},
+    [_] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig6),
+
+    RuleConfig7 = NoCountRuleConfig#{max_length => 2},
+    [_] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig7),
+
+    RuleConfig8 = NoCountRuleConfig#{max_length => 3},
+    [] = elvis_style:max_module_length(ElvisConfig, FileFail, RuleConfig8).
 
 -spec verify_max_function_length(config()) -> any().
 verify_max_function_length(_Config) ->

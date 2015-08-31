@@ -5,11 +5,11 @@
 
 
 
+%% Random comment
 
 
 
 
 
-
-
+%% @doc A function
 f(_) -> ok.
