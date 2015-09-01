@@ -86,7 +86,8 @@ rock_this(Path, Config) ->
 
     FilterFun = fun(Cfg) ->
                         Filter = elvis_config:filter(Cfg),
-                        [] =/= elvis_file:filter_files([File], Filter)
+                        Dirs = elvis_config:dirs(Cfg),
+                        [] =/= elvis_file:filter_files([File], Dirs, Filter)
                 end,
     FilteredConfig = lists:filter(FilterFun, NewConfig),
 

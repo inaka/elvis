@@ -60,8 +60,7 @@ repo_config(Cred, Repo, Branch, LocalConfig) ->
     case egithub:file_content(Cred, Repo, Branch, "elvis.config") of
         {ok, ConfigContent} ->
             ConfigEval = ktn_code:eval(ConfigContent),
-            RepoConfig = elvis_config:load(ConfigEval),
-            RepoConfig;
+            elvis_config:load(ConfigEval);
         {error, _} ->
             LocalConfig
     end.

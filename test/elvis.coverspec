@@ -5,6 +5,7 @@
   elvis,
   elvis_result,
   elvis_utils,
+  elvis_file,
   elvis_style,
   elvis_project,
   elvis_config,

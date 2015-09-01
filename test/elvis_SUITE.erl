@@ -348,17 +348,19 @@ main_git_hook_fail(_Config) ->
         LongLine = <<"Loooooooooooooooooooooooooooooooooooooooooooooooooooong ",
                      "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
         Files = [
-                 #{path => "fake_long_line.erl",
+                 #{path => "../../src/fake_long_line.erl",
                    content => LongLine},
-                 #{path => "README.md",
+                 #{path => "../../test/fake_long_line.erl",
+                   content => LongLine},
+                 #{path => "../../src/README.md",
                    content => <<"### Title">>},
-                 #{path => "Makefile",
+                 #{path => "../../src/Makefile",
                    content => <<"@Some text\n\nCT_OPTS =">>}
                 ],
         FakeStagedFiles = fun() -> Files end,
         meck:expect(elvis_git, staged_files, FakeStagedFiles),
 
-        Expected = "# fake_long_line.erl.*FAIL",
+        Expected = "# ../../src/fake_long_line.erl.*FAIL",
 
         ConfigArgs = "git-hook -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
