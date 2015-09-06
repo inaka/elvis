@@ -148,6 +148,12 @@ get_rebar_deps(File) ->
         [{deps, Deps}] -> Deps
     end.
 
+%% Rebar3
+is_rebar_master_dep({_AppName, {_SCM, _Location, "master"}}) ->
+    true;
+is_rebar_master_dep({_AppName, {_SCM, _Location, {branch, "master"}}}) ->
+    true;
+%% Rebar2
 is_rebar_master_dep({_AppName, _Vsn, {_SCM, _Location, "master"}}) ->
     true;
 is_rebar_master_dep({_AppName, _Vsn, {_SCM, _Location, {branch, "master"}}}) ->
@@ -155,19 +161,26 @@ is_rebar_master_dep({_AppName, _Vsn, {_SCM, _Location, {branch, "master"}}}) ->
 is_rebar_master_dep(_) ->
     false.
 
+is_rebar_not_git_dep({_AppName, {_SCM, Url, _Branch}}, Regex) ->
+    nomatch == re:run(Url, Regex, []);
 is_rebar_not_git_dep({_AppName, _Vsn, {_SCM, Url, _Branch}}, Regex) ->
     nomatch == re:run(Url, Regex, []).
 
-rebar_dep_to_result({AppName, _, _}, Message, {IgnoreDeps, Regex}) ->
-    case lists:member(AppName, IgnoreDeps) of
-        true -> [];
-        false -> [elvis_result:new(item, Message, [AppName, Regex])]
-    end;
-rebar_dep_to_result({AppName, _, _}, Message, IgnoreDeps) ->
-    case lists:member(AppName, IgnoreDeps) of
-        true -> [];
-        false -> [elvis_result:new(item, Message, [AppName])]
-    end.
+rebar_dep_to_result({AppName, _}, Message, {IgnoreDeps, Regex}) ->
+  case lists:member(AppName, IgnoreDeps) of
+    true -> [];
+    false -> [elvis_result:new(item, Message, [AppName, Regex])]
+  end;
+rebar_dep_to_result({AppName, _}, Message, IgnoreDeps) ->
+  case lists:member(AppName, IgnoreDeps) of
+    true -> [];
+    false -> [elvis_result:new(item, Message, [AppName])]
+  end;
+rebar_dep_to_result({AppName, _, GitInfo}, Message, {IgnoreDeps, Regex}) ->
+  rebar_dep_to_result({AppName, GitInfo}, Message, {IgnoreDeps, Regex});
+rebar_dep_to_result({AppName, _, GitInfo}, Message, IgnoreDeps) ->
+  rebar_dep_to_result({AppName, GitInfo}, Message, IgnoreDeps).
+
 
 
 %%% erlang.mk
