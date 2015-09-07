@@ -109,5 +109,5 @@ resolve_parse_tree(_, _, _) ->
 
 -spec glob_to_regex(iodata()) -> iodata().
 glob_to_regex(Glob) ->
-    Regex1 = re:replace(Glob, "\\.", "\\\\."),
-    re:replace(Regex1, "\\*", ".*").
+    Regex1 = re:replace(Glob, "\\.", "\\\\.", [global]),
+    re:replace(Regex1, "\\*", ".*", [global]).
