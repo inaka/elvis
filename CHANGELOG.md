@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.2.6-alpha1](https://github.com/inaka/elvis/tree/0.2.6-alpha1) (2015-09-07)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.5...0.2.6-alpha1)
+
+**Fixed bugs:**
+
+- Incorrect matching of files [\#252](https://github.com/inaka/elvis/issues/252)
+
+**Merged pull requests:**
+
+- \[Closes \#252\] Incorrect matching of files [\#268](https://github.com/inaka/elvis/pull/268) ([jfacorro](https://github.com/jfacorro))
+
 ## [0.2.5](https://github.com/inaka/elvis/tree/0.2.5) (2015-08-31)
 
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta4...0.2.5)
@@ -10,19 +22,43 @@
 
 - Options for max\_module\_length [\#261](https://github.com/inaka/elvis/issues/261)
 
+- Improve git\_for\_deps\_erlang\_mk and git\_for\_deps\_rebar [\#199](https://github.com/inaka/elvis/issues/199)
+
+- Add --version option [\#174](https://github.com/inaka/elvis/issues/174)
+
+- Add an elvis:rock\_this/1 function to rock specific modules [\#159](https://github.com/inaka/elvis/issues/159)
+
 **Fixed bugs:**
 
 - Possible false positive? [\#236](https://github.com/inaka/elvis/issues/236)
 
 - Missing space after comma inside a string being reported  [\#233](https://github.com/inaka/elvis/issues/233)
 
+- Unhandled abstract form issue with fun\(\(...\)  [\#239](https://github.com/inaka/elvis/issues/239)
+
+- Non spacing not detected [\#221](https://github.com/inaka/elvis/issues/221)
+
 **Closed issues:**
+
+- Release version 0.2.5 [\#266](https://github.com/inaka/elvis/issues/266)
+
+- Order line results by line\_num [\#219](https://github.com/inaka/elvis/issues/219)
+
+- White output [\#209](https://github.com/inaka/elvis/issues/209)
+
+- Don't use spaces for indentation [\#178](https://github.com/inaka/elvis/issues/178)
+
+- Fix the specs on elvis\_style and elvis\_project [\#162](https://github.com/inaka/elvis/issues/162)
 
 - New rule: max\_function\_length [\#153](https://github.com/inaka/elvis/issues/153)
 
 - New rule: max\_module\_length [\#152](https://github.com/inaka/elvis/issues/152)
 
+- No Trailing Whitespace [\#147](https://github.com/inaka/elvis/issues/147)
+
 **Merged pull requests:**
+
+- \[Closes \#266\] Release 0.2.5 [\#267](https://github.com/inaka/elvis/pull/267) ([jfacorro](https://github.com/jfacorro))
 
 - \[Closes \#263\] Options for max function length [\#265](https://github.com/inaka/elvis/pull/265) ([jfacorro](https://github.com/jfacorro))
 
@@ -74,8 +110,6 @@
 
 - Not using elvis.config from the PR branch [\#242](https://github.com/inaka/elvis/issues/242)
 
-- Unhandled abstract form issue with fun\(\(...\)  [\#239](https://github.com/inaka/elvis/issues/239)
-
 **Closed issues:**
 
 - Pre-release 0.2.5-beta3 [\#246](https://github.com/inaka/elvis/issues/246)
@@ -94,27 +128,11 @@
 
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta...0.2.5-beta2)
 
-**Implemented enhancements:**
-
-- Improve git\_for\_deps\_erlang\_mk and git\_for\_deps\_rebar [\#199](https://github.com/inaka/elvis/issues/199)
-
-- Add --version option [\#174](https://github.com/inaka/elvis/issues/174)
-
-**Fixed bugs:**
-
-- Non spacing not detected [\#221](https://github.com/inaka/elvis/issues/221)
-
 **Closed issues:**
 
 - exception error: undefined function [\#230](https://github.com/inaka/elvis/issues/230)
 
-- Order line results by line\_num [\#219](https://github.com/inaka/elvis/issues/219)
-
 - Instead of using master, use the current branch for elvis.config [\#216](https://github.com/inaka/elvis/issues/216)
-
-- White output [\#209](https://github.com/inaka/elvis/issues/209)
-
-- Don't use spaces for indentation [\#178](https://github.com/inaka/elvis/issues/178)
 
 - DRY [\#28](https://github.com/inaka/elvis/issues/28)
 
@@ -150,8 +168,6 @@
 
 **Implemented enhancements:**
 
-- Add an elvis:rock\_this/1 function to rock specific modules [\#159](https://github.com/inaka/elvis/issues/159)
-
 - Investigate erl\_tidy [\#38](https://github.com/inaka/elvis/issues/38)
 
 **Fixed bugs:**
@@ -167,10 +183,6 @@
 - Cloning getopt problem [\#201](https://github.com/inaka/elvis/issues/201)
 
 - Specify source file on the command line [\#170](https://github.com/inaka/elvis/issues/170)
-
-- Fix the specs on elvis\_style and elvis\_project [\#162](https://github.com/inaka/elvis/issues/162)
-
-- No Trailing Whitespace [\#147](https://github.com/inaka/elvis/issues/147)
 
 - Don't let modules loose [\#29](https://github.com/inaka/elvis/issues/29)
 
