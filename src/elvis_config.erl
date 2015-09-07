@@ -108,7 +108,7 @@ dirs(#{}) ->
 filter(_RuleGroup = #{filter := Filter}) ->
     Filter;
 filter(#{}) ->
-    undefined.
+    ?DEFAULT_FILTER.
 
 -spec files(config()) -> [string()].
 files(_RuleGroup = #{files := Files}) ->
@@ -130,14 +130,10 @@ rules(#{}) ->
 resolve_files(Config, Files) when is_list(Config) ->
     Fun = fun(RuleGroup) -> resolve_files(RuleGroup, Files) end,
     lists:map(Fun, Config);
-resolve_files(RuleGroup = #{filter := Filter}, Files) ->
+resolve_files(RuleGroup, Files) ->
     Filter = filter(RuleGroup),
     Dirs = dirs(RuleGroup),
     FilteredFiles = elvis_file:filter_files(Files, Dirs, Filter),
-    RuleGroup#{files => FilteredFiles};
-resolve_files(RuleGroup, Files) ->
-    Dirs = dirs(RuleGroup),
-    FilteredFiles = elvis_file:filter_files(Files, Dirs, ?DEFAULT_FILTER),
     RuleGroup#{files => FilteredFiles}.
 
 %% @doc Takes a configuration and finds all files according to its 'dirs'

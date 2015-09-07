@@ -199,11 +199,17 @@ run_webhook(_Config) ->
         elvis:start(),
 
         meck:new(egithub, [passthrough]),
-        FakeFun1 = fun(_, _, _) -> {ok, []} end,
+        Files = [#{<<"filename">> => <<"test/examples/rebar.config.fail">>}],
+        FakeFun1 = fun(_, _, _) -> {ok, Files} end,
         meck:expect(egithub, pull_req_files, FakeFun1),
-        meck:expect(egithub, pull_req_comments, FakeFun1),
-        meck:expect(egithub, issue_comments, FakeFun1),
-        FakeFun2 = fun(_, _, _, _) -> {error, error} end,
+
+        EmptyResultFun = fun(_, _, _) -> {ok, []} end,
+        meck:expect(egithub, pull_req_comments, EmptyResultFun),
+        meck:expect(egithub, issue_comments, EmptyResultFun),
+
+        FakeFun2 = fun(_, _, _, "elvis.config") ->
+                           {error, error}
+                   end,
         meck:expect(egithub, file_content, FakeFun2),
 
         ok = elvis:webhook(Request)
