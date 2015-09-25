@@ -192,7 +192,7 @@ module_name(#{type := root, content := Content}) ->
     end.
 
 %% @doc Takes the root node of a parse_tree and returns name and artity
-%%      of each exported functions.
+%%      of each exported function.
 -spec exported_functions(ktn_code:tree_node()) -> [{atom(), integer()}].
 exported_functions(#{type := root, content := Content}) ->
     Fun = fun
