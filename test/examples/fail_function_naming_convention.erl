@@ -3,6 +3,7 @@
 -export([camelCase/2,
          'ALL_CAPS'/2,
          has_number1/2,
+         'Initial_cap'/2,
          'ok-for-lisp'/2,
          'no_predicates?'/2,
          user@location/2
@@ -20,6 +21,9 @@ camelCase(Should,Fail) ->
     [Should,Fail].
 
 has_number1(Should,Fail) ->
+    [Should,Fail].
+
+'Initial_cap'(Should,Fail) ->
     [Should,Fail].
 
 'ok-for-lisp'(Should,Fail) ->
