@@ -1,6 +1,7 @@
 -module(elvis_style).
 
 -export([
+         function_naming_convention/3,
          line_length/3,
          no_tabs/3,
          no_spaces/3,
@@ -68,6 +69,10 @@
         "Use the '-callback' attribute instead of 'behavior_info/1' "
         "on line ~p.").
 
+-define(FUNCTION_NAMING_CONVENTION_MSG,
+        "The function ~p does not respect the format defined by the "
+        "regular expression '~p'.").
+
 -define(MODULE_NAMING_CONVENTION_MSG,
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
@@ -101,6 +106,34 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -type empty_rule_config() :: #{}.
+
+-type function_naming_convention_config() :: #{regex => string(),
+                                               ignore => [module()]
+                                              }.
+
+-spec function_naming_convention(elvis_config:config(),
+                                 elvis_file:file(),
+                                 function_naming_convention_config()) ->
+    [elvis_result:item()].
+function_naming_convention(Config, Target, RuleConfig) ->
+    Regex = maps:get(regex, RuleConfig, ".*"),
+
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+    ExportedFunctions = elvis_code:exported_functions(Root),
+    errors_for_function_names(Regex, ExportedFunctions).
+
+errors_for_function_names(_Regex, []) -> [];
+errors_for_function_names(Regex, [ExportedFunction | RemainingFuncs]) ->
+    {FunctionName, _FunctionArity} = ExportedFunction,
+    FunctionNameStr = atom_to_list(FunctionName),
+    case re:run(FunctionNameStr, Regex) of
+        nomatch ->
+            Msg = ?FUNCTION_NAMING_CONVENTION_MSG,
+            Info = [FunctionNameStr, Regex],
+            Result = elvis_result:new(item, Msg, Info, 1),
+            [Result | errors_for_function_names(Regex, RemainingFuncs)];
+        {match, _} -> errors_for_function_names(Regex, RemainingFuncs)
+    end.
 
 -type line_length_config() :: #{limit => integer(),
                                 skip_comments => false | any | whole_line
