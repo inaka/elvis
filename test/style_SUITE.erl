@@ -73,7 +73,7 @@ verify_function_naming_convention(_Config) ->
     ElvisConfig = elvis_config:default(),
     SrcDirs = elvis_config:dirs(ElvisConfig),
 
-    RuleConfig = #{regex => "^([a-z][a-z]*_?)*$",
+    RuleConfig = #{regex => "^([a-z]*_?)*$",
                    ignore => []},
 
     PathPass = "pass_function_naming_convention.erl",
@@ -83,7 +83,7 @@ verify_function_naming_convention(_Config) ->
 
     PathFail = "fail_function_naming_convention.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
-    [_CamelCaseError, _ALL_CAPSError, _HasNumberError,
+    [_CamelCaseError, _ALL_CAPSError, _HasNumberError, _InitialCapError,
      _HyphenError, _PredError, _EmailError] =
         elvis_style:function_naming_convention(ElvisConfig, FileFail, RuleConfig).
 
