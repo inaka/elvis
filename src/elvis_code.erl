@@ -192,7 +192,7 @@ module_name(#{type := root, content := Content}) ->
         [] -> undefined
     end.
 
-%% @doc Takes the root node of a parse_tree and returns name and artity
+%% @doc Takes the root node of a parse_tree and returns name and arity
 %%      of each exported function.
 -spec exported_functions(ktn_code:tree_node()) -> [{atom(), integer()}].
 exported_functions(#{type := root, content := Content}) ->
@@ -203,7 +203,7 @@ exported_functions(#{type := root, content := Content}) ->
           end,
     lists:flatmap(Fun, Content).
 
-%% @doc Takes the root node of a parse_tree and returns name and artity
+%% @doc Takes the root node of a parse_tree and returns the name
 %%      of each function, whether exported or not.
 -spec function_names(ktn_code:tree_node()) -> [{atom(), integer()}].
 function_names(#{type := root, content := Content}) ->
