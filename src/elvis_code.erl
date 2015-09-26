@@ -196,22 +196,14 @@ module_name(#{type := root, content := Content}) ->
 %%      of each exported function.
 -spec exported_functions(ktn_code:tree_node()) -> [{atom(), integer()}].
 exported_functions(#{type := root, content := Content}) ->
-    Fun = fun
-              (Node = #{type := export}) ->
-                  ktn_code:attr(value, Node);
-              (_) -> []
-          end,
+    Fun = make_extractor_fun(exported_functions),
     lists:flatmap(Fun, Content).
 
 %% @doc Takes the root node of a parse_tree and returns the name
 %%      of each function, whether exported or not.
 -spec function_names(ktn_code:tree_node()) -> [{atom(), integer()}].
 function_names(#{type := root, content := Content}) ->
-    Fun = fun
-              (Node = #{type := function}) ->
-                  [ktn_code:attr(name, Node)];
-              (_) -> []
-          end,
+    Fun = make_extractor_fun(function_names),
     lists:flatmap(Fun, Content).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -233,4 +225,16 @@ level_increment(Type) ->
     case lists:member(Type, IncrementOne) of
         true -> 1;
         false -> 0
+    end.
+
+%% @private
+%% @doc Returns an anonymous Fun to be flatmapped over node content, as
+%% appropriate for the exported function whose name is the argument given.
+make_extractor_fun(exported_functions) ->
+    fun (Node = #{type := export}) -> ktn_code:attr(value, Node);
+        (_) -> []
+    end;
+make_extractor_fun(function_names) ->
+    fun (Node = #{type := function}) -> [ktn_code:attr(name, Node)];
+        (_) -> []
     end.
