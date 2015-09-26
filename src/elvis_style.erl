@@ -119,20 +119,19 @@ function_naming_convention(Config, Target, RuleConfig) ->
     Regex = maps:get(regex, RuleConfig, ".*"),
 
     {Root, _} = elvis_file:parse_tree(Config, Target),
-    ExportedFunctions = elvis_code:exported_functions(Root),
-    errors_for_function_names(Regex, ExportedFunctions).
+    FunctionNames = elvis_code:function_names(Root),
+    errors_for_function_names(Regex, FunctionNames).
 
 errors_for_function_names(_Regex, []) -> [];
-errors_for_function_names(Regex, [ExportedFunction | RemainingFuncs]) ->
-    {FunctionName, _FunctionArity} = ExportedFunction,
+errors_for_function_names(Regex, [FunctionName | RemainingFuncNames]) ->
     FunctionNameStr = atom_to_list(FunctionName),
     case re:run(FunctionNameStr, Regex) of
         nomatch ->
             Msg = ?FUNCTION_NAMING_CONVENTION_MSG,
             Info = [FunctionNameStr, Regex],
             Result = elvis_result:new(item, Msg, Info, 1),
-            [Result | errors_for_function_names(Regex, RemainingFuncs)];
-        {match, _} -> errors_for_function_names(Regex, RemainingFuncs)
+            [Result | errors_for_function_names(Regex, RemainingFuncNames)];
+        {match, _} -> errors_for_function_names(Regex, RemainingFuncNames)
     end.
 
 -type line_length_config() :: #{limit => integer(),

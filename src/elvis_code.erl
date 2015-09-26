@@ -14,6 +14,7 @@
 -export([
          past_nesting_limit/2,
          exported_functions/1,
+         function_names/1,
          module_name/1,
          print_node/1,
          print_node/2
@@ -198,6 +199,17 @@ exported_functions(#{type := root, content := Content}) ->
     Fun = fun
               (Node = #{type := export}) ->
                   ktn_code:attr(value, Node);
+              (_) -> []
+          end,
+    lists:flatmap(Fun, Content).
+
+%% @doc Takes the root node of a parse_tree and returns name and artity
+%%      of each function, whether exported or not.
+-spec function_names(ktn_code:tree_node()) -> [{atom(), integer()}].
+function_names(#{type := root, content := Content}) ->
+    Fun = fun
+              (Node = #{type := function}) ->
+                  [ktn_code:attr(name, Node)];
               (_) -> []
           end,
     lists:flatmap(Fun, Content).
