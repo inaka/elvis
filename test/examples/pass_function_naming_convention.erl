@@ -7,6 +7,6 @@
 
 %% Cf. https://github.com/inaka/erlang_guidelines#function-names
 
-snake_case(Should,Pass) ->
-    [Should,Pass].
+snake_case(Should, Pass) ->
+    [Should, Pass].
 
