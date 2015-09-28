@@ -7,6 +7,7 @@
         ]).
 
 -export([
+         verify_function_naming_convention/1,
          verify_line_length_rule/1,
          verify_no_tabs_rule/1,
          verify_no_spaces_rule/1,
@@ -66,6 +67,24 @@ end_per_suite(Config) ->
 
 %%%%%%%%%%%%%%%
 %%% Rules
+
+-spec verify_function_naming_convention(config()) -> any().
+verify_function_naming_convention(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    RuleConfig = #{regex => "^([a-z][a-z0-9]*_?)*$"},
+
+    PathPass = "pass_function_naming_convention.erl",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] =
+        elvis_style:function_naming_convention(ElvisConfig, FilePass, RuleConfig),
+
+    PathFail = "fail_function_naming_convention.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    [_CamelCaseError, _ALL_CAPSError, _InitialCapError,
+     _HyphenError, _PredError, _EmailError] =
+        elvis_style:function_naming_convention(ElvisConfig, FileFail, RuleConfig).
 
 -spec verify_line_length_rule(config()) -> any().
 verify_line_length_rule(_Config) ->
