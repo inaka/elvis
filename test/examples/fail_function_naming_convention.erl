@@ -10,7 +10,6 @@
 bad_names_inside() ->
     camelCase(should, fail),
     'ALL_CAPS'(should, fail),
-    has_number1(should, fail),
     'Initial_cap'(should, fail),
     'ok-for-lisp'(should, fail),
     'no_predicates?'(should, fail),
@@ -22,9 +21,6 @@ camelCase(Should, Fail) ->
     [Should, Fail].
 
 'ALL_CAPS'(Should, Fail) ->
-    [Should, Fail].
-
-has_number1(Should, Fail) ->
     [Should, Fail].
 
 'Initial_cap'(Should, Fail) ->

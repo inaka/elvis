@@ -7,6 +7,9 @@
 
 %% Cf. https://github.com/inaka/erlang_guidelines#function-names
 
+has_digit1(Should, Pass) ->
+    [Should, Pass].
+
 snake_case(Should, Pass) ->
     [Should, Pass].
 
