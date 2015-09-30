@@ -213,18 +213,16 @@ function_names(#{type := root, content := Content}) ->
 %% @private
 %% @doc Takes a node type and determines its nesting level increment.
 level_increment(Type) ->
-    Increment =
-        [
-         function,
-         'case',
-         'if',
-         try_case,
-         try_catch,
-         'fun',
-         named_fun,
-         receive_case
-        ],
-    case lists:member(Type, Increment) of
+    IncrementOne = [function,
+                    'case',
+                    'if',
+                    try_case,
+                    try_catch,
+                    'fun',
+                    named_fun,
+                    receive_case
+                   ],
+    case lists:member(Type, IncrementOne) of
         true -> 1;
         false -> 0
     end.

@@ -1017,5 +1017,3 @@ filter_repeated(NodesLocs) ->
 is_children(Parent, Node) ->
     Zipper = elvis_code:code_zipper(Parent),
     [] =/= zipper:filter(fun(Child) -> Child == Node end, Zipper).
-
-
