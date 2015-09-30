@@ -3,20 +3,23 @@
 -export([
          staged_files/0,
          staged_content/1,
-         relative_position/2
+         relative_position/2,
+         install_hook/0
         ]).
 
 -define(LIST_STAGED,
-        "git diff --name-only --staged").
+        "git diff --name-status --staged | awk '$1 != \"D\" { print $2 }'").
 
 -define(STAGED_CONTENT(Path),
         "git show :" ++ Path).
+
+-define(PRE_COMMIT_FILE, ".git/hooks/pre-commit").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec staged_files() -> [elvis_utils:file()].
+-spec staged_files() -> [elvis_file:file()].
 staged_files() ->
     Cmd = ?LIST_STAGED,
     Output = list_to_binary(os:cmd(Cmd)),
@@ -26,7 +29,7 @@ staged_files() ->
 
     lists:map(fun staged_content/1, Paths).
 
--spec staged_content(string()) -> elvis_utils:file().
+-spec staged_content(string()) -> elvis_file:file().
 staged_content(Path) ->
     Content = os:cmd(?STAGED_CONTENT(Path)),
     #{
@@ -56,9 +59,53 @@ relative_position([Line | Lines], Num, Positions) ->
             relative_position(Lines, Num, NewPositions)
     end.
 
+%% @doc Install a pre commit hook for the git repository
+%%      in the current dir.
+-spec install_hook() -> ok.
+install_hook() ->
+    try
+        check_git_dir(),
+        ok = filelib:ensure_dir(?PRE_COMMIT_FILE),
+        add_pre_commit_hook(),
+        elvis_utils:info("Elvis pre-commit hook installed. "
+                         "Wop-bop-a-loom-a-blop-bam-boom!")
+    catch
+        _:Reason ->
+            elvis_utils:error_prn(Reason)
+    end.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% @doc Check if the current dir is a git repository.
+check_git_dir() ->
+    case filelib:is_dir(".git") of
+        true -> ok;
+        false -> throw("Not a git repository.")
+    end.
+
+%% @doc Adds elvis as a pre commit hook. If a pre-commit file already exists
+%%      appends the command to it, otherwise the file is created.
+add_pre_commit_hook() ->
+    Filename = ?PRE_COMMIT_FILE,
+
+    Header = <<"#!/bin/sh\n">>,
+    Command = <<"elvis git-hook\n">>,
+
+    {Mode, Data} =
+        case filelib:is_file(Filename) of
+            true ->
+                {ok, Content} = file:read_file(?PRE_COMMIT_FILE),
+                case binary:match(Content, <<"elvis">>) of
+                    nomatch -> {[append], Command};
+                    _ ->  throw("Elvis is already installed as a git hook.")
+                end;
+            false -> {[write], <<Header/binary, Command/binary>>}
+        end,
+
+    file:write_file(Filename, Data, Mode),
+    os:cmd("chmod +x " ++ ?PRE_COMMIT_FILE).
 
 %% @private
 %% @doc Return the corresponding local and global line increments based
@@ -70,9 +117,7 @@ new_position(Line, {Local, Global}) ->
             {Local + 1, NewGlobal - 1};
         deletion ->
             {Local + 1, Global};
-        addition ->
-            {Local + 1, Global + 1};
-        same ->
+        _ -> %% addition or same
             {Local + 1, Global + 1}
     end.
 
@@ -82,10 +127,11 @@ new_position(Line, {Local, Global}) ->
 patch_line_type(Line) ->
     [Head | _] = elvis_utils:to_str(Line),
     case Head of
-        $@ -> patch;
-        $+ -> addition;
-        $- -> deletion;
-        $  -> same
+        $@  -> patch;
+        $+  -> addition;
+        $-  -> deletion;
+        $\\ -> same;
+        $   -> same %space
     end.
 
 %% @private

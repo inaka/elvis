@@ -1,0 +1,40 @@
+{erl_opts,
+ [
+  {parse_transform, lager_transform},
+  {src_dirs, ["src"]},
+  warn_unused_vars,
+  warn_export_all,
+  warn_shadow_vars,
+  warn_unused_import,
+  warn_unused_function,
+  warn_bif_clash,
+  warn_unused_record,
+  warn_deprecated_function,
+  warn_obsolete_guard,
+  strict_validation,
+  warn_export_vars,
+  warn_exported_vars,
+  warn_missing_spec,
+  warn_untyped_record, debug_info
+ ]
+}.
+{deps_dir, "deps"}.
+{deps,
+ [
+  {lager, "2.*", {git, "git://github.com/basho/lager.git", "2.0.0"}},
+  {getopt, "0.*", {git, "git@github.com:jcomellas/getopt.git", {branch, "master"}}},
+  {meck, "0.*", {git, "https://github.com/eproxus/meck.git", "0.8.2"}},
+  {jiffy, "0.*", {git, "https://github.com/davisp/jiffy.git", "0.11.3"}},
+  {ibrowse, "4.*", {git, "https://github.com/cmullaparthi/ibrowse.git", "v4.1.1"}},
+  {aleppo, "0.*", {git, "https://github.com/inaka/aleppo.git", "master"}},
+
+  {lager, {git, "git://github.com/basho/lager.git", "2.0.0"}},
+  {getopt, {git, "git@github.com:jcomellas/getopt.git", {branch, "master"}}},
+  {meck, {git, "https://github.com/eproxus/meck.git", "0.8.2"}},
+  {jiffy, {git, "https://github.com/davisp/jiffy.git", "0.11.3"}},
+  {ibrowse, {git, "https://github.com/cmullaparthi/ibrowse.git", "v4.1.1"}},
+  {aleppo, {git, "https://github.com/inaka/aleppo.git", "master"}}
+ ]
+}.
+{escript_name, "elvis"}.
+{escript_incl_apps, [getopt, jiffy, ibrowse, aleppo, zipper]}.

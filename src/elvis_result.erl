@@ -5,6 +5,7 @@
          new/3,
          new/4,
          status/1,
+         clean/1,
          print/1
         ]).
 
@@ -41,7 +42,7 @@
          }.
 -type file() ::
         #{
-           file => elvis_utils:file(),
+           file => elvis_file:file(),
            rules => list()
          }.
 
@@ -54,20 +55,23 @@
 -spec new(item | rule | file, any(), any()) ->
     item() | rule() | file().
 new(item, Msg, Info) ->
-    #{message => Msg, info => Info};
+    new(item, Msg, Info, 0);
 new(rule, Name, Results) ->
     #{name => Name, items => Results};
 new(file, File, Rules) ->
-    #{file => File, rules => Rules}.
+    #{file => File, rules => Rules};
+new(error, Msg, Info) ->
+    #{error_msg => Msg, info => Info}.
 
 -spec new(item, term(), any(), any()) -> item().
 new(item, Msg, Info, LineNum) ->
-    Item = new(item, Msg, Info),
-    Item#{line_num => LineNum}.
+    #{message => Msg,
+      info => Info,
+      line_num => LineNum}.
 
 %% Getters
 
--spec get_file(file()) -> elvis_utils:file().
+-spec get_file(file()) -> elvis_file:file().
 get_file(#{file := File}) -> File.
 
 -spec get_rules(file()) -> [rule()].
@@ -77,7 +81,8 @@ get_rules(#{rules := Rules}) -> Rules.
 get_name(#{name := Name}) -> Name.
 
 -spec get_items(rule()) -> [item()].
-get_items(#{items := Items}) -> Items.
+get_items(#{items := Items}) -> Items;
+get_items(_) -> [].
 
 -spec get_message(item()) -> string().
 get_message(#{message := Message}) -> Message.
@@ -96,27 +101,30 @@ print([]) ->
 print([Result | Results]) ->
     print(Result),
     print(Results);
-
+%% File
 print(#{file := File, rules := Rules}) ->
-    Path = maps:get(path, File),
+    Path = elvis_file:path(File),
     Status = case status(Rules) of
-                 ok -> "OK";
-                 fail -> "FAIL"
+                 ok -> "{{green-bold}}OK";
+                 fail -> "{{red-bold}}FAIL"
              end,
 
-    io:format("# ~s [~s]~n", [Path, Status]),
+    elvis_utils:notice("# ~s [~s{{white-bold}}]", [Path, Status]),
     print(Rules);
-
+%% Rule
 print(#{items := []}) ->
     ok;
 print(#{name := Name, items := Items}) ->
-    io:format("  - ~s~n", [atom_to_list(Name)]),
+    elvis_utils:notice("  - ~s", [atom_to_list(Name)]),
     print(Items);
-
+%% Item
 print(#{message := Msg, info := Info}) ->
-    io:format("    - " ++ Msg ++ "~n", Info).
+    elvis_utils:notice("    - " ++ Msg, Info);
+%% Error
+print(#{error_msg := Msg, info := Info}) ->
+    elvis_utils:error_prn(Msg, Info).
 
--spec status([rule()]) -> ok | fail.
+-spec status([file() | rule()]) -> ok | fail.
 status([]) ->
     ok;
 status([#{rules := Rules} | Files]) ->
@@ -128,3 +136,27 @@ status([#{items := []} | Rules]) ->
     status(Rules);
 status(_Rules) ->
     fail.
+
+
+%% @doc Removes files that don't have any failures.
+-spec clean([file() | rule()]) -> [file() | rule()].
+clean(Files)->
+    clean(Files, []).
+
+%% @private
+-spec clean([file() | rule()], [file() | rule()]) -> [file() | rule()].
+clean([], Result) ->
+    lists:reverse(Result);
+clean([#{rules := []} | Files], Result) ->
+    clean(Files, Result);
+clean([File = #{rules := Rules, file := FileInfo} | Files], Result) ->
+    CleanRules = clean(Rules),
+    FileInfo1 = maps:remove(content, FileInfo),
+    FileInfo2 = maps:remove(parse_tree, FileInfo1),
+    NewFile = File#{rules => CleanRules,
+                    file => FileInfo2},
+    clean(Files, [NewFile | Result]);
+clean([#{items := []} | Rules], Result) ->
+    clean(Rules, Result);
+clean([Rule | Rules], Result) ->
+    clean(Rules, [Rule | Result]).

@@ -5,9 +5,9 @@
         ]).
 
 -spec find_file([string()], string()) ->
-    {ok, string()} | {error, enoent}.
+    {ok, elvis_file:file()} | {error, enoent}.
 find_file(Dirs, Pattern) ->
-    case elvis_utils:find_files(Dirs, Pattern) of
+    case elvis_file:find_files(Dirs, Pattern) of
         [] -> {error, enoent};
         [Path | _] -> {ok, Path}
     end.
