@@ -20,7 +20,8 @@
          no_spec_with_records/3,
          dont_repeat_yourself/3,
          max_module_length/3,
-         max_function_length/3
+         max_function_length/3,
+         exec_path_length/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -76,6 +77,9 @@
 -define(MODULE_NAMING_CONVENTION_MSG,
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
+-define(EXEC_PATH_LENGTH_MSG,
+        "The function ~p is too big, being ~p expressions long "
+        "when it gets to the one on line ~p and column ~p.").
 
 -define(STATE_RECORD_MISSING_MSG,
         "This module implements an OTP behavior but is missing "
@@ -350,8 +354,7 @@ module_naming_convention(Config, Target, RuleConfig) ->
                     Result = elvis_result:new(item, Msg, Info, 1),
                     [Result];
                 {match, _} -> []
-            end;
-        true -> []
+            end
     end.
 
 -spec state_record_and_type(elvis_config:config(),
@@ -374,6 +377,23 @@ state_record_and_type(Config, Target, _RuleConfig) ->
                     [Result]
             end;
         false ->
+            []
+    end.
+
+-spec exec_path_length(elvis_config:config(),
+                               elvis_utils:file(),
+                               [list()]) ->
+    [elvis_result:item()].
+exec_path_length(Config, Target, RuleConfig) ->
+    MaxCount = maps:get(max_length, RuleConfig, 10),
+    IgnoreModules = maps:get(ignore, RuleConfig, []),
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+    ModuleName = elvis_code:module_name(Root),
+    case lists:member(ModuleName, IgnoreModules) of
+        false ->
+            elvis_utils:check_nodes(
+                Root, fun check_exec_path_length/2, MaxCount);
+        true ->
             []
     end.
 
@@ -831,6 +851,21 @@ is_ignored_var(Zipper) ->
                 and (Name =/= '_')
                 and not check_parent_match(Zipper);
         _OtherType -> false
+    end.
+
+-spec check_exec_path_length(elvis_code:tree_node(), integer()) ->
+    [elvis_result:item_result()].
+check_exec_path_length(Node, MaxLength) ->
+    case ktn_code:longest_path(Node) of
+        {Length, MaxNode} when Length > MaxLength ->
+            {Line, Col} = elvis_code:attr(location, MaxNode),
+            Name = elvis_code:attr(name, Node),
+            Msg = ?EXEC_PATH_LENGTH_MSG,
+            Info = [Name, Length, Line, Col],
+            Result = elvis_result:new(item, Msg, Info, Line),
+            [Result];
+        _Other ->
+            []
     end.
 
 check_parent_match(Zipper) ->
