@@ -384,10 +384,10 @@ state_record_and_type(Config, Target, _RuleConfig) ->
                                elvis_utils:file(),
                                [list()]) ->
     [elvis_result:item()].
-exec_path_length(_Config, Target, RuleConfig) ->
+exec_path_length(Config, Target, RuleConfig) ->
     MaxCount = maps:get(max_length, RuleConfig, 10),
     IgnoreModules = maps:get(ignore, RuleConfig, []),
-    {Root, _} = elvis_file:parse_tree(Target),
+    {Root, _} = elvis_file:parse_tree(Config, Target),
     ModuleName = elvis_code:module_name(Root),
     case lists:member(ModuleName, IgnoreModules) of
         false ->
