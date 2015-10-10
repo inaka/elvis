@@ -20,7 +20,8 @@
          no_spec_with_records/3,
          dont_repeat_yourself/3,
          max_module_length/3,
-         max_function_length/3
+         max_function_length/3,
+         no_debug_call/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -100,6 +101,9 @@
 -define(MAX_FUNCTION_LENGTH,
         "The code for function ~p has ~p lines which exceeds the "
         "maximum of ~p.").
+
+-define(NO_DEBUG_CALL_MSG,
+        "Remove the debug call to ~p:~p/~p on line ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -501,6 +505,33 @@ max_function_length(Config, Target, RuleConfig) ->
                 elvis_result:new(item, Msg, Info, StartPos)
         end,
     lists:map(ResultFun, FunLenMaxPairs).
+
+-type no_debug_call_config() :: #{debug_functions => [function_spec()],
+                                  ignore => [module()]
+                                 }.
+-type function_spec() :: {module(), atom(), non_neg_integer()}
+                       | {module(), atom()}.
+
+-spec no_debug_call(elvis_config:config(),
+                    elvis_file:file(),
+                    no_debug_call_config()) ->
+    [elvis_result:item()].
+no_debug_call(Config, Target, RuleConfig) ->
+    IgnoreModules = maps:get(ignore, RuleConfig, []),
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+    ModuleName = elvis_code:module_name(Root),
+    DefaultDebugFuns = [{ct, pal},
+                        {io, format, 1},
+                        {io, format, 2}],
+    DebugFuns = maps:get(debug_functions, RuleConfig, DefaultDebugFuns),
+
+    case lists:member(ModuleName, IgnoreModules) of
+        false ->
+            IsCall = fun(Node) -> ktn_code:type(Node) =:= 'call' end,
+            Calls = elvis_code:find(IsCall, Root),
+            check_no_debug_call(Calls, DebugFuns);
+        true -> []
+    end.
 
 -spec node_line_limits(ktn_code:tree_node())->
     {Min :: integer(), Max :: integer()}.
@@ -982,3 +1013,35 @@ filter_repeated(NodesLocs) ->
 is_children(Parent, Node) ->
     Zipper = elvis_code:code_zipper(Parent),
     [] =/= zipper:filter(fun(Child) -> Child == Node end, Zipper).
+
+%% No debug call
+
+-spec check_no_debug_call([ktn_code:node()], [function_spec()]) ->
+    [elvis_result:item()].
+check_no_debug_call(Calls, DebugFuns) ->
+    DebugCalls = [Call || Call <- Calls, is_debug_call(Call, DebugFuns)],
+    ResultFun = fun(Call) ->
+                        {M, F, A} = call_mfa(Call),
+                        {Line, _} = ktn_code:attr(location, Call),
+                        elvis_result:new(item,
+                                         ?NO_DEBUG_CALL_MSG,
+                                         [M, F, A, Line],
+                                         Line)
+                end,
+    lists:map(ResultFun, DebugCalls).
+
+is_debug_call(Call, DebugFuns) ->
+    MFA = call_mfa(Call),
+    MatchFun = fun(Spec) -> fun_spec_match(Spec, MFA) end,
+    lists:any(MatchFun, DebugFuns).
+
+call_mfa(Call) ->
+    FunctionSpec = ktn_code:node_attr(function, Call),
+    M = ktn_code:attr(value, ktn_code:node_attr(module, FunctionSpec)),
+    F = ktn_code:attr(value, ktn_code:node_attr(function, FunctionSpec)),
+    A = length(ktn_code:content(Call)),
+    {M, F, A}.
+
+fun_spec_match({M, F}, {M, F, _}) -> true;
+fun_spec_match({M, F, A}, {M, F, A}) -> true;
+fun_spec_match(_, _) -> false.
