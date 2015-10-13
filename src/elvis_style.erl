@@ -1008,19 +1008,9 @@ is_children(Parent, Node) ->
 
 check_nested_try_catchs(ResultFun, TryExp) ->
     Predicate = fun(Node) -> ktn_code:type(Node) == 'try' end,
-    FilterMapFun =
-        fun (Node) ->
-                case Node /= TryExp of
-                    true ->
-                        {true, ResultFun(Node)};
-                    false ->
-                        false
-                end
-        end,
-    case elvis_code:find(Predicate, TryExp) of
-        [] ->
-            [];
-        NestedTryExprs ->
-            lists:filtermap(FilterMapFun,
-                            NestedTryExprs)
-    end.
+    lists:filtermap(fun (Node) when Node /= TryExp ->
+                             {true, ResultFun(Node)};
+                        (_) ->
+                             false
+                    end,
+                    elvis_code:find(Predicate, TryExp)).

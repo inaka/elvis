@@ -27,7 +27,7 @@
          verify_dont_repeat_yourself/1,
          verify_max_module_length/1,
          verify_max_function_length/1,
-		 verify_no_nested_try_catch/1,
+         verify_no_nested_try_catch/1,
          %% Non-rule
          results_are_ordered_by_line/1
         ]).
