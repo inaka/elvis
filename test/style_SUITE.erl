@@ -102,7 +102,11 @@ verify_variable_naming_convention(_Config) ->
 
     PathFail = "fail_variable_naming_convention.erl",
     {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
-    [_AtSign, _Underline_Word_Separator, _Bad_Ignored_Variable] =
+    [_AtSign,
+     _Underline_Word_Separator,
+     _Bad_Ignored_Variable,
+     _AtSignAgain,
+     _Underline_Word_SeparatorAgain] =
         elvis_style:variable_naming_convention(ElvisConfig,
                                                FileFail,
                                                RuleConfig).
