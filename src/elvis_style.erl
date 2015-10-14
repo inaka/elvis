@@ -20,7 +20,8 @@
          no_spec_with_records/3,
          dont_repeat_yourself/3,
          max_module_length/3,
-         max_function_length/3
+         max_function_length/3,
+         no_nested_try_catch/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -100,6 +101,9 @@
 -define(MAX_FUNCTION_LENGTH,
         "The code for function ~p has ~p lines which exceeds the "
         "maximum of ~p.").
+
+-define(NO_NESTED_TRY_CATCH,
+        "Nested try...catch block starting at line ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -512,6 +516,23 @@ node_line_limits(FunctionNode) ->
     Min = lists:min(LineNums),
     {Min, Max}.
 
+-spec no_nested_try_catch(elvis_config:config(),
+                          elvis_file:file(),
+                          empty_rule_config()) ->
+    [elvis_result:item()].
+no_nested_try_catch(Config, Target, _RuleConfig) ->
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+    Predicate = fun(Node) -> ktn_code:type(Node) == 'try' end,
+    ResultFun = result_node_line_fun(?NO_NESTED_TRY_CATCH),
+    case elvis_code:find(Predicate, Root) of
+        [] ->
+            [];
+        TryExprs ->
+            lists:flatmap(fun (TryExp) ->
+                                   check_nested_try_catchs(ResultFun, TryExp)
+                          end,
+                          TryExprs)
+    end.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -982,3 +1003,14 @@ filter_repeated(NodesLocs) ->
 is_children(Parent, Node) ->
     Zipper = elvis_code:code_zipper(Parent),
     [] =/= zipper:filter(fun(Child) -> Child == Node end, Zipper).
+
+%% No nested try...catch blocks
+
+check_nested_try_catchs(ResultFun, TryExp) ->
+    Predicate = fun(Node) -> ktn_code:type(Node) == 'try' end,
+    lists:filtermap(fun (Node) when Node /= TryExp ->
+                             {true, ResultFun(Node)};
+                        (_) ->
+                             false
+                    end,
+                    elvis_code:find(Predicate, TryExp)).
