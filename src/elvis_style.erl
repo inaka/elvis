@@ -75,8 +75,8 @@
         "regular expression '~p'.").
 
 -define(VARIABLE_NAMING_CONVENTION_MSG,
-        "The variable ~p does not respect the format defined by the "
-        "regular expression '~p'.").
+        "The variable ~p on line ~p does not respect the format "
+        "defined by the regular expression '~p'.").
 
 -define(MODULE_NAMING_CONVENTION_MSG,
         "The module ~p does not respect the format defined by the "
@@ -154,7 +154,7 @@ variable_naming_convention(Config, Target, RuleConfig) ->
     case lists:member(ModuleName, IgnoreModules) of
         false ->
             IsVar = fun(Node) -> ktn_code:type(Node) =:= 'var' end,
-            Vars = elvis_code:find(IsVar, Root),
+            Vars = elvis_code:find(IsVar, Root, #{traverse => all}),
             check_variables_name(Regex, Vars);
         true -> []
     end.
@@ -557,7 +557,8 @@ check_variables_name(Regex, [Variable | RemainingVars]) ->
             check_variables_name(Regex, RemainingVars);
         nomatch ->
             Msg = ?VARIABLE_NAMING_CONVENTION_MSG,
-            Info = [VariableNameStr, Regex],
+            {Line, _} = ktn_code:attr(location, Variable),
+            Info = [VariableNameStr, Line, Regex],
             Result = elvis_result:new(item, Msg, Info, 1),
             [Result | check_variables_name(Regex, RemainingVars)];
         {match, _} -> check_variables_name(Regex, RemainingVars)
