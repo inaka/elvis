@@ -8,6 +8,7 @@
 %% Cf. https://github.com/inaka/erlang_guidelines#variable-names
 
 should_pass(Should, Pass, Way2Home, Fun1, Fun2) ->
+    {_IgnoredVariable, _} = ["Ignored but valid", "also valid"],
     Should = "Should",
     Pass = "Pass",
     Way2Home = "Way to home",

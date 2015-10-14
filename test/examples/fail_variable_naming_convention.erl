@@ -8,4 +8,5 @@
 %% Cf. https://github.com/inaka/erlang_guidelines#variable-names
 
 bad_variables_name(Im@Home, My_Way) ->
+    _Bad_Ignored_Variable = "Bad variable name",
     Im@Home ++ My_Way.
