@@ -544,7 +544,14 @@ node_line_limits(FunctionNode) ->
 %% Variables name
 check_variables_name(_Regex, []) -> [];
 check_variables_name(Regex, [Variable | RemainingVars]) ->
-    VariableNameStr = atom_to_list(ktn_code:attr(name, Variable)),
+    VariableName = atom_to_list(ktn_code:attr(name, Variable)),
+    %% Replace the leading underline (if any) in the variable name.
+    VariableNameStr = case length(VariableName) of
+        (N) when N > 1 ->
+            [_ | TempStr] = re:replace(VariableName, "^_?", ""),
+            binary_to_list(TempStr);
+        (_) -> VariableName
+    end,
     case re:run(VariableNameStr, Regex) of
         nomatch when VariableNameStr == "_" ->
             check_variables_name(Regex, RemainingVars);
