@@ -559,7 +559,7 @@ check_variables_name(Regex, [Variable | RemainingVars]) ->
             Msg = ?VARIABLE_NAMING_CONVENTION_MSG,
             {Line, _} = ktn_code:attr(location, Variable),
             Info = [VariableNameStr, Line, Regex],
-            Result = elvis_result:new(item, Msg, Info, 1),
+            Result = elvis_result:new(item, Msg, Info, Line),
             [Result | check_variables_name(Regex, RemainingVars)];
         {match, _} -> check_variables_name(Regex, RemainingVars)
     end.
