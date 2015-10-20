@@ -28,6 +28,7 @@
          verify_dont_repeat_yourself/1,
          verify_max_module_length/1,
          verify_max_function_length/1,
+         verify_no_nested_try_catch/1,
          %% Non-rule
          results_are_ordered_by_line/1
         ]).
@@ -478,6 +479,19 @@ verify_max_function_length(_Config) ->
 
     RuleConfig10 = NoCountRuleConfig#{max_length => 2},
     [] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig10).
+
+-spec verify_no_nested_try_catch(config()) -> any().
+verify_no_nested_try_catch(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    Path = "fail_no_nested_try_catch.erl",
+    {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
+    [
+     #{line_num := 13},
+     #{line_num := 28},
+     #{line_num := 35}
+    ] = elvis_style:no_nested_try_catch(ElvisConfig, File, #{}).
 
 -spec results_are_ordered_by_line(config()) -> any().
 results_are_ordered_by_line(_Config) ->
