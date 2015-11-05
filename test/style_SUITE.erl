@@ -28,6 +28,7 @@
          verify_dont_repeat_yourself/1,
          verify_max_module_length/1,
          verify_max_function_length/1,
+         verify_no_debug_call/1,
          verify_no_nested_try_catch/1,
          %% Non-rule
          results_are_ordered_by_line/1
@@ -479,6 +480,29 @@ verify_max_function_length(_Config) ->
 
     RuleConfig10 = NoCountRuleConfig#{max_length => 2},
     [] = elvis_style:max_function_length(ElvisConfig, FileFail, RuleConfig10).
+
+-spec verify_no_debug_call(config()) -> any().
+verify_no_debug_call(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    PathFail = "fail_no_debug_call.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+
+    [_, _, _, _] = elvis_style:no_debug_call(ElvisConfig, FileFail, #{}),
+
+    RuleConfig = #{ignore => [fail_no_debug_call]},
+    [] = elvis_style:no_debug_call(ElvisConfig, FileFail, RuleConfig),
+
+    RuleConfig2 = #{debug_functions => [{ct, pal, 2}]},
+    [_] = elvis_style:no_debug_call(ElvisConfig, FileFail, RuleConfig2),
+
+    RuleConfig3 = #{debug_functions => [{ct, pal}]},
+    [_, _] = elvis_style:no_debug_call(ElvisConfig, FileFail, RuleConfig3),
+
+    RuleConfig4 = #{debug_functions => [{io, format}]},
+    [_, _, _] =
+        elvis_style:no_debug_call(ElvisConfig, FileFail, RuleConfig4).
 
 -spec verify_no_nested_try_catch(config()) -> any().
 verify_no_nested_try_catch(_Config) ->
