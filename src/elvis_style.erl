@@ -2,6 +2,7 @@
 
 -export([
          function_naming_convention/3,
+         variable_naming_convention/3,
          line_length/3,
          no_tabs/3,
          no_spaces/3,
@@ -21,7 +22,8 @@
          dont_repeat_yourself/3,
          max_module_length/3,
          max_function_length/3,
-         no_debug_call/3
+         no_debug_call/3,
+         no_nested_try_catch/3
         ]).
 
 -define(LINE_LENGTH_MSG, "Line ~p is too long: ~s.").
@@ -74,6 +76,10 @@
         "The function ~p does not respect the format defined by the "
         "regular expression '~p'.").
 
+-define(VARIABLE_NAMING_CONVENTION_MSG,
+        "The variable ~p on line ~p does not respect the format "
+        "defined by the regular expression '~p'.").
+
 -define(MODULE_NAMING_CONVENTION_MSG,
         "The module ~p does not respect the format defined by the "
         "regular expression '~p'.").
@@ -104,6 +110,9 @@
 
 -define(NO_DEBUG_CALL_MSG,
         "Remove the debug call to ~p:~p/~p on line ~p.").
+
+-define(NO_NESTED_TRY_CATCH,
+        "Nested try...catch block starting at line ~p.").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Rules
@@ -136,6 +145,26 @@ errors_for_function_names(Regex, [FunctionName | RemainingFuncNames]) ->
             Result = elvis_result:new(item, Msg, Info, 1),
             [Result | errors_for_function_names(Regex, RemainingFuncNames)];
         {match, _} -> errors_for_function_names(Regex, RemainingFuncNames)
+    end.
+
+-type variable_naming_convention_config() :: #{regex => string(),
+                                               ignore => [module()]
+                                              }.
+-spec variable_naming_convention(elvis_config:config(),
+                                 elvis_file:file(),
+                                 variable_naming_convention_config()) ->
+    [elvis_result:item()].
+variable_naming_convention(Config, Target, RuleConfig) ->
+    IgnoreModules = maps:get(ignore, RuleConfig, []),
+    Regex = maps:get(regex, RuleConfig, ".*"),
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+    ModuleName = elvis_code:module_name(Root),
+    case lists:member(ModuleName, IgnoreModules) of
+        false ->
+            IsVar = fun(Node) -> ktn_code:type(Node) =:= 'var' end,
+            Vars = elvis_code:find(IsVar, Root, #{traverse => all}),
+            check_variables_name(Regex, Vars);
+        true -> []
     end.
 
 -type line_length_config() :: #{limit => integer(),
@@ -543,9 +572,49 @@ node_line_limits(FunctionNode) ->
     Min = lists:min(LineNums),
     {Min, Max}.
 
+-spec no_nested_try_catch(elvis_config:config(),
+                          elvis_file:file(),
+                          empty_rule_config()) ->
+    [elvis_result:item()].
+no_nested_try_catch(Config, Target, _RuleConfig) ->
+    {Root, _} = elvis_file:parse_tree(Config, Target),
+    Predicate = fun(Node) -> ktn_code:type(Node) == 'try' end,
+    ResultFun = result_node_line_fun(?NO_NESTED_TRY_CATCH),
+    case elvis_code:find(Predicate, Root) of
+        [] ->
+            [];
+        TryExprs ->
+            lists:flatmap(fun (TryExp) ->
+                                   check_nested_try_catchs(ResultFun, TryExp)
+                          end,
+                          TryExprs)
+    end.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Variables name
+check_variables_name(_Regex, []) -> [];
+check_variables_name(Regex, [Variable | RemainingVars]) ->
+    VariableName = atom_to_list(ktn_code:attr(name, Variable)),
+    %% Replace the leading underline (if any) in the variable name.
+    VariableNameStr = case length(VariableName) of
+        (N) when N > 1 ->
+            [_ | TempStr] = re:replace(VariableName, "^_?", ""),
+            binary_to_list(TempStr);
+        (_) -> VariableName
+    end,
+    case re:run(VariableNameStr, Regex) of
+        nomatch when VariableNameStr == "_" ->
+            check_variables_name(Regex, RemainingVars);
+        nomatch ->
+            Msg = ?VARIABLE_NAMING_CONVENTION_MSG,
+            {Line, _} = ktn_code:attr(location, Variable),
+            Info = [VariableNameStr, Line, Regex],
+            Result = elvis_result:new(item, Msg, Info, Line),
+            [Result | check_variables_name(Regex, RemainingVars)];
+        {match, _} -> check_variables_name(Regex, RemainingVars)
+    end.
 
 %% Result building
 
@@ -1045,3 +1114,14 @@ call_mfa(Call) ->
 fun_spec_match({M, F}, {M, F, _}) -> true;
 fun_spec_match({M, F, A}, {M, F, A}) -> true;
 fun_spec_match(_, _) -> false.
+
+%% No nested try...catch blocks
+
+check_nested_try_catchs(ResultFun, TryExp) ->
+    Predicate = fun(Node) -> ktn_code:type(Node) == 'try' end,
+    lists:filtermap(fun (Node) when Node /= TryExp ->
+                             {true, ResultFun(Node)};
+                        (_) ->
+                             false
+                    end,
+                    elvis_code:find(Predicate, TryExp)).

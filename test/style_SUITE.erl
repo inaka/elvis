@@ -8,6 +8,7 @@
 
 -export([
          verify_function_naming_convention/1,
+         verify_variable_naming_convention/1,
          verify_line_length_rule/1,
          verify_no_tabs_rule/1,
          verify_no_spaces_rule/1,
@@ -28,6 +29,7 @@
          verify_max_module_length/1,
          verify_max_function_length/1,
          verify_no_debug_call/1,
+         verify_no_nested_try_catch/1,
          %% Non-rule
          results_are_ordered_by_line/1
         ]).
@@ -86,6 +88,30 @@ verify_function_naming_convention(_Config) ->
     [_CamelCaseError, _ALL_CAPSError, _InitialCapError,
      _HyphenError, _PredError, _EmailError] =
         elvis_style:function_naming_convention(ElvisConfig, FileFail, RuleConfig).
+
+-spec verify_variable_naming_convention(config()) -> any().
+verify_variable_naming_convention(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    RuleConfig = #{regex => "^([A-Z][0-9a-zA-Z]*)$"},
+
+    PathPass = "pass_variable_naming_convention.erl",
+    {ok, FilePass} = elvis_test_utils:find_file(SrcDirs, PathPass),
+    [] = elvis_style:variable_naming_convention(ElvisConfig,
+                                                FilePass,
+                                                RuleConfig),
+
+    PathFail = "fail_variable_naming_convention.erl",
+    {ok, FileFail} = elvis_test_utils:find_file(SrcDirs, PathFail),
+    [_AtSign,
+     _Underline_Word_Separator,
+     _Bad_Ignored_Variable,
+     _AtSignAgain,
+     _Underline_Word_SeparatorAgain] =
+        elvis_style:variable_naming_convention(ElvisConfig,
+                                               FileFail,
+                                               RuleConfig).
 
 -spec verify_line_length_rule(config()) -> any().
 verify_line_length_rule(_Config) ->
@@ -477,6 +503,19 @@ verify_no_debug_call(_Config) ->
     RuleConfig4 = #{debug_functions => [{io, format}]},
     [_, _, _] =
         elvis_style:no_debug_call(ElvisConfig, FileFail, RuleConfig4).
+
+-spec verify_no_nested_try_catch(config()) -> any().
+verify_no_nested_try_catch(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    Path = "fail_no_nested_try_catch.erl",
+    {ok, File} = elvis_test_utils:find_file(SrcDirs, Path),
+    [
+     #{line_num := 13},
+     #{line_num := 28},
+     #{line_num := 35}
+    ] = elvis_style:no_nested_try_catch(ElvisConfig, File, #{}).
 
 -spec results_are_ordered_by_line(config()) -> any().
 results_are_ordered_by_line(_Config) ->
