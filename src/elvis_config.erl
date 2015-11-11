@@ -21,7 +21,7 @@
               config/0
              ]).
 
--type config() :: map().
+-type config() :: [map()].
 
 -define(DEFAULT_CONFIG_PATH, "./elvis.config").
 -define(DEFAULT_FILTER, "*.erl").
