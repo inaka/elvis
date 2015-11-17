@@ -670,7 +670,8 @@ check_line_length(Line, Num, [Limit, any]) ->
 check_line_length(Line, Num, [Limit|_]) ->
     check_line_length(Line, Num, Limit);
 check_line_length(Line, Num, Limit) ->
-    case byte_size(Line) of
+    Chars = unicode:characters_to_list(Line),
+    case length(Chars) of
         Large when Large > Limit ->
             Msg = ?LINE_LENGTH_MSG,
             Info = [Num, binary_to_list(Line)],
