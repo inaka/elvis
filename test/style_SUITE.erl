@@ -10,6 +10,7 @@
          verify_function_naming_convention/1,
          verify_variable_naming_convention/1,
          verify_line_length_rule/1,
+         verify_unicode_line_length_rule/1,
          verify_no_tabs_rule/1,
          verify_no_spaces_rule/1,
          verify_no_trailing_whitespace_rule/1,
@@ -136,6 +137,17 @@ verify_line_length_rule(_Config) ->
                                         #{limit => 80,
                                           skip_comments => any}),
     6 = length(AnyResult).
+
+-spec verify_unicode_line_length_rule(config()) -> any().
+verify_unicode_line_length_rule(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    Pass = "pass_unicode_comments.erl",
+    {ok, Path} = elvis_test_utils:find_file(SrcDirs, Pass),
+
+    Result = elvis_style:line_length(ElvisConfig, Path, #{limit => 80}),
+    0 = length(Result).
 
 -spec verify_no_tabs_rule(config()) -> any().
 verify_no_tabs_rule(_Config) ->
