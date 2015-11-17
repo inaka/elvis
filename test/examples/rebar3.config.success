@@ -1,0 +1,6 @@
+{deps,
+ [
+  {lager, "2.1.1"},
+  {meck, "0.8.2", {git, "https://github.com/basho/meck.git", {tag, "0.8.2"}}},
+  recon
+ ]}.

@@ -9,6 +9,7 @@
 -export([
          verify_no_deps_master_erlang_mk/1,
          verify_no_deps_master_rebar/1,
+         verify_hex_dep_rebar/1,
          verify_git_for_deps_erlang_mk/1,
          verify_protocol_for_deps_erlang_mk/1,
          verify_git_for_deps_rebar/1,
@@ -178,6 +179,16 @@ verify_protocol_for_deps_rebar(_Config) ->
     RuleConfig2 =  #{ignore => [meck], regex => "git@.*"},
     [_, _, _, _, _, _, _, _] =
         elvis_project:protocol_for_deps_rebar(ElvisConfig, File, RuleConfig2).
+
+-spec verify_hex_dep_rebar(config()) -> any().
+verify_hex_dep_rebar(_Config) ->
+    ElvisConfig = elvis_config:default(),
+    SrcDirs = elvis_config:dirs(ElvisConfig),
+
+    Filename = "rebar3.config.success",
+    {ok, File} = elvis_test_utils:find_file(SrcDirs, Filename),
+
+    [] = elvis_project:protocol_for_deps_rebar(ElvisConfig, File, #{}).
 
 -spec verify_old_config_format(config()) -> any().
 verify_old_config_format(_Config) ->

@@ -74,8 +74,10 @@ protocol_for_deps_rebar(_Config, Target, RuleConfig) ->
     IgnoreDeps = maps:get(ignore, RuleConfig, []),
     Regex = maps:get(regex, RuleConfig, "https://.*"),
     Deps = get_rebar_deps(Target),
+    NoHexDeps = lists:filter(fun(Dep) -> not is_rebar_hex_dep(Dep) end,
+                             Deps),
     BadDeps = lists:filter(fun(Dep) -> is_rebar_not_git_dep(Dep, Regex) end,
-                           Deps),
+                           NoHexDeps),
     lists:flatmap(
         fun(Line) ->
             rebar_dep_to_result(Line, ?DEP_NO_GIT, {IgnoreDeps, Regex})
@@ -159,6 +161,14 @@ is_rebar_master_dep({_AppName, _Vsn, {_SCM, _Location, "master"}}) ->
 is_rebar_master_dep({_AppName, _Vsn, {_SCM, _Location, {branch, "master"}}}) ->
     true;
 is_rebar_master_dep(_) ->
+    false.
+is_rebar_hex_dep(_AppName) when is_atom(_AppName) ->
+    true;
+is_rebar_hex_dep({_AppName, _Vsn})
+  when is_atom(_AppName),
+       is_list(_Vsn) ->
+    true;
+is_rebar_hex_dep(_) ->
     false.
 
 is_rebar_not_git_dep({_AppName, {_SCM, Url, _Branch}}, Regex) ->
