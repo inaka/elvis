@@ -1,3 +1,5 @@
+.erlang.mk/
+elvis.d
 .eunit
 .rebar
 deps
