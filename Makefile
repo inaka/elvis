@@ -30,7 +30,6 @@ TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
 CT_OPTS = -cover test/elvis.coverspec -erl_args -config config/test.config
 
 # Builds the elvis escript.
-#	rebar escriptize
 escript::
 	./elvis help
 
