@@ -187,11 +187,13 @@ environment values in your [configuration][config] file:
        },
       #{dirs => ["."],
         filter => "Makefile",
-        rules => [{elvis_project, no_deps_master_erlang_mk, []}]
+        rules => [{elvis_project, no_deps_master_erlang_mk, #{ignore => []}},
+                  {elvis_project, protocol_for_deps_erlang_mk, #{ignore => []}}]
        },
       #{dirs => ["."],
         filter => "rebar.config",
-        rules => [{elvis_project, no_deps_master_rebar, []}]
+        rules => [{elvis_project, no_deps_master_rebar, #{ignore => []}},
+                  {elvis_project, protocol_for_deps_rebar, #{ignore => []}}]
        }
      ]
     },
