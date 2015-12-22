@@ -2,25 +2,11 @@
 
 %% Public API
 
--export([
-         main/1
-        ]).
-
--export([
-         rock/0,
-         rock/1,
-         rock_this/1,
-         rock_this/2,
-         webhook/1,
-         webhook/2
-        ]).
+-export([main/1]).
 
 -export([start/0]).
 
 -define(APP_NAME, "elvis").
-
--type source_filename() :: nonempty_string().
--type target() :: source_filename() | module().
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
@@ -48,22 +34,6 @@ main(Args) ->
             help()
     end.
 
-%%% Rock Command
-
--spec rock() -> ok | {fail, [elvis_result:file()]}.
-rock() -> elvis_core:rock().
-
--spec rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
-rock(Config) -> elvis_core:rock(Config).
-
--spec rock_this(target()) ->
-    ok | {fail, elvis_result:file()}.
-rock_this(Target) -> elvis_core:rock_this(Target).
-
--spec rock_this(target(), elvis_config:config()) ->
-    ok | {fail, elvis_result:file()}.
-rock_this(Module, Config) -> elvis_core:rock_this(Module, Config).
-
 %%% Git-Hook Command
 
 -spec git_hook(elvis_config:config()) -> ok.
@@ -71,23 +41,10 @@ git_hook(Config) ->
     Files = elvis_git:staged_files(),
     NewConfig = elvis_config:resolve_files(Config, Files),
 
-    case rock(NewConfig) of
+    case elvis_core:rock(NewConfig) of
         {fail, _} -> elvis_utils:erlang_halt(1);
         ok -> ok
     end.
-
-%% @doc Should receive the payload of a Github event and act accordingly.
--spec webhook(webhook:request()) -> ok | {error, term()}.
-webhook(Request) ->
-    Credentials = github_credentials(),
-    elvis_webhook:event(Credentials, Request).
-
-%% @doc Receives github credentials (basic or OAuth) and the payload
-%%      from an event, acting accordingly.
--spec webhook(egithub:credentials(), webhook:request()) ->
-    ok | {error, term()}.
-webhook(Credentials, Request) ->
-    elvis_webhook:event(Credentials, Request).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
@@ -147,7 +104,7 @@ process_options([], Cmds, Config) ->
 
 -spec process_commands([string()], elvis_config:config()) -> ok.
 process_commands([rock | Cmds], Config) ->
-    case rock(Config) of
+    case elvis_core:rock(Config) of
         {fail, _} -> elvis_utils:erlang_halt(1);
         ok -> ok
     end,
@@ -204,9 +161,3 @@ version() ->
               "/___/_/|___/_/___/\n"
               "Version: ~s\n",
     io:format(Version, [Vsn]).
-
--spec github_credentials() -> egithub:credentials().
-github_credentials() ->
-    User = application:get_env(elvis, github_user, ""),
-    Password = application:get_env(elvis, github_password, ""),
-    egithub:basic_auth(User, Password).
