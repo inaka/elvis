@@ -34,18 +34,6 @@ main(Args) ->
             help()
     end.
 
-%%% Git-Hook Command
-
--spec git_hook(elvis_config:config()) -> ok.
-git_hook(Config) ->
-    Files = elvis_git:staged_files(),
-    NewConfig = elvis_config:resolve_files(Config, Files),
-
-    case elvis_core:rock(NewConfig) of
-        {fail, _} -> elvis_utils:erlang_halt(1);
-        ok -> ok
-    end.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,7 +104,7 @@ process_commands(['install', 'git-hook' | Cmds], Config) ->
     elvis_git:install_hook(),
     process_commands(Cmds, Config);
 process_commands(['git-hook' | Cmds], Config) ->
-    git_hook(Config),
+    elvis_git:run_hook(Config),
     process_commands(Cmds, Config);
 process_commands([], _Config) ->
     ok;

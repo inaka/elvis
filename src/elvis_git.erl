@@ -1,6 +1,7 @@
 -module(elvis_git).
 
 -export([
+         run_hook/1,
          staged_files/0,
          staged_content/1,
          relative_position/2,
@@ -18,6 +19,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-spec run_hook(elvis_config:config()) -> ok.
+run_hook(Config) ->
+    Files = elvis_git:staged_files(),
+    NewConfig = elvis_config:resolve_files(Config, Files),
+
+    case elvis_core:rock(NewConfig) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
+    end.
 
 -spec staged_files() -> [elvis_file:file()].
 staged_files() ->
