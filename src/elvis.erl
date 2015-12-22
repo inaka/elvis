@@ -51,85 +51,18 @@ main(Args) ->
 %%% Rock Command
 
 -spec rock() -> ok | {fail, [elvis_result:file()]}.
-rock() ->
-    Config = elvis_config:default(),
-    rock(Config).
+rock() -> elvis_core:rock().
 
 -spec rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
-rock(Config) ->
-    elvis_config:validate(Config),
-    NewConfig = elvis_config:normalize(Config),
-    Results = lists:map(fun do_rock/1, NewConfig),
-    lists:foldl(fun combine_results/2, ok, Results).
+rock(Config) -> elvis_core:rock(Config).
 
 -spec rock_this(target()) ->
     ok | {fail, elvis_result:file()}.
-rock_this(Target) ->
-    Config = elvis_config:default(),
-    rock_this(Target, Config).
+rock_this(Target) -> elvis_core:rock_this(Target).
 
 -spec rock_this(target(), elvis_config:config()) ->
     ok | {fail, elvis_result:file()}.
-rock_this(Module, Config) when is_atom(Module) ->
-    ModuleInfo = Module:module_info(compile),
-    Path = proplists:get_value(source, ModuleInfo),
-    rock_this(Path, Config);
-rock_this(Path, Config) ->
-    elvis_config:validate(Config),
-    NewConfig = elvis_config:normalize(Config),
-    Dirname = filename:dirname(Path),
-    Filename = filename:basename(Path),
-    File = case elvis_file:find_files([Dirname], Filename, local) of
-               [] -> throw({enoent, Path});
-               [File0] -> File0
-           end,
-
-    FilterFun = fun(Cfg) ->
-                        Filter = elvis_config:filter(Cfg),
-                        Dirs = elvis_config:dirs(Cfg),
-                        [] =/= elvis_file:filter_files([File], Dirs, Filter)
-                end,
-    FilteredConfig = lists:filter(FilterFun, NewConfig),
-
-    LoadedFile = load_file_data(FilteredConfig, File),
-
-    ApplyRulesFun = fun(Cfg) -> apply_rules(Cfg, LoadedFile) end,
-    Results = lists:map(ApplyRulesFun, FilteredConfig),
-    case elvis_result:status(Results) of
-        fail -> {fail, elvis_result:clean(Results)};
-        ok -> ok
-    end.
-
-%% @private
--spec do_rock(elvis_config:config()) -> ok | {fail, [elvis_result:file()]}.
-do_rock(Config0) ->
-    elvis_utils:info("Loading files..."),
-    Config = elvis_config:resolve_files(Config0),
-    Files = elvis_config:files(Config),
-    Fun = fun (File) -> load_file_data(Config, File) end,
-    LoadedFiles = lists:map(Fun, Files),
-    elvis_utils:info("Applying rules..."),
-    Results = [apply_rules(Config, File) || File <- LoadedFiles],
-
-    case elvis_result:status(Results) of
-        fail -> {fail, elvis_result:clean(Results)};
-        ok -> ok
-    end.
-
-%% @private
--spec load_file_data(elvis_config:config(), elvis_file:file()) ->
-    elvis_file:file().
-load_file_data(Config, File) ->
-    Path = elvis_file:path(File),
-    elvis_utils:info("Loading ~s", [Path]),
-    try
-        elvis_file:load_file_data(Config, File)
-    catch
-        _:Reason ->
-            Msg = "~p when loading file ~p.",
-            elvis_utils:error_prn(Msg, [Reason, Path]),
-            File
-    end.
+rock_this(Module, Config) -> elvis_core:rock_this(Module, Config).
 
 %%% Git-Hook Command
 
@@ -159,45 +92,6 @@ webhook(Credentials, Request) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
--spec combine_results(ok | {fail, [elvis_result:file()]},
-                      ok | {fail, [elvis_result:file()]}) ->
-    ok | {fail, [elvis_result:file()]}.
-combine_results(ok, Acc) ->
-    Acc;
-combine_results(Item, ok) ->
-    Item;
-combine_results({fail, ItemResults}, {fail, AccResults}) ->
-    {fail, ItemResults ++ AccResults}.
-
--spec apply_rules(elvis_config:config(), elvis_file:file()) ->
-    elvis_result:file().
-apply_rules(Config, File) ->
-    Rules = elvis_config:rules(Config),
-    Acc = {[], Config, File},
-    {RulesResults, _, _} = lists:foldl(fun apply_rule/2, Acc, Rules),
-
-    Results = elvis_result:new(file, File, RulesResults),
-    elvis_result:print(Results),
-    Results.
-
-apply_rule({Module, Function}, {Result, Config, File}) ->
-    apply_rule({Module, Function, #{}}, {Result, Config, File});
-apply_rule({Module, Function, ConfigArgs}, {Result, Config, File}) ->
-    ConfigMap = ensure_config_map(Module, Function, ConfigArgs),
-    RuleResult = try
-                    Results = Module:Function(Config, File, ConfigMap),
-                    SortFun = fun(#{line_num := L1}, #{line_num := L2}) ->
-                                  L1 =< L2
-                              end,
-                    SortResults = lists:sort(SortFun, Results),
-                    elvis_result:new(rule, Function, SortResults)
-                 catch
-                     _:Reason ->
-                         Msg = "'~p' while applying rule '~p'.",
-                         elvis_result:new(error, Msg, [Reason, Function])
-                 end,
-    {[RuleResult | Result], Config, File}.
 
 %%% Command Line Interface
 
@@ -316,25 +210,3 @@ github_credentials() ->
     User = application:get_env(elvis, github_user, ""),
     Password = application:get_env(elvis, github_password, ""),
     egithub:basic_auth(User, Password).
-
-%% @doc Process a tules configuration argument and converts it to a map.
-ensure_config_map(_, _, Map) when is_map(Map) ->
-    Map;
-ensure_config_map(elvis_style, line_length, [Limit]) ->
-    #{limit => Limit};
-ensure_config_map(elvis_style, operator_spaces, Rules) ->
-    #{rules => Rules};
-ensure_config_map(elvis_style, nesting_level, [Level]) ->
-    #{level => Level};
-ensure_config_map(elvis_style, god_modules, [Limit]) ->
-    #{limit => Limit};
-ensure_config_map(elvis_style, god_modules, [Limit, IgnoreModules]) ->
-    #{limit => Limit, ignore => IgnoreModules};
-ensure_config_map(elvis_style, invalid_dynamic_call, IgnoreModules) ->
-    #{ignore => IgnoreModules};
-ensure_config_map(elvis_style,
-                  module_naming_convention,
-                  [Regex, IgnoreModules]) ->
-    #{regex => Regex, ignore => IgnoreModules};
-ensure_config_map(_, _, []) ->
-    #{}.
