@@ -1,4 +1,4 @@
-PROJECT = elvis
+PROJECT = elvis_shell
 
 DEPS = lager elvis_core getopt jiffy ibrowse egithub
 SHELL_DEPS = sync
@@ -25,8 +25,8 @@ ERLC_OPTS += +warn_export_vars +warn_exported_vars +warn_missing_spec +warn_unty
 
 TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
 CT_OPTS = -cover test/elvis.coverspec -erl_args -config config/test.config
-
 SHELL_OPTS = -name elvis@`hostname` -s sync -s elvis -s lager -config config/elvis.config
+ESCRIPT_NAME = elvis
 
 # Builds the elvis escript.
 escript::

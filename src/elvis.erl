@@ -15,7 +15,7 @@
 %% @doc Used when starting the application on the shell.
 -spec start() -> ok.
 start() ->
-    {ok, _} = application:ensure_all_started(elvis),
+    {ok, _} = application:ensure_all_started(elvis_shell),
     ok.
 
 -spec main([string()]) -> ok.

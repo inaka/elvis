@@ -1,5 +1,5 @@
 .erlang.mk/
-elvis.d
+elvis_shell.d
 .eunit
 .rebar
 deps

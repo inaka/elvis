@@ -1,0 +1,16 @@
+{
+  application, elvis_shell,
+  [
+   {description, "CLI for the Elvis Erlang Style Reviewer"},
+   {vsn, "0.2.6-alpha1"},
+   {applications, [kernel, elvis, stdlib, ibrowse, ssl, jiffy, lager, aleppo, zipper]},
+   {modules,
+    [
+     elvis,
+     elvis_git,
+     elvis_webhook
+    ]
+   },
+   {registered, []}
+  ]
+}.
