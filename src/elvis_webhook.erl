@@ -2,11 +2,14 @@
 
 -behaviour(egithub_webhook).
 
--export([event/2]).
+-export([event/1, event/2]).
 -export([handle_pull_request/3]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% External Functions
+
+-spec event(egithub_webhook:request()) -> ok | {error, term()}.
+event(Request) -> event(github_credentials(), Request).
 
 -spec event(egithub:credentials(), egithub_webhook:request()) ->
   ok | {error, term()}.
@@ -37,13 +40,19 @@ handle_pull_request(Cred, Data, GithubFiles) ->
     FileInfoFun = fun (File) -> file_info(Cred, Repo, File) end,
     Config2 = elvis_config:apply_to_files(FileInfoFun, Config1),
 
-    case elvis:rock(Config2) of
+    case elvis_core:rock(Config2) of
         {fail, Results} -> {ok, messages_from_results(Results)};
         ok -> {ok, []}
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helper functions
+
+-spec github_credentials() -> egithub:credentials().
+github_credentials() ->
+    User = application:get_env(elvis, github_user, ""),
+    Password = application:get_env(elvis, github_password, ""),
+    egithub:basic_auth(User, Password).
 
 file_info(Cred, Repo,
           #{<<"filename">> := Filename,
