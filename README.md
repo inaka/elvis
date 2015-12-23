@@ -102,7 +102,7 @@ Make sure your pre-commit hook script is executable (i.e. by running
 ### Erlang Shell
 
 If you only need to use `elvis` in the Erlang shell you might want to
-consider only including the [`elvis_core`](https://github.com/inaka/elvis_core) 
+consider only including the [`elvis_core`](https://github.com/inaka/elvis_core)
 library as a dependency.
 
 ## Configuration
@@ -127,7 +127,7 @@ environment values in your [configuration][config] file:
 ].
 ```
 
-The `config` and `output_format` are explained in the [`elvis_core`](https://github.com/inaka/elvis_core).
+The `config` and `output_format` are explained in [`elvis_core`](https://github.com/inaka/elvis_core).
 
 The GitHub configuration parameters `github_user` and `github_password` are
 required only when `elvis` is used as a [webhook](#webhook).
