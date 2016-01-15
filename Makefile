@@ -5,7 +5,7 @@ SHELL_DEPS = sync
 TEST_DEPS = meck xref_runner
 
 dep_lager       = git https://github.com/basho/lager.git       2.0.3
-dep_elvis_core  = git https://github.com/inaka/elvis_core      0.2.6-alpha2
+dep_elvis_core  = git https://github.com/inaka/elvis_core      0.2.6
 dep_getopt      = git https://github.com/jcomellas/getopt      v0.8.2
 dep_jiffy       = git https://github.com/davisp/jiffy          0.14.2
 dep_ibrowse     = git https://github.com/cmullaparthi/ibrowse  v4.1.2
