@@ -1,5 +1,27 @@
 # Change Log
 
+## [0.2.7](https://github.com/inaka/elvis/tree/0.2.7) (2016-01-22)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.6...0.2.7)
+
+**Implemented enhancements:**
+
+- Update Katana version  [\#332](https://github.com/inaka/elvis/issues/332)
+
+**Fixed bugs:**
+
+- Update katana to 0.2.22 in elvis\_core and bump version to 0.2.7 [\#335](https://github.com/inaka/elvis/issues/335)
+- Missing elvis\_core dep in rebar.config [\#330](https://github.com/inaka/elvis/issues/330)
+
+**Closed issues:**
+
+- Update katana to 0.2.21 in elvis\_core so that it compiles successfully [\#334](https://github.com/inaka/elvis/issues/334)
+
+**Merged pull requests:**
+
+- \[\#335\] Update elvis\_core version to 0.2.7 [\#336](https://github.com/inaka/elvis/pull/336) ([jfacorro](https://github.com/jfacorro))
+- \[Fix \#330\] add elvis\_core 0.2.6 in rebar.config [\#331](https://github.com/inaka/elvis/pull/331) ([Euen](https://github.com/Euen))
+
 ## [0.2.6](https://github.com/inaka/elvis/tree/0.2.6) (2016-01-15)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.6-alpha1...0.2.6)
 
@@ -28,6 +50,7 @@
 
 **Closed issues:**
 
+- Version Bump to 0.2.6 [\#328](https://github.com/inaka/elvis/issues/328)
 - Version Bump to 0.2.6 at elvis\_core [\#327](https://github.com/inaka/elvis/issues/327)
 - Update documentation to include new default configuration feature. [\#323](https://github.com/inaka/elvis/issues/323)
 - Update zipper and katana deps to avoid compiler warnings [\#317](https://github.com/inaka/elvis/issues/317)
@@ -46,6 +69,7 @@
 
 **Merged pull requests:**
 
+- \[Fix \#328\] update release 0.2.6 [\#329](https://github.com/inaka/elvis/pull/329) ([Euen](https://github.com/Euen))
 - \[Closes \#300\] Split elvis into parts [\#316](https://github.com/inaka/elvis/pull/316) ([jfacorro](https://github.com/jfacorro))
 - \[Closes \#309\] Update example [\#310](https://github.com/inaka/elvis/pull/310) ([jfacorro](https://github.com/jfacorro))
 - Bump lager version to 3.0.2 [\#305](https://github.com/inaka/elvis/pull/305) ([sargun](https://github.com/sargun))
