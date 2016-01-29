@@ -16,7 +16,14 @@ If you find any **bugs** or have a **problem** while using this library, please
 
 And you can check all of our open-source projects at [inaka.github.io](http://inaka.github.io).
 
+## Installation
+
+1. Clone the repo
+1. `make && make install`
+
 ## Usage
+
+In any `elvis`-enabled product, `elvis rock` will trigger a rule check.
 
 ### Script
 
