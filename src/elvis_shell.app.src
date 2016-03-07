@@ -3,7 +3,7 @@
   [
    {description, "CLI for the Elvis Erlang Style Reviewer"},
    {vsn, "0.2.7"},
-   {applications, [kernel, elvis, stdlib, ibrowse, ssl, jiffy, lager, aleppo, zipper]},
+   {applications, [kernel, elvis, stdlib, ibrowse, ssl, jiffy, lager, zipper]},
    {modules,
     [
      elvis,
