@@ -1,7 +1,28 @@
 # Change Log
 
-## [0.2.7](https://github.com/inaka/elvis/tree/0.2.7) (2016-01-22)
+## [0.2.8](https://github.com/inaka/elvis/tree/0.2.8) (2016-03-08)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.7...0.2.8)
 
+**Implemented enhancements:**
+
+- Update for rebar3 [\#280](https://github.com/inaka/elvis/issues/280)
+
+**Closed issues:**
+
+- Bump elvis\_core version to 0.2.8-2 [\#349](https://github.com/inaka/elvis/issues/349)
+- Remove unused dependency aleppo in elvis\_core [\#347](https://github.com/inaka/elvis/issues/347)
+- Remove unused dependency aleppo in elvis [\#346](https://github.com/inaka/elvis/issues/346)
+- Bump elvis\_core version to 0.2.8 [\#345](https://github.com/inaka/elvis/issues/345)
+- Update to the latest version of elvis\_core [\#344](https://github.com/inaka/elvis/issues/344)
+- Trouble using built escript with recent builds. [\#333](https://github.com/inaka/elvis/issues/333)
+
+**Merged pull requests:**
+
+- \[Fix \#344\] Update elvis\_core dependency version; Update config files [\#350](https://github.com/inaka/elvis/pull/350) ([harenson](https://github.com/harenson))
+- \[Fix \#346\] Remove unused application [\#348](https://github.com/inaka/elvis/pull/348) ([harenson](https://github.com/harenson))
+- Update README.md [\#340](https://github.com/inaka/elvis/pull/340) ([StoneCypher](https://github.com/StoneCypher))
+
+## [0.2.7](https://github.com/inaka/elvis/tree/0.2.7) (2016-01-22)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.6...0.2.7)
 
 **Implemented enhancements:**
@@ -15,10 +36,12 @@
 
 **Closed issues:**
 
+- Bump version to 0.2.7 [\#337](https://github.com/inaka/elvis/issues/337)
 - Update katana to 0.2.21 in elvis\_core so that it compiles successfully [\#334](https://github.com/inaka/elvis/issues/334)
 
 **Merged pull requests:**
 
+- \[Close \#337\] Update elvis\_core version to 0.2.7 [\#338](https://github.com/inaka/elvis/pull/338) ([jfacorro](https://github.com/jfacorro))
 - \[\#335\] Update elvis\_core version to 0.2.7 [\#336](https://github.com/inaka/elvis/pull/336) ([jfacorro](https://github.com/jfacorro))
 - \[Fix \#330\] add elvis\_core 0.2.6 in rebar.config [\#331](https://github.com/inaka/elvis/pull/331) ([Euen](https://github.com/Euen))
 
