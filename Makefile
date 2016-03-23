@@ -2,19 +2,25 @@ PROJECT = elvis_shell
 
 DEPS = lager elvis_core getopt jiffy ibrowse egithub katana katana_code
 SHELL_DEPS = sync
-TEST_DEPS = meck xref_runner
+TEST_DEPS = katana_test mixer meck xref_runner
+BUILD_DEPS = inaka_mk hexer_mk
+DEP_PLUGINS = inaka_mk hexer_mk
 
-dep_lager       = git https://github.com/basho/lager.git       2.0.3
-dep_elvis_core  = git https://github.com/inaka/elvis_core      0.2.8-2
-dep_getopt      = git https://github.com/jcomellas/getopt      v0.8.2
-dep_jiffy       = git https://github.com/davisp/jiffy          0.14.2
-dep_ibrowse     = git https://github.com/cmullaparthi/ibrowse  v4.1.2
-dep_egithub     = git https://github.com/inaka/erlang-github   0.1.7
+dep_lager       = hex 3.0.2
+dep_elvis_core  = git https://github.com/inaka/elvis_core      0.2.9
+dep_getopt      = hex 0.8.2
+dep_jiffy       = hex 0.14.7
+dep_ibrowse     = hex 4.2.2
+dep_egithub     = hex 0.2.2
 dep_katana      = git https://github.com/inaka/erlang-katana   0.2.23
-dep_katana_code = git https://github.com/inaka/katana-code.git 0.0.1
-dep_sync        = git https://github.com/rustyio/sync.git      9c78e7b
-dep_meck        = git https://github.com/eproxus/meck          0.8.3
-dep_xref_runner = git https://github.com/inaka/xref_runner.git 0.2.2
+dep_katana_test = git https://github.com/inaka/katana-test     0.0.5
+dep_katana_code = git https://github.com/inaka/katana-code     0.0.1
+dep_sync        = git https://github.com/rustyio/sync          11df81d
+dep_meck        = git https://github.com/eproxus/meck          0.8.4
+dep_xref_runner = git https://github.com/inaka/xref_runner     0.2.6
+dep_mixer       = git https://github.com/inaka/mixer           0.1.5
+dep_inaka_mk    = git https://github.com/inaka/inaka.mk        1.0.0
+dep_hexer_mk    = git https://github.com/inaka/hexer.mk        1.1.0
 
 include erlang.mk
 
@@ -39,12 +45,3 @@ test-shell: build-ct-suites app
 
 install: escript
 	cp elvis /usr/local/bin
-
-quicktests: ERLC_OPTS = $(TEST_ERLC_OPTS)
-quicktests: clean app build-ct-suites
-	@if [ -d "test" ] ; \
-	then \
-		mkdir -p logs/ ; \
-		$(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES)) $(CT_OPTS) ; \
-	fi
-	$(gen_verbose) rm -f test/*.beam

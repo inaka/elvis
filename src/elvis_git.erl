@@ -77,7 +77,7 @@ install_hook() ->
     try
         check_git_dir(),
         ok = filelib:ensure_dir(?PRE_COMMIT_FILE),
-        add_pre_commit_hook(),
+        _ = add_pre_commit_hook(),
         elvis_utils:info("Elvis pre-commit hook installed. "
                          "Wop-bop-a-loom-a-blop-bam-boom!")
     catch
@@ -115,7 +115,7 @@ add_pre_commit_hook() ->
             false -> {[write], <<Header/binary, Command/binary>>}
         end,
 
-    file:write_file(Filename, Data, Mode),
+    ok = file:write_file(Filename, Data, Mode),
     os:cmd("chmod +x " ++ ?PRE_COMMIT_FILE).
 
 %% @private
