@@ -18,11 +18,15 @@ start() ->
     {ok, _} = application:ensure_all_started(elvis_shell),
     ok.
 
--spec main([string()]) -> ok.
+-spec main(string()) -> ok.
 main(Args) ->
     %% Load the application to be able to access its information
     %% (e.g. --version option)
-    application:load(elvis),
+    ok =
+      case application:load(elvis) of
+        ok -> ok;
+        {error, {already_loaded, elvis}} -> ok
+      end,
     OptSpecList = option_spec_list(),
     case getopt:parse(OptSpecList, Args) of
         {ok, {[], []}} ->
@@ -85,12 +89,12 @@ process_options([version | Opts], Cmds, Config) ->
     version(),
     process_options(Opts, Cmds, Config);
 process_options([{code_path, Path} | Opts], Cmds, Config) ->
-    code:add_path(Path),
+    true = code:add_path(Path),
     process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
--spec process_commands([string()], elvis_config:config()) -> ok.
+-spec process_commands([string()], elvis_config:config()) ->ok.
 process_commands([rock | Cmds], Config) ->
     case elvis_core:rock(Config) of
         {fail, _} -> elvis_utils:erlang_halt(1);

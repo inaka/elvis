@@ -45,12 +45,12 @@ all() ->
 
 -spec init_per_suite(config()) -> config().
 init_per_suite(Config) ->
-    application:start(elvis),
+    _ = application:start(elvis),
     Config.
 
 -spec end_per_suite(config()) -> config().
 end_per_suite(Config) ->
-    application:stop(elvis),
+    ok = application:stop(elvis),
     Config.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,16 +104,16 @@ main_help(_Config) ->
     Expected = "Usage: elvis",
 
     ShortOptFun = fun() -> elvis:main("-h") end,
-    check_first_line_output(ShortOptFun, Expected, fun starts_with/2),
+    _ = check_first_line_output(ShortOptFun, Expected, fun starts_with/2),
 
     LongOptFun = fun() -> elvis:main("--help") end,
-    check_first_line_output(LongOptFun, Expected, fun starts_with/2),
+    _ = check_first_line_output(LongOptFun, Expected, fun starts_with/2),
 
     EmptyFun = fun() -> elvis:main("") end,
-    check_first_line_output(EmptyFun, Expected, fun starts_with/2),
+    _ = check_first_line_output(EmptyFun, Expected, fun starts_with/2),
 
     CmdFun = fun() -> elvis:main("help") end,
-    check_first_line_output(CmdFun, Expected, fun starts_with/2),
+    _ = check_first_line_output(CmdFun, Expected, fun starts_with/2),
 
     ok.
 
@@ -122,7 +122,7 @@ main_commands(_Config) ->
     Expected = "Elvis will do the following things",
 
     OptFun = fun() -> elvis:main("--commands") end,
-    check_first_line_output(OptFun, Expected, fun starts_with/2),
+    _ = check_first_line_output(OptFun, Expected, fun starts_with/2),
 
     ok.
 
@@ -131,11 +131,13 @@ main_config(_Config) ->
     Expected = "missing_option_arg config",
 
     OptFun = fun() -> elvis:main("-c") end,
-    check_first_line_output(OptFun, Expected, fun matches_regex/2),
+    _ = check_first_line_output(OptFun, Expected, fun matches_regex/2),
 
     EnoentExpected = "enoent",
     OptEnoentFun = fun() -> elvis:main("-c missing") end,
-    check_first_line_output(OptEnoentFun, EnoentExpected, fun matches_regex/2),
+    _ = check_first_line_output(OptEnoentFun,
+                                EnoentExpected,
+                                fun matches_regex/2),
 
     ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
     check_empty_output(ConfigFun),
@@ -149,7 +151,7 @@ main_version(_Config) ->
     Expected = ".*Version: " ++ Version,
     OptFun = fun() -> elvis:main("--version") end,
 
-    check_some_line_output(OptFun, Expected, fun matches_regex/2),
+    _ = check_some_line_output(OptFun, Expected, fun matches_regex/2),
     ok.
 
 -spec main_rock(config()) -> any().
@@ -162,13 +164,15 @@ main_rock(_Config) ->
 
         NoConfigArgs = "rock",
         NoConfigFun = fun() -> elvis:main(NoConfigArgs) end,
-        check_some_line_output(NoConfigFun, ExpectedFail, fun matches_regex/2),
+        _ = check_some_line_output(NoConfigFun,
+                                   ExpectedFail,
+                                   fun matches_regex/2),
 
         Expected = "# ../../src/elvis.erl.*OK",
 
         ConfigArgs = "rock -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
+        _ = check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
 
         ok
     after
@@ -201,7 +205,7 @@ main_git_hook_fail(_Config) ->
 
         ConfigArgs = "git-hook -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
+        _ = check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
 
         meck:expect(elvis_git, staged_files, fun() -> [] end),
         check_empty_output(ConfigFun)
@@ -225,19 +229,18 @@ main_git_hook_ok(_Config) ->
 
 -spec main_default_config(config()) -> any().
 main_default_config(_Config) ->
-    try
+    ok = try
         meck:new(elvis_utils, [passthrough]),
         meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
         Src = "../../config/elvis-test.config",
         Dest = "./elvis.config",
-        file:copy(Src, Dest),
+        {ok , _} = file:copy(Src, Dest),
 
         Expected = "# ../../src/elvis.erl.*OK",
         RockFun = fun() -> elvis:main("rock") end,
-        check_some_line_output(RockFun, Expected, fun matches_regex/2),
+        _ = check_some_line_output(RockFun, Expected, fun matches_regex/2),
 
-        file:delete(Dest),
-        ok
+        file:delete(Dest)
     after
         meck:unload(elvis_utils)
     end.
@@ -247,7 +250,7 @@ main_unexistent(_Config) ->
     Expected = "unrecognized_or_unimplemented_command.",
 
     UnexistentFun = fun() -> elvis:main("aaarrrghh") end,
-    check_first_line_output(UnexistentFun, Expected, fun matches_regex/2),
+    _ = check_first_line_output(UnexistentFun, Expected, fun matches_regex/2),
 
     ok.
 
@@ -263,20 +266,20 @@ main_code_path(_Config) ->
     Source = Prefix ++ "test/examples/user_defined_rules.erl",
     Destination = Prefix ++ "ebin-test/user_defined_rules",
 
-    try
+    _ = try
         meck:new(elvis_utils, [passthrough]),
         meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
-        file:make_dir(OutDir),
-        file:copy(Source, Destination ++ ".erl"),
+        ok = file:make_dir(OutDir),
+        {ok, _} = file:copy(Source, Destination ++ ".erl"),
         compile:file(Destination, [{outdir, OutDir}]),
 
         CodePathFun = fun() -> elvis:main(Args) end,
         check_some_line_output(CodePathFun, Expected, fun matches_regex/2)
     after
         meck:unload(elvis_utils),
-        file:delete(Destination ++ ".erl"),
-        file:delete(Destination ++ ".beam"),
+        ok = file:delete(Destination ++ ".erl"),
+        ok = file:delete(Destination ++ ".beam"),
         file:del_dir(OutDir)
     end,
     ok.
