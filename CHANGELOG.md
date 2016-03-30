@@ -1,5 +1,31 @@
 # Change Log
 
+## [0.2.10](https://github.com/inaka/elvis/tree/0.2.10) (2016-03-30)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.8...0.2.10)
+
+**Fixed bugs:**
+
+- elvis\_core specifies aleppo as a dep but downloads inaka\_aleppo [\#367](https://github.com/inaka/elvis/issues/367)
+
+**Closed issues:**
+
+- Get elvis\_core to use katana\_code 0.0.2 [\#368](https://github.com/inaka/elvis/issues/368)
+- Bump version to 0.2.9 \(elvis\_core\) [\#365](https://github.com/inaka/elvis/issues/365)
+- Fix specs \(elvis\_core\) [\#364](https://github.com/inaka/elvis/issues/364)
+- How to implement my own rules? [\#363](https://github.com/inaka/elvis/issues/363)
+- Update elvis\_core repo and make it ready for hex.pm [\#360](https://github.com/inaka/elvis/issues/360)
+- Update repo and make it ready for hex.pm [\#359](https://github.com/inaka/elvis/issues/359)
+- can I exclude files from the check? [\#356](https://github.com/inaka/elvis/issues/356)
+- Update katana dependency in elvis [\#354](https://github.com/inaka/elvis/issues/354)
+- Update katana dependency in elvis\_core [\#353](https://github.com/inaka/elvis/issues/353)
+- Update erlang-katana dep to 0.2.23 when published and bump version [\#341](https://github.com/inaka/elvis/issues/341)
+- read rebar.config elvis section if exists [\#307](https://github.com/inaka/elvis/issues/307)
+
+**Merged pull requests:**
+
+- \[Fix \#359\] Update dependencies; Update erlang.mk; Add meta testing [\#366](https://github.com/inaka/elvis/pull/366) ([harenson](https://github.com/harenson))
+- \[Fix \#354\] Update katana [\#355](https://github.com/inaka/elvis/pull/355) ([harenson](https://github.com/harenson))
+
 ## [0.2.8](https://github.com/inaka/elvis/tree/0.2.8) (2016-03-08)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.7...0.2.8)
 
@@ -9,6 +35,7 @@
 
 **Closed issues:**
 
+- Bump elvis version to 0.2.8 [\#351](https://github.com/inaka/elvis/issues/351)
 - Bump elvis\_core version to 0.2.8-2 [\#349](https://github.com/inaka/elvis/issues/349)
 - Remove unused dependency aleppo in elvis\_core [\#347](https://github.com/inaka/elvis/issues/347)
 - Remove unused dependency aleppo in elvis [\#346](https://github.com/inaka/elvis/issues/346)
@@ -18,6 +45,7 @@
 
 **Merged pull requests:**
 
+- \[Fix \#351\] Bump version to 0.2.8 [\#352](https://github.com/inaka/elvis/pull/352) ([harenson](https://github.com/harenson))
 - \[Fix \#344\] Update elvis\_core dependency version; Update config files [\#350](https://github.com/inaka/elvis/pull/350) ([harenson](https://github.com/harenson))
 - \[Fix \#346\] Remove unused application [\#348](https://github.com/inaka/elvis/pull/348) ([harenson](https://github.com/harenson))
 - Update README.md [\#340](https://github.com/inaka/elvis/pull/340) ([StoneCypher](https://github.com/StoneCypher))

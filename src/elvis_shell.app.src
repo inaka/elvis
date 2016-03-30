@@ -2,7 +2,7 @@
   application, elvis_shell,
   [
    {description, "CLI for the Elvis Erlang Style Reviewer"},
-   {vsn, "0.2.8"},
+   {vsn, "0.2.10"},
    {applications, [kernel, elvis, stdlib, ibrowse, ssl, jiffy, lager, zipper]},
    {modules,
     [
