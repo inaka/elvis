@@ -7,7 +7,7 @@ BUILD_DEPS = inaka_mk hexer_mk
 DEP_PLUGINS = inaka_mk hexer_mk
 
 dep_lager       = hex 3.0.2
-dep_elvis_core  = git https://github.com/inaka/elvis_core      0.2.9
+dep_elvis_core  = git https://github.com/inaka/elvis_core      0.2.10
 dep_getopt      = hex 0.8.2
 dep_jiffy       = hex 0.14.7
 dep_ibrowse     = hex 4.2.2
