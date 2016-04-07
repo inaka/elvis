@@ -127,8 +127,9 @@ messages_from_item(Item, File) ->
                     ];
                 not_found ->
                     Args = [Line],
-                    ok = lager:info("Line ~p does not belong to file's diff.",
-                                    Args),
+                    ok =
+                        error_logger:info_msg(
+                            "Line ~p does not belong to file's diff.", Args),
                     []
             end
     end.
