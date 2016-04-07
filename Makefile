@@ -1,6 +1,6 @@
 PROJECT = elvis_shell
 
-DEPS = elvis_core getopt jiffy ibrowse egithub katana katana_code
+DEPS = elvis_core getopt jiffy egithub katana katana_code
 SHELL_DEPS = sync
 TEST_DEPS = katana_test mixer meck xref_runner
 BUILD_DEPS = inaka_mk hexer_mk
@@ -9,7 +9,6 @@ DEP_PLUGINS = inaka_mk hexer_mk
 dep_elvis_core  = git https://github.com/inaka/elvis_core      0.2.11
 dep_getopt      = hex 0.8.2
 dep_jiffy       = hex 0.14.7
-dep_ibrowse     = hex 4.2.2
 dep_egithub     = hex 0.2.2
 dep_katana      = git https://github.com/inaka/erlang-katana   0.2.23
 dep_katana_test = git https://github.com/inaka/katana-test     0.0.5
