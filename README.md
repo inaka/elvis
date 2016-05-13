@@ -160,7 +160,7 @@ elvis rock -p deps/elvis_rules/ebin -c elvis.config
 
 ## Dependencies
 
-- Erlang/OTP 17.0
+- Erlang/OTP 18+
 - make
 - git
 
