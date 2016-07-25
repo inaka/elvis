@@ -24,7 +24,6 @@
 run_hook(Config) ->
     Files = elvis_git:staged_files(),
     NewConfig = elvis_config:resolve_files(Config, Files),
-
     case elvis_core:rock(NewConfig) of
         {fail, _} -> elvis_utils:erlang_halt(1);
         ok -> ok

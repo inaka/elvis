@@ -1,6 +1,7 @@
 {
   application, elvis_shell,
   [
+   {pkg_name, elvis},
    {description, "CLI for the Elvis Erlang Style Reviewer"},
    {vsn, "0.2.11"},
    {applications, [kernel, stdlib, ssl, elvis, egithub, jiffy, katana, katana_code]},
@@ -16,6 +17,6 @@
    {licenses, ["Apache 2.0"]},
    {links, [{"Github", "https://github.com/inaka/elvis"},
             {"Blog", "http://inaka.net/blog/2014/09/05/erlang-standards-and-elvis-rock/"}]},
-   {build_tools, ["erlang.mk", "rebar"]}
+   {build_tools, ["rebar3"]}
   ]
 }.

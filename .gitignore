@@ -11,6 +11,7 @@ ebin
 erl_crash.dump
 log*/
 .erlang.mk.packages.*
+rebar3.crashdump
 
 # Ignore elvis escript
 elvis

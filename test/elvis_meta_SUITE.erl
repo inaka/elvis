@@ -15,4 +15,4 @@
 
 -spec init_per_suite(config()) -> config().
 init_per_suite(Config) ->
-  [{application, elvis_shell}, {base_dir, "../../"} | Config].
+  [{application, elvis_shell} | Config].
