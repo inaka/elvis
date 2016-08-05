@@ -19,8 +19,7 @@ And you can check all of our open-source projects at [inaka.github.io](http://in
 ## Installation
 
 1. Clone the repo
-1. `rebar3 compile`
-1. `make && make install`
+2. `rebar3 compile`
 
 ## Usage
 

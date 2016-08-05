@@ -24,17 +24,16 @@ event(Cred, Request) -> egithub_webhook:event(?MODULE, Cred, Request).
   {ok, [egithub_webhook:message()]} | {error, term()}.
 handle_pull_request(Cred, Data, GithubFiles) ->
     #{<<"repository">> := Repository} = Data,
-    BranchName = ktn_maps:get([<<"pull_request">>,
-                               <<"head">>,
-                               <<"ref">>],
-                              Data, <<"master">>),
+    BranchName = maps_get([ <<"pull_request">>,
+                            <<"head">>,
+                            <<"ref">>],
+                            Data, <<"master">>),
     Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
     Branch = binary_to_list(BranchName),
     Config = repo_config(Cred, Repo, Branch, elvis_config:default()),
 
     GithubFiles1 = [F#{path => Path}
                     || F = #{<<"filename">> := Path} <- GithubFiles],
-
     Config1 = elvis_config:resolve_files(Config, GithubFiles1),
 
     FileInfoFun = fun (File) -> file_info(Cred, Repo, File) end,
@@ -132,4 +131,13 @@ messages_from_item(Item, File) ->
                             "Line ~p does not belong to file's diff.", Args),
                     []
             end
+    end.
+
+maps_get([Key], Map, Default) -> maps:get(Key, Map, Default);
+maps_get([Key | Rest], Map, Default) ->
+    case maps:get(Key, Map, Default) of
+        NewMap when is_map(NewMap) ->
+            maps_get(Rest, NewMap, Default);
+        _ ->
+            Default
     end.
