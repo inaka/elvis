@@ -19,7 +19,7 @@ And you can check all of our open-source projects at [inaka.github.io](http://in
 ## Installation
 
 1. Clone the repo
-1. `make && make install`
+2. `rebar3 compile`
 
 ## Usage
 
@@ -27,7 +27,7 @@ In any `elvis`-enabled product, `elvis rock` will trigger a rule check.
 
 ### Script
 
-`elvis` can be turned into a script by executing `make escript`. This will
+`elvis` can be turned into a script by executing `rebar3 escriptize`. This will
 generate an `elvis` self-contained executable script, from which you can get
 help by typing `elvis help`. A list of available commands can be shown using the
 `--commands` option (i.e. `elvis --commands`).
@@ -161,7 +161,6 @@ elvis rock -p deps/elvis_rules/ebin -c elvis.config
 ## Dependencies
 
 - Erlang/OTP 18+
-- make
 - git
 
 ## References

@@ -72,7 +72,8 @@ process_options(Options, Commands) ->
             elvis_utils:error_prn("~p.", [Exception])
     end.
 
--spec process_options([atom()], [string()], elvis_config:config()) -> ok.
+-spec process_options([atom()], [string()], elvis_config:config()) ->
+  ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
     process_options(Opts, Cmds, Config);

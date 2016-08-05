@@ -45,12 +45,12 @@ all() ->
 
 -spec init_per_suite(config()) -> config().
 init_per_suite(Config) ->
-    _ = application:start(elvis),
+    _ = application:start(elvis_shell),
     Config.
 
 -spec end_per_suite(config()) -> config().
 end_per_suite(Config) ->
-    ok = application:stop(elvis),
+    ok = application:stop(elvis_shell),
     Config.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
