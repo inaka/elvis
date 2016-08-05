@@ -1,11 +1,41 @@
 # Change Log
 
+## [0.2.12](https://github.com/inaka/elvis/tree/0.2.12) (2016-08-05)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.11...0.2.12)
+
+**Fixed bugs:**
+
+- Missing builds for elvis.mk [\#373](https://github.com/inaka/elvis/issues/373)
+- operator spaces rules fails in lines with a unicode char [\#343](https://github.com/inaka/elvis/issues/343)
+- variable\_naming\_convention and MACROs [\#362](https://github.com/inaka/elvis/pull/362) ([andreineculau](https://github.com/andreineculau))
+
+**Closed issues:**
+
+- Version Bump to 0.3.2 [\#389](https://github.com/inaka/elvis/issues/389)
+- Version Bump to 0.3.1 [\#388](https://github.com/inaka/elvis/issues/388)
+- Move from erlang.mk to rebar3 [\#387](https://github.com/inaka/elvis/issues/387)
+- Version Bump to 0.3.0 [\#386](https://github.com/inaka/elvis/issues/386)
+- Please update lager [\#385](https://github.com/inaka/elvis/issues/385)
+- Function clause when rule is disabled [\#384](https://github.com/inaka/elvis/issues/384)
+- Add Inaka Logo in every page [\#383](https://github.com/inaka/elvis/issues/383)
+- Move from erlang.mk to rebar3 [\#381](https://github.com/inaka/elvis/issues/381)
+- BUG: Files in directory '.' are filtered out, so never checked [\#374](https://github.com/inaka/elvis/issues/374)
+
+**Merged pull requests:**
+
+- Euen.387.rebar3 [\#390](https://github.com/inaka/elvis/pull/390) ([Euen](https://github.com/Euen))
+- Update README.md [\#377](https://github.com/inaka/elvis/pull/377) ([elbrujohalcon](https://github.com/elbrujohalcon))
+
 ## [0.2.11](https://github.com/inaka/elvis/tree/0.2.11) (2016-04-07)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.10...0.2.11)
 
 **Closed issues:**
 
 - Update katana\_code to 0.0.3 in elvis\_core [\#371](https://github.com/inaka/elvis/issues/371)
+
+**Merged pull requests:**
+
+- Version Bump to 0.2.11 [\#372](https://github.com/inaka/elvis/pull/372) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
 ## [0.2.10](https://github.com/inaka/elvis/tree/0.2.10) (2016-03-30)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.8...0.2.10)
