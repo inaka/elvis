@@ -89,7 +89,7 @@ run_webhook(_Config) ->
         meck:unload(egithub)
     end.
 
--spec run_webhook_ping(config()) -> any().
+-spec run_webhook_ping(config()) -> ok.
 run_webhook_ping(_Config) ->
     Headers = #{<<"x-github-event">> => <<"ping">>},
     Body = <<"[]">>,

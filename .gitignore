@@ -13,6 +13,7 @@ log*/
 .erlang.mk.packages.*
 rebar3.crashdump
 doc
+compile_commands.json
 
 # Ignore elvis escript
 elvis
