@@ -96,12 +96,16 @@ process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
 -spec process_commands([string()], elvis_config:config()) ->ok.
-process_commands([rock | Cmds], Config) ->
-    case elvis_core:rock(Config) of
-        {fail, _} -> elvis_utils:erlang_halt(1);
-        ok -> ok
-    end,
-    process_commands(Cmds, Config);
+process_commands([rock | Files], Config) ->
+    case Files of
+        [] ->
+            case elvis_core:rock(Config) of
+                {fail, _} -> elvis_utils:erlang_halt(1);
+                ok -> ok
+            end;
+        _ ->
+            lists:map(fun(F) -> rock_one_song(F, Config) end, Files)
+    end;
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
@@ -133,7 +137,7 @@ help(Config) ->
 commands() ->
     Commands = <<"Elvis will do the following things for you when asked nicely:
 
-rock             Rock your socks off by running all rules to your source files.
+rock [file...]   Rock your socks off by running all rules to your source files.
 
 git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
                                       specified in the configuration to those
@@ -154,3 +158,11 @@ version() ->
               "/___/_/|___/_/___/\n"
               "Version: ~s\n",
     io:format(Version, [Vsn]).
+
+
+rock_one_song(FileName, Config) ->
+    F = atom_to_list(FileName),
+    case elvis_core:rock_this(F, Config) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
+    end.
