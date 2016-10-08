@@ -56,7 +56,7 @@ repositories. Just log in with your GitHub credentials and the site will pull
 all the repos for which you have permissions to add webhooks. The `elvis`
 webhook can always be deactivated at any time using the same mechanism.
 
-When activating the webhook, the site will use the GitHub API to add the user
+When activating the webhook, the site will use the [GitHub API](https://developer.github.com/v3/) to add the user
 `elvisinaka` as a collaborator to your repo, so that it can create comments
 on its pull requests. If the repo belongs to an organization, a **Services**
 team is created instead (if it doesn't exist already), then this team is added
