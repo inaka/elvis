@@ -7,7 +7,8 @@
 -export([
          relative_position_from_patch/1,
          check_staged_files/1,
-         ignore_deleted_files/1
+         ignore_deleted_files/1,
+         check_branch_files/1
         ]).
 
 -define(EXCLUDED_FUNS,
@@ -66,16 +67,17 @@ relative_position_from_patch(_Config) ->
 
 -spec check_staged_files(config()) -> any().
 check_staged_files(_Config) ->
-    Filename = "../../temp_file_test",
-    ok = file:write_file(Filename, <<"sdsds">>, [append]),
+    FileName = random_file_name(),
+    FileLocation = "../../" ++ FileName,
+    ok = file:write_file(FileLocation, <<"sdsds">>, [append]),
 
-    _ = os:cmd("git add " ++ Filename),
+    _ = os:cmd("git add " ++ FileLocation),
     StagedFiles = elvis_git:staged_files(),
-    FilterFun = fun (#{path := Path}) -> Path == "temp_file_test" end,
+    FilterFun = fun (#{path := Path}) -> Path == FileName end,
     [_] = lists:filter(FilterFun, StagedFiles),
-    _ = os:cmd("git reset " ++ Filename),
+    _ = os:cmd("git reset " ++ FileLocation),
 
-    file:delete(Filename).
+    file:delete(FileLocation).
 
 -spec ignore_deleted_files(config()) -> any().
 ignore_deleted_files(Config) ->
@@ -92,3 +94,25 @@ ignore_deleted_files(Config) ->
     StagedFiles = lists:sort([Path
                               || #{path := Path} <- elvis_git:staged_files()]),
     ["test2", "test3"] = StagedFiles.
+
+-spec check_branch_files(config()) -> any().
+check_branch_files(_Config) ->
+    _ = os:cmd("git stash"),
+
+    FileName = random_file_name(),
+    FileLocation = "../../" ++ FileName,
+    ok = file:write_file(FileLocation, <<"sdsds">>, [append]),
+
+    _ = os:cmd("git add " ++ FileLocation),
+    _ = os:cmd("git commit -m \"some commit\""),
+    [FileName] = elvis_git:branch_files("HEAD^"),
+    _ = os:cmd("git reset --hard HEAD^"),
+
+    _ = os:cmd("git stash pop"),
+
+    file:delete(FileLocation).
+
+-spec random_file_name() -> string().
+random_file_name() ->
+  RandomString = integer_to_list(crypto:rand_uniform(0, 1 bsl 127)),
+  "test_file_" ++ RandomString.

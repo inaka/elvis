@@ -115,6 +115,9 @@ process_commands(['install', 'git-hook' | Cmds], Config) ->
 process_commands(['git-hook' | Cmds], Config) ->
     elvis_git:run_hook(Config),
     process_commands(Cmds, Config);
+process_commands(['git-branch', Commit | Cmds], Config) ->
+    elvis_git:run_branch(atom_to_list(Commit), Config),
+    process_commands(Cmds, Config);
 process_commands([], _Config) ->
     ok;
 process_commands([_Cmd | _Cmds], _Config) ->
@@ -142,6 +145,11 @@ rock [file...]   Rock your socks off by running all rules to your source files.
 git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
                                       specified in the configuration to those
                                       files.
+
+git-branch [branch|commit]
+                 Rock your socks off by running all rules on source files that
+                 have changed since branch or commit.
+
 install git-hook
                 Installs Elvis as a pre-commit hook in your current working
                 directory, which should be a git repository.
