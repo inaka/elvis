@@ -1,18 +1,63 @@
 -module(elvis_meta_SUITE).
+-author('felipe@inakanetworks.net').
 
--include_lib("mixer/include/mixer.hrl").
--mixin([{ktn_meta_SUITE
-        , [ all/0
-           , xref/1
-           , dialyzer/1
-           , elvis/1
-          ]
-        }]).
-
--export([init_per_suite/1]).
+-export([all/0]).
+-export([dialyzer/1, xref/1, elvis/1]).
 
 -type config() :: [{atom(), term()}].
 
--spec init_per_suite(config()) -> config().
-init_per_suite(Config) ->
-  [{application, elvis_shell} | Config].
+-spec all() -> [dialyzer | xref | elvis].
+all() -> [dialyzer, xref, elvis].
+
+-spec dialyzer(config()) -> {comment, []}.
+dialyzer(_Config) ->
+  BaseDir = code:lib_dir(elvis_shell),
+  DefaultRebar3PltLoc = filename:join(BaseDir, "../../../default"),
+  Plts = filelib:wildcard(filename:join(DefaultRebar3PltLoc, "*_plt")),
+  Dirs = [filename:join(BaseDir, Dir) || Dir <- ["ebin", "test"]],
+  Warnings = [error_handling, no_return, unmatched_returns],
+  ct:comment("Dialyzer must emit no warnings"),
+  Opts =
+    [ {analysis_type, succ_typings}
+    , {plts,          Plts}
+    , {files_rec,     Dirs}
+    , {check_plt,     true}
+    , {warnings,      Warnings}
+    ],
+  [] = [dialyzer:format_warning(W, basename) || W <- dialyzer:run(Opts)],
+  {comment, ""}.
+
+-spec xref(config()) -> {comment, []}.
+xref(_Config) ->
+  BaseDir = code:lib_dir(elvis_shell),
+  Dirs = [filename:join(BaseDir, Dir) || Dir <- ["ebin", "test"]],
+  XrefConfig = #{ dirs => Dirs
+                , xref_defaults =>
+                  [ {verbose, true}
+                  , {recurse, true}
+                  , {builtins, true}
+                  ]
+                },
+  Checks = [ undefined_function_calls
+           , locals_not_used
+           , deprecated_function_calls
+           ],
+  ct:comment("There are no Warnings"),
+  [] =
+    [ Warning
+    || Check <- Checks, Warning <- xref_runner:check(Check, XrefConfig)],
+  {comment, ""}.
+
+-spec elvis(config()) -> {comment, []}.
+elvis(_Config) ->
+  BaseDir = code:lib_dir(elvis_shell),
+  ConfigFile = filename:join(BaseDir, "../../../../elvis.config"),
+  ElvisConfig = [ fix_dirs(Group)
+                || Group <- elvis_config:load_file(ConfigFile)],
+  ct:comment("Elvis rocks!"),
+  ok = elvis_core:rock(ElvisConfig),
+  {comment, ""}.
+
+fix_dirs(#{dirs := Dirs} = Group) ->
+  NewDirs = [filename:join(code:lib_dir(elvis_shell), Dir) || Dir <- Dirs],
+  Group#{dirs := NewDirs}.

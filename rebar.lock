@@ -2,7 +2,10 @@
 [{<<"aleppo">>,{pkg,<<"inaka_aleppo">>,<<"1.0.0">>},1},
  {<<"certifi">>,{pkg,<<"certifi">>,<<"0.4.0">>},2},
  {<<"egithub">>,{pkg,<<"egithub">>,<<"0.3.1">>},0},
- {<<"elvis">>,{pkg,<<"elvis_core">>,<<"0.3.2">>},0},
+ {<<"elvis">>,
+  {git,"https://github.com/inaka/elvis_core.git",
+       {ref,"47a75810398df5844e4f553f96c42e125fcde404"}},
+  0},
  {<<"getopt">>,{pkg,<<"getopt">>,<<"0.8.2">>},0},
  {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.8">>},2},
  {<<"hackney">>,{pkg,<<"hackney">>,<<"1.6.0">>},1},
@@ -13,13 +16,12 @@
  {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},2},
  {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.0.2">>},2},
  {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.0">>},2},
- {<<"zipper">>,{pkg,<<"zipper">>,<<"1.0.0">>},1}]}.
+ {<<"zipper">>,{pkg,<<"zipper">>,<<"1.0.1">>},1}]}.
 [
 {pkg_hash,[
  {<<"aleppo">>, <<"8DB14CF16BB8C263C14FF4C3F69F64D7C849D40888944F4204D2CA74F1114CEB">>},
  {<<"certifi">>, <<"A7966EFB868B179023618D29A407548F70C52466BF1849B9E8EBD0E34B7EA11F">>},
  {<<"egithub">>, <<"5026153AD458EC9B05062D17E3334AF3C4E8C74F263D3A11B826829F516F831E">>},
- {<<"elvis">>, <<"5424DBD17BEC4265A6808F49064CC1A8D2D1B593B5C4E94E747EDB157ABDE6DE">>},
  {<<"getopt">>, <<"B17556DB683000BA50370B16C0619DF1337E7AF7ECBF7D64FBF8D1D6BCE3109B">>},
  {<<"goldrush">>, <<"2024BA375CEEA47E27EA70E14D2C483B2D8610101B4E852EF7F89163CDB6E649">>},
  {<<"hackney">>, <<"8D1E9440C9EDF23BF5E5E2FE0C71DE03EB265103B72901337394C840EEC679AC">>},
@@ -30,5 +32,5 @@
  {<<"metrics">>, <<"25F094DEA2CDA98213CECC3AEFF09E940299D950904393B2A29D191C346A8486">>},
  {<<"mimerl">>, <<"993F9B0E084083405ED8252B99460C4F0563E41729AB42D9074FD5E52439BE88">>},
  {<<"ssl_verify_fun">>, <<"EDEE20847C42E379BF91261DB474FFBE373F8ACB56E9079ACB6038D4E0BF414F">>},
- {<<"zipper">>, <<"812CF95E93A025FAAAB1276B5789260A08CC129961DE226ADDC13EF56DF507B9">>}]}
+ {<<"zipper">>, <<"3CCB4F14B97C06B2749B93D8B6C204A1ECB6FAFC6050CACC3B93B9870C05952A">>}]}
 ].
