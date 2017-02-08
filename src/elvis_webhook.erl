@@ -4,6 +4,7 @@
 
 -export([event/1, event/2]).
 -export([handle_pull_request/3]).
+-export([handle_error/3]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% External Functions
@@ -43,6 +44,12 @@ handle_pull_request(Cred, Data, GithubFiles) ->
         {fail, Results} -> {ok, messages_from_results(Results)};
         ok -> {ok, []}
     end.
+
+-spec handle_error( {error, term()}
+                  , egithub_webhook:req_data()
+                  , [egithub_webhook:file()]
+                  ) -> {ok, [], []}.
+handle_error({error, _}, _, _) -> {ok, [], []}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helper functions

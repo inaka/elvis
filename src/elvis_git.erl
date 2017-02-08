@@ -45,7 +45,7 @@ run_branch(Commit, Config) ->
         false -> ok
     end.
 
--spec branch_files(string()) -> [elvis_file:file()].
+-spec branch_files(string()) -> [string()].
 branch_files(Commit) ->
     Cmd = ?LIST_BRANCH_CHANGES(Commit),
     Output = list_to_binary(os:cmd(Cmd)),
