@@ -23,6 +23,11 @@ main(Args) ->
     %% Load the application to be able to access its information
     %% (e.g. --version option)
     ok =
+      case application:load(elvis_shell) of
+        ok -> ok;
+        {error, {already_loaded, elvis_shell}} -> ok
+      end,
+    ok =
       case application:load(elvis) of
         ok -> ok;
         {error, {already_loaded, elvis}} -> ok
@@ -158,14 +163,17 @@ install git-hook
 
 -spec version() -> ok.
 version() ->
-    {ok, AppConfig} = application:get_all_key(elvis),
-    Vsn = proplists:get_value(vsn, AppConfig),
+    {ok, ElvisCoreAppConfig} = application:get_all_key(elvis),
+    {ok, ElvisShellAppConfig} = application:get_all_key(elvis_shell),
+    ElvisCoreVsn = proplists:get_value(vsn, ElvisCoreAppConfig),
+    ElvisShellVsn = proplists:get_value(vsn, ElvisShellAppConfig),
     Version = "   ______     _   \n"
               "  / __/ /  __(_)__\n"
               " / _// / |/ / (_-<\n"
               "/___/_/|___/_/___/\n"
-              "Version: ~s\n",
-    io:format(Version, [Vsn]).
+              "Version: ~s\n"
+              "Elvis Core Version: ~s\n",
+    io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
 
 
 rock_one_song(FileName, Config) ->
