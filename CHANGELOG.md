@@ -1,5 +1,49 @@
 # Change Log
 
+## [0.3.0](https://github.com/inaka/elvis/tree/0.3.0) (2017-02-09)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.2.12...0.3.0)
+
+**Implemented enhancements:**
+
+- Remove lager as a dep from elvis\_core since it is practically unsued [\#318](https://github.com/inaka/elvis/issues/318)
+
+**Fixed bugs:**
+
+- Link to elvis v0.2.12 points to the wrong version [\#419](https://github.com/inaka/elvis/issues/419)
+- max\_function\_length check fails unexpectedly [\#407](https://github.com/inaka/elvis/issues/407)
+- Fix dialyzer warnings [\#406](https://github.com/inaka/elvis/issues/406)
+- Binary package for latest release [\#393](https://github.com/inaka/elvis/issues/393)
+
+**Closed issues:**
+
+- Update dependencies [\#424](https://github.com/inaka/elvis/issues/424)
+- Allow Elvis to run on all changes in a particular branch [\#420](https://github.com/inaka/elvis/issues/420)
+- Fix tests [\#418](https://github.com/inaka/elvis/issues/418)
+- Bump version to 0.3.4 [\#417](https://github.com/inaka/elvis/issues/417)
+- Fix wrong type [\#416](https://github.com/inaka/elvis/issues/416)
+- Update elvis\_core dep version to 0.3.4 [\#415](https://github.com/inaka/elvis/issues/415)
+- Bump Version for elvis\_core to 0.3.3 [\#414](https://github.com/inaka/elvis/issues/414)
+- Style rules for the seqbind transform [\#413](https://github.com/inaka/elvis/issues/413)
+- Default rulesets doesn't include no\_nested\_try\_catch rule [\#410](https://github.com/inaka/elvis/issues/410)
+- Include ignore\_functions rule doc for max\_function\_length rule [\#408](https://github.com/inaka/elvis/issues/408)
+- Check fails on eunit tests [\#403](https://github.com/inaka/elvis/issues/403)
+- Add ct:print on elvis\_style:no\_debug\_call default functions [\#402](https://github.com/inaka/elvis/issues/402)
+- Get the project to compile with OTP19.x [\#399](https://github.com/inaka/elvis/issues/399)
+- Use https in URLs when setting new webhook [\#397](https://github.com/inaka/elvis/issues/397)
+- Migrate existing webhooks to use https instead of http in their URLs [\#396](https://github.com/inaka/elvis/issues/396)
+- New Hex release [\#375](https://github.com/inaka/elvis/issues/375)
+
+**Merged pull requests:**
+
+- \[\#419\] link to correct version [\#427](https://github.com/inaka/elvis/pull/427) ([ferigis](https://github.com/ferigis))
+- \[\#424\] updating dependencies [\#426](https://github.com/inaka/elvis/pull/426) ([ferigis](https://github.com/ferigis))
+- Add option for running Elvis on all changes since branch or commit [\#421](https://github.com/inaka/elvis/pull/421) ([onno-vos-dev](https://github.com/onno-vos-dev))
+- Remove Lager as a direct dependency of Elvis [\#411](https://github.com/inaka/elvis/pull/411) ([waisbrot](https://github.com/waisbrot))
+- Add link to GitHub API page [\#405](https://github.com/inaka/elvis/pull/405) ([mzaini30](https://github.com/mzaini30))
+- Allow filenames on command line [\#401](https://github.com/inaka/elvis/pull/401) ([bartekgorny](https://github.com/bartekgorny))
+- \[Close \#399\] Update lager [\#400](https://github.com/inaka/elvis/pull/400) ([Euen](https://github.com/Euen))
+- Add getopt to applications [\#398](https://github.com/inaka/elvis/pull/398) ([mururu](https://github.com/mururu))
+
 ## [0.2.12](https://github.com/inaka/elvis/tree/0.2.12) (2016-08-05)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.11...0.2.12)
 
@@ -11,6 +55,7 @@
 
 **Closed issues:**
 
+- Version Bump to 0.2.12 [\#391](https://github.com/inaka/elvis/issues/391)
 - Version Bump to 0.3.2 [\#389](https://github.com/inaka/elvis/issues/389)
 - Version Bump to 0.3.1 [\#388](https://github.com/inaka/elvis/issues/388)
 - Move from erlang.mk to rebar3 [\#387](https://github.com/inaka/elvis/issues/387)
@@ -23,6 +68,7 @@
 
 **Merged pull requests:**
 
+- \[Close \#391\] version bump 0.2.12 [\#392](https://github.com/inaka/elvis/pull/392) ([Euen](https://github.com/Euen))
 - Euen.387.rebar3 [\#390](https://github.com/inaka/elvis/pull/390) ([Euen](https://github.com/Euen))
 - Update README.md [\#377](https://github.com/inaka/elvis/pull/377) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
