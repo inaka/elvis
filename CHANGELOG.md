@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.3.2](https://github.com/inaka/elvis/tree/0.3.2) (2017-02-16)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.3.1...0.3.2)
+
+**Closed issues:**
+
+- Update egithub dependency [\#432](https://github.com/inaka/elvis/issues/432)
+- Version Bump to 0.3.1 [\#429](https://github.com/inaka/elvis/issues/429)
+
+**Merged pull requests:**
+
+- \[\#432\] updating egithub dependency [\#433](https://github.com/inaka/elvis/pull/433) ([ferigis](https://github.com/ferigis))
+
+## [0.3.1](https://github.com/inaka/elvis/tree/0.3.1) (2017-02-16)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.3.0...0.3.1)
+
+**Merged pull requests:**
+
+- \[\#429\] Bump Version to 0.3.1 [\#430](https://github.com/inaka/elvis/pull/430) ([ferigis](https://github.com/ferigis))
+
 ## [0.3.0](https://github.com/inaka/elvis/tree/0.3.0) (2017-02-10)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.12...0.3.0)
 
