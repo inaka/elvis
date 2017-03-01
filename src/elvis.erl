@@ -40,7 +40,8 @@ main(Args) ->
             process_options(Options, Commands);
         {error, {Reason, Data}} ->
             elvis_utils:error_prn("~s ~p~n", [Reason, Data]),
-            help()
+            help(),
+            elvis_utils:erlang_halt(1)
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,7 +75,8 @@ process_options(Options, Commands) ->
         process_options(Options, AtomCommands, Config)
     catch
         throw:Exception ->
-            elvis_utils:error_prn("~p.", [Exception])
+            elvis_utils:error_prn("~p.", [Exception]),
+            elvis_utils:erlang_halt(1)
     end.
 
 -spec process_options([atom()], [string()], elvis_config:config()) ->
