@@ -53,20 +53,28 @@ main(Args) ->
 -spec option_spec_list() -> [getopt:option_spec()].
 option_spec_list() ->
     Commands = "Provide the path to the configuration file. "
-               ++ "When none is provided elvis checks if there's "
-               ++ "an elvis.config file.",
+               "When none is provided elvis checks if there's "
+               "an elvis.config file.",
     OutputFormat = "It allows you to display the results in plain text. When "
-                   ++ "none is provided elvis displays the results in colors. "
-                   ++ "The options allowed are (plain | colors).",
-    KeepGoing = "Won't stop rocking on first error when given a list of files",
+                   "none is provided elvis displays the results in colors. "
+                   "The options allowed are (plain | colors).",
+    KeepRocking = "Won't stop rocking on first error"
+                  " when given a list of files",
     [
-     {help, $h, "help", undefined, "Show this help information."},
-     {config, $c, "config", string, Commands},
-     {commands, undefined, "commands", undefined, "Show available commands."},
-     {output_format, undefined, "output-format", string, OutputFormat},
-     {version, $v, "version", undefined, "Specify the elvis current version."},
-     {code_path, $p, "code-path", string, "Add the directory in the code path."},
-     {keep_going, $k, "keep-going", undefined, KeepGoing}
+     {help, $h, "help", undefined,
+      "Show this help information."},
+     {config, $c, "config", string,
+      Commands},
+     {commands, undefined, "commands", undefined,
+      "Show available commands."},
+     {output_format, undefined, "output-format", string,
+      OutputFormat},
+     {version, $v, "version", undefined,
+      "Specify the elvis current version."},
+     {code_path, $p, "code-path", string,
+      "Add the directory in the code path."},
+     {keep_rocking, $k, "keep-rocking", undefined,
+      KeepRocking}
     ].
 
 -spec process_options([atom()], [string()]) -> ok.
@@ -95,8 +103,8 @@ process_options([commands | Opts], Cmds, Config) ->
 process_options([{output_format, Format} | Opts], Cmds, Config) ->
     ok = application:set_env(elvis, output_format, list_to_atom(Format)),
     process_options(Opts, Cmds, Config);
-process_options([keep_going | Opts], Cmds, Config) ->
-    ok = application:set_env(elvis, keep_going, true),
+process_options([keep_rocking | Opts], Cmds, Config) ->
+    ok = application:set_env(elvis, keep_rocking, true),
     process_options(Opts, Cmds, Config);
 process_options([version | Opts], Cmds, Config) ->
     version(),
@@ -187,7 +195,7 @@ rock_one_song(FileName, Config) ->
     F = atom_to_list(FileName),
     case elvis_core:rock_this(F, Config) of
         {fail, _} ->
-            case application:get_env(elvis, keep_going, false) of
+            case application:get_env(elvis, keep_rocking, false) of
                 false -> elvis_utils:erlang_halt(1);
                 true -> ok
             end;
