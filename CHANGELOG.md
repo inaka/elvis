@@ -1,5 +1,25 @@
 # Change Log
 
+## [0.3.3](https://github.com/inaka/elvis/tree/0.3.3) (2017-04-25)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.3.2...0.3.3)
+
+**Fixed bugs:**
+
+- Implicit funs shouldn't be counted as a level. [\#342](https://github.com/inaka/elvis/issues/342)
+
+**Closed issues:**
+
+- Update elvis\_core dependency [\#443](https://github.com/inaka/elvis/issues/443)
+- Bump Version elvis\_core to 0.3.6 [\#442](https://github.com/inaka/elvis/issues/442)
+- Change line\_length default to 100 [\#441](https://github.com/inaka/elvis/issues/441)
+- Version Bump to 0.3.2 [\#431](https://github.com/inaka/elvis/issues/431)
+
+**Merged pull requests:**
+
+- \[Close \#443\] update elvis\_core dependency [\#444](https://github.com/inaka/elvis/pull/444) ([Euen](https://github.com/Euen))
+- Exit with non-zero exit code on all failures [\#436](https://github.com/inaka/elvis/pull/436) ([tjarvstrand](https://github.com/tjarvstrand))
+- Add --keep-rocking switch [\#435](https://github.com/inaka/elvis/pull/435) ([fenek](https://github.com/fenek))
+
 ## [0.3.2](https://github.com/inaka/elvis/tree/0.3.2) (2017-02-16)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.1...0.3.2)
 
@@ -10,6 +30,7 @@
 
 **Merged pull requests:**
 
+- \[\#431\] version bump to 0.3.2 [\#434](https://github.com/inaka/elvis/pull/434) ([ferigis](https://github.com/ferigis))
 - \[\#432\] updating egithub dependency [\#433](https://github.com/inaka/elvis/pull/433) ([ferigis](https://github.com/ferigis))
 
 ## [0.3.1](https://github.com/inaka/elvis/tree/0.3.1) (2017-02-16)
