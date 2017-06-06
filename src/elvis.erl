@@ -72,7 +72,7 @@ option_spec_list() ->
      {verbose, $V, "verbose", undefined,
       "Enable verbose output."},
      {version, $v, "version", undefined,
-      "Specify the elvis current version."},
+      "Output the current elvis version."},
      {code_path, $p, "code-path", string,
       "Add the directory in the code path."},
      {keep_rocking, $k, "keep-rocking", undefined,
