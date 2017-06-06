@@ -69,8 +69,12 @@ option_spec_list() ->
       "Show available commands."},
      {output_format, undefined, "output-format", string,
       OutputFormat},
+     {quiet, $q, "quiet", undefined,
+      "Suppress all output."},
+     {verbose, $V, "verbose", undefined,
+      "Enable verbose output."},
      {version, $v, "version", undefined,
-      "Specify the elvis current version."},
+      "Output the current elvis version."},
      {code_path, $p, "code-path", string,
       "Add the directory in the code path."},
      {keep_rocking, $k, "keep-rocking", undefined,
@@ -105,6 +109,12 @@ process_options([{output_format, Format} | Opts], Cmds, Config) ->
     process_options(Opts, Cmds, Config);
 process_options([keep_rocking | Opts], Cmds, Config) ->
     ok = application:set_env(elvis, keep_rocking, true),
+    process_options(Opts, Cmds, Config);
+process_options([quiet | Opts], Cmds, Config) ->
+    ok = application:set_env(elvis, no_output, true),
+    process_options(Opts, Cmds, Config);
+process_options([verbose | Opts], Cmds, Config) ->
+    ok = application:set_env(elvis, verbose, true),
     process_options(Opts, Cmds, Config);
 process_options([version | Opts], Cmds, Config) ->
     version(),
