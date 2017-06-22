@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.3.4](https://github.com/inaka/elvis/tree/0.3.4) (2017-06-22)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.3.3...0.3.4)
+
+**Fixed bugs:**
+
+- Elvis is failing badly when operator\_spaces and line\_length checks don't pass [\#450](https://github.com/inaka/elvis/issues/450)
+
+**Closed issues:**
+
+- Update elvis\_core dependency to 0.3.8 version [\#452](https://github.com/inaka/elvis/issues/452)
+- Bump elvis\_core version to 0.3.7 and hex.pm it! [\#451](https://github.com/inaka/elvis/issues/451)
+- Add `--verbose` flag, obey rule of silence of it's not passed [\#447](https://github.com/inaka/elvis/issues/447)
+
+**Merged pull requests:**
+
+- \[Fix \#452\] Upgrade elvis\_core dependency to 0.3.8 and remove unused jiffy stuff [\#453](https://github.com/inaka/elvis/pull/453) ([harenson](https://github.com/harenson))
+- Add `--verbose` flag, setting verbose app env option [\#448](https://github.com/inaka/elvis/pull/448) ([srenatus](https://github.com/srenatus))
+
 ## [0.3.3](https://github.com/inaka/elvis/tree/0.3.3) (2017-04-25)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.2...0.3.3)
 
@@ -9,6 +27,7 @@
 
 **Closed issues:**
 
+- Bump version to 0.3.3 [\#445](https://github.com/inaka/elvis/issues/445)
 - Update elvis\_core dependency [\#443](https://github.com/inaka/elvis/issues/443)
 - Bump Version elvis\_core to 0.3.6 [\#442](https://github.com/inaka/elvis/issues/442)
 - Change line\_length default to 100 [\#441](https://github.com/inaka/elvis/issues/441)
@@ -16,6 +35,7 @@
 
 **Merged pull requests:**
 
+- \[Close \#445\] bump version to 0.3.3 [\#446](https://github.com/inaka/elvis/pull/446) ([Euen](https://github.com/Euen))
 - \[Close \#443\] update elvis\_core dependency [\#444](https://github.com/inaka/elvis/pull/444) ([Euen](https://github.com/Euen))
 - Exit with non-zero exit code on all failures [\#436](https://github.com/inaka/elvis/pull/436) ([tjarvstrand](https://github.com/tjarvstrand))
 - Add --keep-rocking switch [\#435](https://github.com/inaka/elvis/pull/435) ([fenek](https://github.com/fenek))
