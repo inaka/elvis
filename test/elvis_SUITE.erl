@@ -65,7 +65,7 @@ run_webhook(_Config) ->
     Headers = #{<<"x-github-event">> => <<"pull_request">>},
     Path = "../../test/examples/pull_request.js",
     {ok, Body} = file:read_file(Path),
-    Request = #{headers => Headers, body => Body},
+    Request = egithub_webhook_req:new(Headers, Body),
 
     try
         elvis:start(),
@@ -93,7 +93,7 @@ run_webhook(_Config) ->
 run_webhook_ping(_Config) ->
     Headers = #{<<"x-github-event">> => <<"ping">>},
     Body = <<"[]">>,
-    Request = #{headers => Headers, body => Body},
+    Request = egithub_webhook_req:new(Headers, Body),
     ok = elvis_webhook:event(Request).
 
 %%%%%%%%%%%%%%%
@@ -128,20 +128,26 @@ main_commands(_Config) ->
 
 -spec main_config(config()) -> any().
 main_config(_Config) ->
-    Expected = "missing_option_arg config",
+    try
+      meck:new(elvis_utils, [passthrough]),
+      meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
-    OptFun = fun() -> elvis:main("-c") end,
-    _ = check_first_line_output(OptFun, Expected, fun matches_regex/2),
+      Expected = "missing_option_arg config",
 
-    EnoentExpected = "enoent",
-    OptEnoentFun = fun() -> elvis:main("-c missing") end,
-    _ = check_first_line_output(OptEnoentFun,
-                                EnoentExpected,
-                                fun matches_regex/2),
+      OptFun = fun() -> elvis:main("-c") end,
+      _ = check_first_line_output(OptFun, Expected, fun matches_regex/2),
 
-    ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
-    check_empty_output(ConfigFun),
-    ok.
+      EnoentExpected = "enoent",
+      OptEnoentFun = fun() -> elvis:main("-c missing") end,
+      _ = check_first_line_output(OptEnoentFun,
+                                  EnoentExpected,
+                                  fun matches_regex/2),
+
+      ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
+      check_empty_output(ConfigFun)
+    after
+        meck:unload(elvis_utils)
+    end.
 
 -spec main_version(config()) -> ok.
 main_version(_Config) ->
@@ -170,11 +176,10 @@ main_rock(_Config) ->
 
         Expected = "# ../../src/elvis.erl.*OK",
 
-        ConfigArgs = "rock -c ../../config/elvis-test.config",
+        ConfigArgs = "rock -V -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        _ = check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
+        _ = check_some_line_output(ConfigFun, Expected, fun matches_regex/2)
 
-        ok
     after
         meck:unload(elvis_utils)
     end.
@@ -187,7 +192,7 @@ main_git_hook_fail(_Config) ->
 
         meck:new(elvis_git, [passthrough]),
         LongLine = <<"Loooooooooooooooooooooooooooooooooooooooooooooooooooong ",
-                     "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
+                     "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
         Files = [
                  #{path => "../../src/fake_long_line.erl",
                    content => LongLine},
@@ -247,12 +252,17 @@ main_default_config(_Config) ->
 
 -spec main_unexistent(config()) -> any().
 main_unexistent(_Config) ->
-    Expected = "unrecognized_or_unimplemented_command.",
+    try
+      meck:new(elvis_utils, [passthrough]),
+      meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
-    UnexistentFun = fun() -> elvis:main("aaarrrghh") end,
-    _ = check_first_line_output(UnexistentFun, Expected, fun matches_regex/2),
+      Expected = "unrecognized_or_unimplemented_command.",
 
-    ok.
+      UnexistentFun = fun() -> elvis:main("aaarrrghh") end,
+      _ = check_first_line_output(UnexistentFun, Expected, fun matches_regex/2)
+    after
+        meck:unload(elvis_utils)
+    end.
 
 -spec main_code_path(config()) -> any().
 main_code_path(_Config) ->
