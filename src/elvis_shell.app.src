@@ -3,7 +3,7 @@
   [
    {pkg_name, elvis},
    {description, "CLI for the Elvis Erlang Style Reviewer"},
-   {vsn, "0.3.3"},
+   {vsn, "0.3.4"},
    {applications, [kernel, stdlib, ssl, elvis, egithub, katana_code, getopt]},
    {modules,
     [
