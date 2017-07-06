@@ -2,7 +2,7 @@
 
 ![](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
-# elvis
+# elvis [![Build Status](https://travis-ci.org/inaka/elvis.svg?branch=master)](https://travis-ci.org/inaka/elvis)
 
 Command-line interface for Elvis, the Erlang style reviewer.
 
