@@ -22,13 +22,11 @@ event(Cred, Request) -> egithub_webhook:event(?MODULE, Cred, Request).
 -spec handle_pull_request(
   egithub:credentials(), egithub_webhook:req_data(),
   [egithub_webhook:file()]) ->
-  {ok, [egithub_webhook:message()]} | {error, term()}.
+  {ok, egithub_webhook:review()} | {error, term()}.
 handle_pull_request(Cred, Data, GithubFiles) ->
     #{<<"repository">> := Repository} = Data,
-    BranchName = maps_get([ <<"pull_request">>,
-                            <<"head">>,
-                            <<"ref">>],
-                            Data, <<"master">>),
+    BranchName =
+      maps_get([<<"pull_request">>, <<"head">>, <<"ref">>], Data, <<"master">>),
     Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
     Branch = binary_to_list(BranchName),
     Config = repo_config(Cred, Repo, Branch, elvis_config:default()),
@@ -39,10 +37,17 @@ handle_pull_request(Cred, Data, GithubFiles) ->
 
     FileInfoFun = fun (File) -> file_info(Cred, Repo, File) end,
     Config2 = elvis_config:apply_to_files(FileInfoFun, Config1),
+    CommitId =
+      maps_get([<<"pull_request">>, <<"head">>, <<"sha">>], Data, <<>>),
 
     case elvis_core:rock(Config2) of
-        {fail, Results} -> {ok, messages_from_results(Results)};
-        ok -> {ok, []}
+        {fail, Results} ->
+            {ok, review_from_results(Results, CommitId)};
+        ok ->
+            {ok, #{commit_id => CommitId,
+                   body => <<":+1:">>,
+                   event => <<"APPROVE">>,
+                   comments => []}}
     end.
 
 -spec handle_error( {error, term()}
@@ -53,6 +58,23 @@ handle_error({error, _}, _, _) -> {ok, [], []}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helper functions
+
+-spec review_from_results([elvis_result:file()], string()) ->
+    egithub_webhook:review().
+review_from_results(Results, CommitId) ->
+    RC = review_comments_from_results(Results),
+    %% Comments with `position = 0' cannot be added as a review comment, so they
+    %% are added to the review's body.
+    Fun = fun(#{position := 0, body := B}, {BodyAcc, CommentsAcc}) ->
+              {<<BodyAcc/binary, "\n- ", B/binary>>, CommentsAcc};
+             (Comment, {BodyAcc, CommentsAcc}) ->
+              {BodyAcc, [Comment | CommentsAcc]}
+          end,
+    {Body, ReviewComments} = lists:foldl(Fun, {<<>>, []}, RC),
+    #{commit_id => CommitId,
+      body => Body,
+      event => <<"REQUEST_CHANGES">>,
+      comments => ReviewComments}.
 
 -spec github_credentials() -> egithub:credentials().
 github_credentials() ->
@@ -88,31 +110,29 @@ commit_id_from_raw_url(Url, Filename) ->
     {match, [_, {Pos, Len} | _]} = re:run(UrlString, Regex),
     string:substr(UrlString, Pos + 1, Len).
 
-messages_from_results(Results) ->
+review_comments_from_results(Results) ->
     lists:flatmap(
         fun(Result) ->
-            messages_from_result(Result)
+            review_comments_from_result(Result)
         end, Results).
 
-messages_from_result(Result) ->
+review_comments_from_result(Result) ->
     File = elvis_result:get_file(Result),
     Rules = elvis_result:get_rules(Result),
     lists:flatmap(
         fun(Rule) ->
-            messages_from_result(Rule, File)
+            review_comments_from_result(Rule, File)
         end, Rules).
 
-messages_from_result(Rule, File) ->
+review_comments_from_result(Rule, File) ->
     Items = elvis_result:get_items(Rule),
     lists:flatmap(
         fun(Item) ->
-            messages_from_item(Item, File)
+            review_comments_from_item(Item, File)
         end, Items).
 
-messages_from_item(Item, File) ->
-    #{path := Path,
-      commit_id := CommitId,
-      patch := Patch} = File,
+review_comments_from_item(Item, File) ->
+    #{path := Path, patch := Patch} = File,
     Message = elvis_result:get_message(Item),
     Info = elvis_result:get_info(Item),
     Line = elvis_result:get_line_num(Item),
@@ -120,15 +140,15 @@ messages_from_item(Item, File) ->
 
     case Line of
         0 ->
-            [#{text => Text,
-               position => Line}];
+            [#{path => Path,
+               position => Line,
+               body => Text}];
         _ ->
             case elvis_git:relative_position(Patch, Line) of
                 {ok, Position} ->
-                    [ #{commit_id => CommitId,
-                        path      => Path,
+                    [ #{path      => Path,
                         position  => Position,
-                        text      => Text
+                        body      => Text
                        }
                     ];
                 not_found ->
