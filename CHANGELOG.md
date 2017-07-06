@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.4.0](https://github.com/inaka/elvis/tree/0.4.0) (2017-07-06)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.3.4...0.4.0)
+
+**Implemented enhancements:**
+
+- Use the new PR review feature [\#449](https://github.com/inaka/elvis/issues/449)
+
+**Merged pull requests:**
+
+- \[Fix \#449\] Use the new GitHub's PR review feature [\#457](https://github.com/inaka/elvis/pull/457) ([harenson](https://github.com/harenson))
+
 ## [0.3.4](https://github.com/inaka/elvis/tree/0.3.4) (2017-06-22)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.3...0.3.4)
 
@@ -9,12 +20,14 @@
 
 **Closed issues:**
 
+- Bump version to 0.3.4 [\#454](https://github.com/inaka/elvis/issues/454)
 - Update elvis\_core dependency to 0.3.8 version [\#452](https://github.com/inaka/elvis/issues/452)
 - Bump elvis\_core version to 0.3.7 and hex.pm it! [\#451](https://github.com/inaka/elvis/issues/451)
 - Add `--verbose` flag, obey rule of silence of it's not passed [\#447](https://github.com/inaka/elvis/issues/447)
 
 **Merged pull requests:**
 
+- \[Fix \#454\] Bump version to 0.3.4 [\#455](https://github.com/inaka/elvis/pull/455) ([harenson](https://github.com/harenson))
 - \[Fix \#452\] Upgrade elvis\_core dependency to 0.3.8 and remove unused jiffy stuff [\#453](https://github.com/inaka/elvis/pull/453) ([harenson](https://github.com/harenson))
 - Add `--verbose` flag, setting verbose app env option [\#448](https://github.com/inaka/elvis/pull/448) ([srenatus](https://github.com/srenatus))
 
