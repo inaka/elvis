@@ -69,8 +69,10 @@ found [here](https://github.com/inaka/elvis/wiki/Default-Rules-in-Elvis-Webhook)
 #### Running the webhook on your servers
 
 Since GitHub's API needs a valid user and password to allow the creation of
-comments on PRs, the parameters `github_user` and `github_password` need to be
-added to `elvis`'s [configuration](#configuration).
+reviews on PRs, the parameters `github_user` and `github_password` need to be
+added to `elvis`'s [configuration](#configuration) and also the credentials used
+must be from an admin of the repo or someone with permissions for requesting changes
+on PRs.
 
 The `webhook/1` function takes a map containing the keys `headers` and `body`,
 whose values should be the map of headers and the body from the GitHub's event
