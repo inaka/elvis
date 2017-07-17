@@ -1,7 +1,7 @@
 {"1.1.0",
 [{<<"aleppo">>,{pkg,<<"inaka_aleppo">>,<<"1.0.0">>},1},
  {<<"certifi">>,{pkg,<<"certifi">>,<<"0.7.0">>},2},
- {<<"egithub">>,{pkg,<<"egithub">>,<<"0.5.1">>},0},
+ {<<"egithub">>,{pkg,<<"egithub">>,<<"0.5.2">>},0},
  {<<"elvis">>,{pkg,<<"elvis_core">>,<<"0.3.8">>},0},
  {<<"getopt">>,{pkg,<<"getopt">>,<<"0.8.2">>},0},
  {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.9">>},1},
@@ -18,7 +18,7 @@
 {pkg_hash,[
  {<<"aleppo">>, <<"8DB14CF16BB8C263C14FF4C3F69F64D7C849D40888944F4204D2CA74F1114CEB">>},
  {<<"certifi">>, <<"861A57F3808F7EB0C2D1802AFEAAE0FA5DE813B0DF0979153CBAFCD853ABABAF">>},
- {<<"egithub">>, <<"C8BDB55F4D9EF610535D62CC96A43D974BE8D5924C5507218A25B1DF608788ED">>},
+ {<<"egithub">>, <<"67A4B063D0A685053E729C71628848A7A3BBAC73946CC483497F93F11351D7FB">>},
  {<<"elvis">>, <<"9FE9DBFF15150DB41110D86BD87F29A7269A5CC3C0984EF47C1D208FBBD24222">>},
  {<<"getopt">>, <<"B17556DB683000BA50370B16C0619DF1337E7AF7ECBF7D64FBF8D1D6BCE3109B">>},
  {<<"goldrush">>, <<"F06E5D5F1277DA5C413E84D5A2924174182FB108DABB39D5EC548B27424CD106">>},
