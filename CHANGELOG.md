@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.4.1](https://github.com/inaka/elvis/tree/0.4.1) (2017-07-17)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.4.0...0.4.1)
+
+**Fixed bugs:**
+
+- Update egithub dependency to version 0.5.2 [\#463](https://github.com/inaka/elvis/issues/463)
+
+**Merged pull requests:**
+
+- \[Fix \#463\] Update egithub dependency to version 0.5.2 [\#465](https://github.com/inaka/elvis/pull/465) ([harenson](https://github.com/harenson))
+
 ## [0.4.0](https://github.com/inaka/elvis/tree/0.4.0) (2017-07-06)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.4...0.4.0)
 
@@ -7,8 +18,13 @@
 
 - Use the new PR review feature [\#449](https://github.com/inaka/elvis/issues/449)
 
+**Closed issues:**
+
+- Bump version to 0.4.0 [\#458](https://github.com/inaka/elvis/issues/458)
+
 **Merged pull requests:**
 
+- \[Fix \#458\] Bump version to 0.4.0 [\#460](https://github.com/inaka/elvis/pull/460) ([harenson](https://github.com/harenson))
 - \[Fix \#449\] Use the new GitHub's PR review feature [\#457](https://github.com/inaka/elvis/pull/457) ([harenson](https://github.com/harenson))
 
 ## [0.3.4](https://github.com/inaka/elvis/tree/0.3.4) (2017-06-22)
