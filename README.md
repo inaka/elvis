@@ -40,7 +40,7 @@ elvis rock --config config/elvis.config
 ### Webhook
 
 There's also a way to use `elvis` as a GitHub [webhook][webhooks] for
-`pull request` (PR) events by calling the `webhook/1` function. This will add
+`pull request` (PR) events by calling the `elvis_webhook:event/1` function. This will add
 a comment in each file and rule that is broken, analyzing only the files
 associated with the PR.
 
