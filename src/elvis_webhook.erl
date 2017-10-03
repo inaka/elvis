@@ -22,7 +22,7 @@ event(Cred, Request) -> egithub_webhook:event(?MODULE, Cred, Request).
 -spec handle_pull_request(
   egithub:credentials(), egithub_webhook:req_data(),
   [egithub_webhook:file()]) ->
-  {ok, egithub_webhook:review()} | {error, term()}.
+  {ok, egithub_webhook:review()}.
 handle_pull_request(Cred, Data, GithubFiles) ->
     #{<<"repository">> := Repository} = Data,
     BranchName =
