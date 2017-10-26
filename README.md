@@ -136,6 +136,40 @@ The `config` and `output_format` are explained in [`elvis_core`](https://github.
 The GitHub configuration parameters `github_user` and `github_password` are
 required only when `elvis` is used as a [webhook](#webhook).
 
+### elvis.config
+
+In your `elvis.config` file you can setup which rules should be
+applied, on what files and in which directories to do it.
+
+The configuration is in Erlang format, it is not that hard to write
+but it is easier if you use the `elvis.config` file in this reposiotry
+as a template.
+
+In the `elvis.config` file you create an elvis config where for a set
+of directories, you want to run a ruleset (or specific rules) on a set
+of files.
+
+For example, configure to check all erlang files under the `src`
+directory using the ruleset `erl_files`:
+```
+[
+ {
+   elvis,
+   [
+    {config,
+     [#{dirs => ["src"],
+        filter => "*.erl",
+        ruleset => erl_files
+       }
+     ]
+    }
+   ]
+ }
+].
+```
+
+You can use four different rulesets `erl_files`, `makefiles`, `rebar_config` or `elvis_config`.
+
 ## Implemented Rules
 
 A reference of all rules implemented in Elvis can be found in this wiki page:
