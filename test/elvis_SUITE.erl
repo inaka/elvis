@@ -85,7 +85,6 @@ run_webhook(_Config) ->
                    end,
         meck:expect(egithub, file_content, FakeFun2),
 
-
         ok = elvis_webhook:event(Request)
     after
         meck:unload(egithub)
