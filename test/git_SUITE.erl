@@ -114,5 +114,5 @@ check_branch_files(_Config) ->
 
 -spec random_file_name() -> string().
 random_file_name() ->
-  RandomString = integer_to_list(crypto:rand_uniform(0, 1 bsl 127)),
+  RandomString = integer_to_list(rand:uniform(1 bsl 127)),
   "test_file_" ++ RandomString.
