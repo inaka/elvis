@@ -78,11 +78,13 @@ run_webhook(_Config) ->
         EmptyResultFun = fun(_, _, _) -> {ok, []} end,
         meck:expect(egithub, pull_req_comments, EmptyResultFun),
         meck:expect(egithub, issue_comments, EmptyResultFun),
+        meck:expect(egithub, pr_reviews, EmptyResultFun),
 
         FakeFun2 = fun(_, _, _, "elvis.config") ->
                            {error, error}
                    end,
         meck:expect(egithub, file_content, FakeFun2),
+
 
         ok = elvis_webhook:event(Request)
     after
