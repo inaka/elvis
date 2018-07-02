@@ -1,5 +1,42 @@
 # Change Log
 
+## [0.4.2](https://github.com/inaka/elvis/tree/0.4.2) (2018-07-02)
+[Full Changelog](https://github.com/inaka/elvis/compare/0.4.1...0.4.2)
+
+**Implemented enhancements:**
+
+- Update elvis.config so that it can be checked with gadget [\#324](https://github.com/inaka/elvis/issues/324)
+
+**Fixed bugs:**
+
+- Misuse of options [\#468](https://github.com/inaka/elvis/issues/468)
+- elvis.config not honored for the elvis bot [\#439](https://github.com/inaka/elvis/issues/439)
+- Webhook: elvis.config not found when creating PR from fork [\#311](https://github.com/inaka/elvis/issues/311)
+
+**Closed issues:**
+
+- Would you be interested in a Common Caveats rule? [\#484](https://github.com/inaka/elvis/issues/484)
+- Bump elvis\_core Version to 0.4.0 [\#482](https://github.com/inaka/elvis/issues/482)
+- Update Dependencies on elvis\_core [\#481](https://github.com/inaka/elvis/issues/481)
+- Parsing eunit macro ?debugVal fails with Error: function\_clause [\#480](https://github.com/inaka/elvis/issues/480)
+- Update elvis\_core dependency version to 0.3.9 [\#470](https://github.com/inaka/elvis/issues/470)
+- Bump elvis\_core version to 0.3.9 [\#469](https://github.com/inaka/elvis/issues/469)
+- Adding Travis [\#456](https://github.com/inaka/elvis/issues/456)
+- elvis.config file documentation [\#437](https://github.com/inaka/elvis/issues/437)
+- Fix elvis\_webhook:handle\_pull\_request/3 spec [\#358](https://github.com/inaka/elvis/issues/358)
+- Document group level ignore [\#357](https://github.com/inaka/elvis/issues/357)
+- There is not elvis:webhook/1 function anymore so please update the documentation [\#322](https://github.com/inaka/elvis/issues/322)
+
+**Merged pull requests:**
+
+- upgrade deps: elvis\_core, katana\_code [\#485](https://github.com/inaka/elvis/pull/485) ([f3c0](https://github.com/f3c0))
+- \[\#380\] Add a section describing elvis.config [\#477](https://github.com/inaka/elvis/pull/477) ([JohanVikman](https://github.com/JohanVikman))
+- \[\#358\] Fix webhook function spec [\#475](https://github.com/inaka/elvis/pull/475) ([JohanVikman](https://github.com/JohanVikman))
+- \[\#322\] Fix webhook readme instructions [\#474](https://github.com/inaka/elvis/pull/474) ([JohanVikman](https://github.com/JohanVikman))
+- Update README.md [\#473](https://github.com/inaka/elvis/pull/473) ([igaray](https://github.com/igaray))
+- \[Fix \#470\] Update elvis\_core dependency version to 0.3.9 [\#471](https://github.com/inaka/elvis/pull/471) ([harenson](https://github.com/harenson))
+- \[\#456\] Adding Travis [\#461](https://github.com/inaka/elvis/pull/461) ([ferigis](https://github.com/ferigis))
+
 ## [0.4.1](https://github.com/inaka/elvis/tree/0.4.1) (2017-07-17)
 [Full Changelog](https://github.com/inaka/elvis/compare/0.4.0...0.4.1)
 
@@ -7,8 +44,13 @@
 
 - Update egithub dependency to version 0.5.2 [\#463](https://github.com/inaka/elvis/issues/463)
 
+**Closed issues:**
+
+- Bump version to 0.4.1 [\#464](https://github.com/inaka/elvis/issues/464)
+
 **Merged pull requests:**
 
+- \[Fix \#464\] Bump version to 0.4.1 [\#466](https://github.com/inaka/elvis/pull/466) ([harenson](https://github.com/harenson))
 - \[Fix \#463\] Update egithub dependency to version 0.5.2 [\#465](https://github.com/inaka/elvis/pull/465) ([harenson](https://github.com/harenson))
 
 ## [0.4.0](https://github.com/inaka/elvis/tree/0.4.0) (2017-07-06)
