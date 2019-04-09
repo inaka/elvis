@@ -37,6 +37,8 @@ otherwise a configuration file can be specified through the use of the
 elvis rock --config config/elvis.config
 ```
 
+In `0.3.0` a new option was introduced in order to run elvis checks only on the source files that have changed since a particular branch of commit. Example usage would be `elvis git-branch origin/HEAD`.
+
 ### Webhook
 
 There's also a way to use `elvis` as a GitHub [webhook][webhooks] for
