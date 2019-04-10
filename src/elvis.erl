@@ -69,6 +69,7 @@ option_spec_list() ->
       "Show available commands."},
      {output_format, undefined, "output-format", string,
       OutputFormat},
+     {parsable, undefined, "parsable", undefined, "Output is parsable"},
      {quiet, $q, "quiet", undefined,
       "Suppress all output."},
      {verbose, $V, "verbose", undefined,
@@ -106,6 +107,9 @@ process_options([commands | Opts], Cmds, Config) ->
     process_options(Opts, Cmds, Config);
 process_options([{output_format, Format} | Opts], Cmds, Config) ->
     ok = application:set_env(elvis, output_format, list_to_atom(Format)),
+    process_options(Opts, Cmds, Config);
+process_options([parsable | Opts], Cmds, Config) ->
+    ok = application:set_env(elvis, parsable, true),
     process_options(Opts, Cmds, Config);
 process_options([keep_rocking | Opts], Cmds, Config) ->
     ok = application:set_env(elvis, keep_rocking, true),
