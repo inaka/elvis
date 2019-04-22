@@ -105,7 +105,7 @@ check_branch_files(_Config) ->
 
     _ = os:cmd("git add " ++ FileLocation),
     _ = os:cmd("git commit -m \"some commit\""),
-    [FileName] = elvis_git:branch_files("HEAD^"),
+    [#{path := FileName}] = elvis_git:branch_files("HEAD^"),
     _ = os:cmd("git reset --hard HEAD^"),
 
     _ = os:cmd("git stash pop"),

@@ -42,7 +42,7 @@ handle_pull_request(Cred, Data, GithubFiles) ->
 
     case elvis_core:rock(Config2) of
         {fail, Results} ->
-            {ok, review_from_results(Results, CommitId)};
+            {ok, review_from_results(Results, CommitId, GithubFiles1)};
         ok ->
             {ok, #{commit_id => CommitId,
                    body => <<":+1:">>,
@@ -59,10 +59,10 @@ handle_error({error, _}, _, _) -> {ok, [], []}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Helper functions
 
--spec review_from_results([elvis_result:file()], string()) ->
+-spec review_from_results([elvis_result:file()], string(), [map()]) ->
     egithub_webhook:review().
-review_from_results(Results, CommitId) ->
-    RC = review_comments_from_results(Results),
+review_from_results(Results, CommitId, GithubFiles) ->
+    RC = review_comments_from_results(Results, GithubFiles),
     %% Comments with `position = 0' cannot be added as a review comment, so they
     %% are added to the review's body.
     Fun = fun(#{position := 0, body := B}, {BodyAcc, CommentsAcc}) ->
@@ -110,29 +110,33 @@ commit_id_from_raw_url(Url, Filename) ->
     {match, [_, {Pos, Len} | _]} = re:run(UrlString, Regex),
     string:substr(UrlString, Pos + 1, Len).
 
-review_comments_from_results(Results) ->
+review_comments_from_results(Results, GithubFiles) ->
+    GithubFiles1 =
+        maps:from_list([ {Path, File}
+                         || #{path := Path} = File <- GithubFiles ]),
     lists:flatmap(
         fun(Result) ->
-            review_comments_from_result(Result)
+            review_comments_from_result(Result, GithubFiles1)
         end, Results).
 
-review_comments_from_result(Result) ->
-    File = elvis_result:get_file(Result),
+review_comments_from_result(Result, GithubFiles) ->
+    FilePath = elvis_result:get_path(Result),
+    #{patch := Patch} = maps:get(FilePath, GithubFiles),
+
     Rules = elvis_result:get_rules(Result),
     lists:flatmap(
         fun(Rule) ->
-            review_comments_from_result(Rule, File)
+                review_comments_from_result(Rule, FilePath, Patch)
         end, Rules).
 
-review_comments_from_result(Rule, File) ->
+review_comments_from_result(Rule, FilePath, Patch) ->
     Items = elvis_result:get_items(Rule),
     lists:flatmap(
         fun(Item) ->
-            review_comments_from_item(Item, File)
+                review_comments_from_item(Item, FilePath, Patch)
         end, Items).
 
-review_comments_from_item(Item, File) ->
-    #{path := Path, patch := Patch} = File,
+review_comments_from_item(Item, Path, Patch) ->
     Message = elvis_result:get_message(Item),
     Info = elvis_result:get_info(Item),
     Line = elvis_result:get_line_num(Item),

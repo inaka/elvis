@@ -57,9 +57,12 @@ option_spec_list() ->
                "an elvis.config file.",
     OutputFormat = "It allows you to display the results in plain text. When "
                    "none is provided elvis displays the results in colors. "
-                   "The options allowed are (plain | colors).",
+                   "The options allowed are (plain | colors | parsable).",
     KeepRocking = "Won't stop rocking on first error"
                   " when given a list of files",
+    Parallel = "Allows to analyze files concurrently. Provide max number of"
+               " concurrent workers, or specify \"auto\" to peek default value"
+               " based on the number of schedulers.",
     [
      {help, $h, "help", undefined,
       "Show this help information."},
@@ -69,6 +72,7 @@ option_spec_list() ->
       "Show available commands."},
      {output_format, undefined, "output-format", string,
       OutputFormat},
+     {parallel, $p, "parallel", string, Parallel},
      {quiet, $q, "quiet", undefined,
       "Suppress all output."},
      {verbose, $V, "verbose", undefined,
@@ -121,6 +125,13 @@ process_options([version | Opts], Cmds, Config) ->
     process_options(Opts, Cmds, Config);
 process_options([{code_path, Path} | Opts], Cmds, Config) ->
     true = code:add_path(Path),
+    process_options(Opts, Cmds, Config);
+process_options([{parallel, Num} | Opts], Cmds, Config) ->
+    N = case Num of
+            "auto" -> erlang:system_info(schedulers);
+            _      -> erlang:list_to_integer(Num)
+        end,
+    ok = application:set_env(elvis, parallel, N),
     process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
