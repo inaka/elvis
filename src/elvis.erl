@@ -72,7 +72,7 @@ option_spec_list() ->
       "Show available commands."},
      {output_format, undefined, "output-format", string,
       OutputFormat},
-     {parallel, $p, "parallel", string, Parallel},
+     {parallel, $P, "parallel", string, Parallel},
      {quiet, $q, "quiet", undefined,
       "Suppress all output."},
      {verbose, $V, "verbose", undefined,
