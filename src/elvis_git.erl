@@ -44,21 +44,17 @@ run_branch(Commit, Config) ->
 
 -spec branch_files(string()) -> [elvis_file:file()].
 branch_files(Commit) ->
-    Cmd = ?LIST_BRANCH_CHANGES(Commit),
-    Output = list_to_binary(os:cmd(Cmd)),
-
-    Lines = binary:split(Output, <<"\n">>, [global]),
-    Paths = [binary_to_list(Path) || Path <- Lines, byte_size(Path) > 0],
-    lists:map(fun elvis_file/1, Paths).
+    process_files(?LIST_BRANCH_CHANGES(Commit)).
 
 -spec staged_files() -> [elvis_file:file()].
 staged_files() ->
-    Cmd = ?LIST_STAGED,
+    process_files(?LIST_STAGED).
+
+process_files(Cmd) ->
     Output = list_to_binary(os:cmd(Cmd)),
 
     Lines = binary:split(Output, <<"\n">>, [global]),
     Paths = [binary_to_list(Path) || Path <- Lines, byte_size(Path) > 0],
-
     lists:map(fun elvis_file/1, Paths).
 
 -spec elvis_file(string()) -> elvis_file:file().
