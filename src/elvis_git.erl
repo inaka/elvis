@@ -5,7 +5,6 @@
          run_branch/2,
          staged_files/0,
          branch_files/1,
-         staged_content/1,
          relative_position/2,
          install_hook/0
         ]).
@@ -37,39 +36,30 @@ run_hook(Config) ->
 -spec run_branch(string(), elvis_config:config()) -> ok.
 run_branch(Commit, Config) ->
     Files = elvis_git:branch_files(Commit),
-    Results = lists:map(fun(File) ->
-                                elvis_core:rock_this(File, Config)
-                        end, Files),
-    case lists:any(fun(Res) -> Res /= ok end, Results) of
-        true -> elvis_utils:erlang_halt(1);
-        false -> ok
+    NewConfig = elvis_config:resolve_files(Config, Files),
+    case elvis_core:rock(NewConfig) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
     end.
 
--spec branch_files(string()) -> [string()].
+-spec branch_files(string()) -> [elvis_file:file()].
 branch_files(Commit) ->
-    Cmd = ?LIST_BRANCH_CHANGES(Commit),
-    Output = list_to_binary(os:cmd(Cmd)),
-
-    Lines = binary:split(Output, <<"\n">>, [global]),
-    [binary_to_list(Path) || Path <- Lines, byte_size(Path) > 0].
+    process_files(?LIST_BRANCH_CHANGES(Commit)).
 
 -spec staged_files() -> [elvis_file:file()].
 staged_files() ->
-    Cmd = ?LIST_STAGED,
+    process_files(?LIST_STAGED).
+
+process_files(Cmd) ->
     Output = list_to_binary(os:cmd(Cmd)),
 
     Lines = binary:split(Output, <<"\n">>, [global]),
     Paths = [binary_to_list(Path) || Path <- Lines, byte_size(Path) > 0],
+    lists:map(fun elvis_file/1, Paths).
 
-    lists:map(fun staged_content/1, Paths).
-
--spec staged_content(string()) -> elvis_file:file().
-staged_content(Path) ->
-    Content = os:cmd(?STAGED_CONTENT(Path)),
-    #{
-       path => Path,
-       content => list_to_binary(Content)
-     }.
+-spec elvis_file(string()) -> elvis_file:file().
+elvis_file(Path) ->
+    #{path => Path}.
 
 %% @doc Takes a git patch and an absolute file line number and returns a
 %%      relative position for that line in the patch.
