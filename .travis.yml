@@ -5,12 +5,12 @@ otp_release:
   - 20.3
   - 21.3
   - 22.0
-before_install:
-  - ./ci before_install "${PWD:?}"/rebar3
 install:
-  - ./ci install "${PWD:?}"/rebar3
+  - wget https://s3.amazonaws.com/rebar3/rebar3
+  - chmod +x rebar3
+  - export PATH=$PWD:$PATH
 script:
-  - ./ci script "${PWD:?}"/rebar3
+  - ./ci
 cache:
   directories:
     - .plt
