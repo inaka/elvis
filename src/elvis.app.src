@@ -1,0 +1,24 @@
+{ application, elvis
+, [ {pkg_name, elvis}
+  , {description, "CLI for the Elvis Erlang Style Reviewer"}
+  , {vsn, "0.4.2"}
+  , { applications
+    , [kernel, stdlib, ssl, elvis_core, egithub, katana_code, getopt]
+    }
+  , { modules
+    , [ elvis
+      , elvis_git
+      , elvis_webhook
+      ]
+    }
+  , {registered, []}
+  , {maintainers, ["Inaka"]}
+  , {licenses, ["Apache 2.0"]}
+  , { links
+    , [ {"Github", "https://github.com/inaka/elvis"}
+      , {"Blog", "http://inaka.net/blog/2014/09/05/erlang-standards-and-elvis-rock/"}
+      ]
+    }
+  , {build_tools, ["rebar3"]}
+  ]
+}.
