@@ -29,7 +29,7 @@ handle_pull_request(Cred, Data, GithubFiles) ->
       maps_get([<<"pull_request">>, <<"head">>, <<"ref">>], Data, <<"master">>),
     Repo = binary_to_list(maps:get(<<"full_name">>, Repository)),
     Branch = binary_to_list(BranchName),
-    Config = repo_config(Cred, Repo, Branch, elvis_config:default()),
+    Config = repo_config(Cred, Repo, Branch, elvis:default_config()),
 
     GithubFiles1 = [F#{path => Path}
                     || F = #{<<"filename">> := Path} <- GithubFiles],
@@ -97,7 +97,8 @@ repo_config(Cred, Repo, Branch, LocalConfig) ->
     case egithub:file_content(Cred, Repo, Branch, "elvis.config") of
         {ok, ConfigContent} ->
             ConfigEval = ktn_code:eval(ConfigContent),
-            elvis_config:load(ConfigEval);
+            ElvisConfig = proplists:get_value(elvis, ConfigEval),
+            proplists:get_value(config, ElvisConfig);
         {error, _} ->
             LocalConfig
     end.

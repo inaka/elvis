@@ -11,7 +11,7 @@ all() -> [dialyzer, xref, elvis].
 
 -spec dialyzer(config()) -> {comment, []}.
 dialyzer(_Config) ->
-  BaseDir = code:lib_dir(elvis_shell),
+  BaseDir = code:lib_dir(elvis),
   DefaultRebar3PltLoc = filename:join(BaseDir, "../../../default"),
   Plts = filelib:wildcard(filename:join(DefaultRebar3PltLoc, "*_plt")),
   Dirs = [filename:join(BaseDir, Dir) || Dir <- ["ebin", "test"]],
@@ -29,7 +29,7 @@ dialyzer(_Config) ->
 
 -spec xref(config()) -> {comment, []}.
 xref(_Config) ->
-  BaseDir = code:lib_dir(elvis_shell),
+  BaseDir = code:lib_dir(elvis),
   Dirs = [filename:join(BaseDir, Dir) || Dir <- ["ebin", "test"]],
   XrefConfig = #{ dirs => Dirs
                 , xref_defaults =>
@@ -50,14 +50,14 @@ xref(_Config) ->
 
 -spec elvis(config()) -> {comment, []}.
 elvis(_Config) ->
-  BaseDir = code:lib_dir(elvis_shell),
+  BaseDir = code:lib_dir(elvis),
   ConfigFile = filename:join(BaseDir, "../../../../elvis.config"),
   ElvisConfig = [ fix_dirs(Group)
-                || Group <- elvis_config:load_file(ConfigFile)],
+                || Group <- elvis_config:from_file(ConfigFile)],
   ct:comment("Elvis rocks!"),
   ok = elvis_core:rock(ElvisConfig),
   {comment, ""}.
 
 fix_dirs(#{dirs := Dirs} = Group) ->
-  NewDirs = [filename:join(code:lib_dir(elvis_shell), Dir) || Dir <- Dirs],
+  NewDirs = [filename:join(code:lib_dir(elvis), Dir) || Dir <- Dirs],
   Group#{dirs := NewDirs}.
