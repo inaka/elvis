@@ -153,7 +153,7 @@ of files.
 
 For example, configure to check all erlang files under the `src`
 directory using the ruleset `erl_files`:
-```
+```erlang
 [
  {
    elvis,
