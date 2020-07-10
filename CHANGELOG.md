@@ -1,6 +1,43 @@
-# Change Log
+# Changelog
+
+## [0.5.0](https://github.com/inaka/elvis/tree/0.5.0)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/0.4.2...0.5.0)
+
+**Implemented enhancements:**
+
+- Implement a "confidence score" on each thing Elvis finds [\#138](https://github.com/inaka/elvis/issues/138)
+
+**Fixed bugs:**
+
+- FUNCTION\_NAME macro treated as variable [\#505](https://github.com/inaka/elvis/issues/505)
+- Master doesn't build [\#503](https://github.com/inaka/elvis/issues/503)
+- Fix dialyzer warnings on OTP21 [\#486](https://github.com/inaka/elvis/issues/486)
+- operator\_spaces handles +,- and / signs as operator in cases where it is not an operator [\#483](https://github.com/inaka/elvis/issues/483)
+- Elvis is not detecting "Missing space" between a comma [\#376](https://github.com/inaka/elvis/issues/376)
+- Crash elvis on eval formatted string [\#288](https://github.com/inaka/elvis/issues/288)
+
+**Closed issues:**
+
+- Compiling the elvis shell Error [\#506](https://github.com/inaka/elvis/issues/506)
+- Possible problems with state\_record\_and\_type validation [\#490](https://github.com/inaka/elvis/issues/490)
+- Make corrections for detected problems [\#478](https://github.com/inaka/elvis/issues/478)
+- Elvis complains about dynamic function call in behaviour module [\#467](https://github.com/inaka/elvis/issues/467)
+- Rename libraries to match repo names [\#425](https://github.com/inaka/elvis/issues/425)
+- Elvis seems to ignore -ifdef/-else/-endif conditionals and flags disabled code parts as DRY of enabled ones. [\#321](https://github.com/inaka/elvis/issues/321)
+- Create release once ongoing tasks are merged into master [\#287](https://github.com/inaka/elvis/issues/287)
+- Create a stable tag/release in order to have a fixed reference to the latest stable version [\#205](https://github.com/inaka/elvis/issues/205)
+
+**Merged pull requests:**
+
+- README.md code block formatting for Erlang [\#513](https://github.com/inaka/elvis/pull/513) ([szTheory](https://github.com/szTheory))
+- \[\#491\] Update elvis\_core with correct OTP naming [\#511](https://github.com/inaka/elvis/pull/511) ([jfacorro](https://github.com/jfacorro))
+- \[\#503\] Update egithub [\#504](https://github.com/inaka/elvis/pull/504) ([jfacorro](https://github.com/jfacorro))
+- Add 'parallel' option, that runs analysis of files in parallel [\#499](https://github.com/inaka/elvis/pull/499) ([define-null](https://github.com/define-null))
+- Add git-branch option for elvis escript to readme [\#496](https://github.com/inaka/elvis/pull/496) ([onno-vos-dev](https://github.com/onno-vos-dev))
 
 ## [0.4.2](https://github.com/inaka/elvis/tree/0.4.2) (2018-07-02)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.4.1...0.4.2)
 
 **Implemented enhancements:**
@@ -34,10 +71,12 @@
 - \[\#358\] Fix webhook function spec [\#475](https://github.com/inaka/elvis/pull/475) ([JohanVikman](https://github.com/JohanVikman))
 - \[\#322\] Fix webhook readme instructions [\#474](https://github.com/inaka/elvis/pull/474) ([JohanVikman](https://github.com/JohanVikman))
 - Update README.md [\#473](https://github.com/inaka/elvis/pull/473) ([igaray](https://github.com/igaray))
+- Bump version to 0.4.2 [\#472](https://github.com/inaka/elvis/pull/472) ([harenson](https://github.com/harenson))
 - \[Fix \#470\] Update elvis\_core dependency version to 0.3.9 [\#471](https://github.com/inaka/elvis/pull/471) ([harenson](https://github.com/harenson))
 - \[\#456\] Adding Travis [\#461](https://github.com/inaka/elvis/pull/461) ([ferigis](https://github.com/ferigis))
 
 ## [0.4.1](https://github.com/inaka/elvis/tree/0.4.1) (2017-07-17)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.4.0...0.4.1)
 
 **Fixed bugs:**
@@ -54,6 +93,7 @@
 - \[Fix \#463\] Update egithub dependency to version 0.5.2 [\#465](https://github.com/inaka/elvis/pull/465) ([harenson](https://github.com/harenson))
 
 ## [0.4.0](https://github.com/inaka/elvis/tree/0.4.0) (2017-07-06)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.4...0.4.0)
 
 **Implemented enhancements:**
@@ -70,6 +110,7 @@
 - \[Fix \#449\] Use the new GitHub's PR review feature [\#457](https://github.com/inaka/elvis/pull/457) ([harenson](https://github.com/harenson))
 
 ## [0.3.4](https://github.com/inaka/elvis/tree/0.3.4) (2017-06-22)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.3...0.3.4)
 
 **Fixed bugs:**
@@ -90,6 +131,7 @@
 - Add `--verbose` flag, setting verbose app env option [\#448](https://github.com/inaka/elvis/pull/448) ([srenatus](https://github.com/srenatus))
 
 ## [0.3.3](https://github.com/inaka/elvis/tree/0.3.3) (2017-04-25)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.2...0.3.3)
 
 **Fixed bugs:**
@@ -112,6 +154,7 @@
 - Add --keep-rocking switch [\#435](https://github.com/inaka/elvis/pull/435) ([fenek](https://github.com/fenek))
 
 ## [0.3.2](https://github.com/inaka/elvis/tree/0.3.2) (2017-02-16)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.1...0.3.2)
 
 **Closed issues:**
@@ -125,6 +168,7 @@
 - \[\#432\] updating egithub dependency [\#433](https://github.com/inaka/elvis/pull/433) ([ferigis](https://github.com/ferigis))
 
 ## [0.3.1](https://github.com/inaka/elvis/tree/0.3.1) (2017-02-16)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.3.0...0.3.1)
 
 **Merged pull requests:**
@@ -132,6 +176,7 @@
 - \[\#429\] Bump Version to 0.3.1 [\#430](https://github.com/inaka/elvis/pull/430) ([ferigis](https://github.com/ferigis))
 
 ## [0.3.0](https://github.com/inaka/elvis/tree/0.3.0) (2017-02-10)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.12...0.3.0)
 
 **Implemented enhancements:**
@@ -178,6 +223,7 @@
 - \[\#424\] updating dependencies [\#426](https://github.com/inaka/elvis/pull/426) ([ferigis](https://github.com/ferigis))
 
 ## [0.2.12](https://github.com/inaka/elvis/tree/0.2.12) (2016-08-05)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.11...0.2.12)
 
 **Fixed bugs:**
@@ -206,6 +252,7 @@
 - Update README.md [\#377](https://github.com/inaka/elvis/pull/377) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
 ## [0.2.11](https://github.com/inaka/elvis/tree/0.2.11) (2016-04-07)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.10...0.2.11)
 
 **Closed issues:**
@@ -217,6 +264,7 @@
 - Version Bump to 0.2.11 [\#372](https://github.com/inaka/elvis/pull/372) ([elbrujohalcon](https://github.com/elbrujohalcon))
 
 ## [0.2.10](https://github.com/inaka/elvis/tree/0.2.10) (2016-03-30)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.8...0.2.10)
 
 **Fixed bugs:**
@@ -245,6 +293,7 @@
 - \[Fix \#354\] Update katana [\#355](https://github.com/inaka/elvis/pull/355) ([harenson](https://github.com/harenson))
 
 ## [0.2.8](https://github.com/inaka/elvis/tree/0.2.8) (2016-03-08)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.7...0.2.8)
 
 **Implemented enhancements:**
@@ -269,6 +318,7 @@
 - Update README.md [\#340](https://github.com/inaka/elvis/pull/340) ([StoneCypher](https://github.com/StoneCypher))
 
 ## [0.2.7](https://github.com/inaka/elvis/tree/0.2.7) (2016-01-22)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.6...0.2.7)
 
 **Implemented enhancements:**
@@ -292,6 +342,7 @@
 - \[Fix \#330\] add elvis\_core 0.2.6 in rebar.config [\#331](https://github.com/inaka/elvis/pull/331) ([Euen](https://github.com/Euen))
 
 ## [0.2.6](https://github.com/inaka/elvis/tree/0.2.6) (2016-01-15)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.6-alpha1...0.2.6)
 
 **Implemented enhancements:**
@@ -356,6 +407,7 @@
 - Support for Rebar3 style deps [\#269](https://github.com/inaka/elvis/pull/269) ([walrusVision](https://github.com/walrusVision))
 
 ## [0.2.6-alpha1](https://github.com/inaka/elvis/tree/0.2.6-alpha1) (2015-09-07)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5...0.2.6-alpha1)
 
 **Fixed bugs:**
@@ -372,6 +424,7 @@
 - \[Closes \#252\] Incorrect matching of files [\#268](https://github.com/inaka/elvis/pull/268) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.5](https://github.com/inaka/elvis/tree/0.2.5) (2015-08-31)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta4...0.2.5)
 
 **Implemented enhancements:**
@@ -411,6 +464,7 @@
 - Fix typo in specs [\#257](https://github.com/inaka/elvis/pull/257) ([NOMORECOFFEE](https://github.com/NOMORECOFFEE))
 
 ## [0.2.5-beta4](https://github.com/inaka/elvis/tree/0.2.5-beta4) (2015-08-20)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta3...0.2.5-beta4)
 
 **Closed issues:**
@@ -429,6 +483,7 @@
 - \[Close \#238\] change https protocol as default for deps rule [\#248](https://github.com/inaka/elvis/pull/248) ([Euen](https://github.com/Euen))
 
 ## [0.2.5-beta3](https://github.com/inaka/elvis/tree/0.2.5-beta3) (2015-06-30)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta2...0.2.5-beta3)
 
 **Fixed bugs:**
@@ -448,6 +503,7 @@
 - \[Closes \#239\] Updated katana dep to 0.2.7, add spec with fun\(\(...\) -\> ok\) [\#240](https://github.com/inaka/elvis/pull/240) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.5-beta2](https://github.com/inaka/elvis/tree/0.2.5-beta2) (2015-06-19)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-beta...0.2.5-beta2)
 
 **Closed issues:**
@@ -472,6 +528,7 @@
 - WIP \[\#28\] DRY rule [\#218](https://github.com/inaka/elvis/pull/218) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.5-beta](https://github.com/inaka/elvis/tree/0.2.5-beta) (2015-04-24)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.5-alpha...0.2.5-beta)
 
 **Implemented enhancements:**
@@ -506,6 +563,7 @@
 - Replaced tildes for dahses since GitGub shows sections as code. [\#203](https://github.com/inaka/elvis/pull/203) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.5-alpha](https://github.com/inaka/elvis/tree/0.2.5-alpha) (2015-01-14)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.4...0.2.5-alpha)
 
 **Closed issues:**
@@ -524,6 +582,7 @@
 - Rule to enforce dependency url fetch protocol [\#185](https://github.com/inaka/elvis/pull/185) ([igaray](https://github.com/igaray))
 
 ## [0.2.4](https://github.com/inaka/elvis/tree/0.2.4) (2015-01-05)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.3...0.2.4)
 
 **Implemented enhancements:**
@@ -573,13 +632,10 @@
 - \[Closes \#143\] Added install target [\#145](https://github.com/inaka/elvis/pull/145) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.3](https://github.com/inaka/elvis/tree/0.2.3) (2014-10-16)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.2...0.2.3)
 
 **Implemented enhancements:**
-
-- Update version of erlang-github dependency to 0.1.1 [\#140](https://github.com/inaka/elvis/issues/140)
-
-**Fixed bugs:**
 
 - Update version of erlang-github dependency to 0.1.1 [\#140](https://github.com/inaka/elvis/issues/140)
 
@@ -592,6 +648,7 @@
 - \[Closes \#140\] Udpated erlang-github version and rebar.config. [\#141](https://github.com/inaka/elvis/pull/141) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.2](https://github.com/inaka/elvis/tree/0.2.2) (2014-09-26)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.1...0.2.2)
 
 **Implemented enhancements:**
@@ -624,6 +681,7 @@
 - \[\#120\] Webhook not working [\#121](https://github.com/inaka/elvis/pull/121) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.1](https://github.com/inaka/elvis/tree/0.2.1) (2014-09-15)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.2.0...0.2.1)
 
 **Implemented enhancements:**
@@ -644,6 +702,7 @@
 - \[Fixes \#112\] Added abstract form. [\#114](https://github.com/inaka/elvis/pull/114) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.0](https://github.com/inaka/elvis/tree/0.2.0) (2014-09-11)
+
 [Full Changelog](https://github.com/inaka/elvis/compare/0.1.1...0.2.0)
 
 **Implemented enhancements:**
@@ -670,6 +729,9 @@
 - \[\#21\] State records in OTP modules. [\#104](https://github.com/inaka/elvis/pull/104) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.1.1](https://github.com/inaka/elvis/tree/0.1.1) (2014-09-09)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/7c7a0c4cc316f6a3eab6fdbbc5e05c0653be226d...0.1.1)
+
 **Implemented enhancements:**
 
 - make compatible with erlang.mk [\#91](https://github.com/inaka/elvis/issues/91)
@@ -767,4 +829,4 @@
 
 
 
-\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
+\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
