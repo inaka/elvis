@@ -11,6 +11,33 @@
       , elvis_webhook
       ]
     }
+  , { env
+    , [ { config
+        , [ #{ dirs => [ "apps/*/src"
+                       , "apps/*/test"
+                       , "lib/*/src"
+                       , "lib/*/test"
+                       , "src"
+                       , "test"
+                       ]
+             , filter => "*.erl"
+             , ruleset => erl_files
+             }
+          , #{ dirs => ["."]
+             , filter => "Makefile"
+             , ruleset => makefiles
+             }
+          , #{ dirs => [ "."
+                       , "apps/*"
+                       , "lib/*"
+                       ]
+             , filter => "rebar.config"
+             , ruleset => rebar_config
+             }
+          ]
+        }
+      ]
+    }
   , {registered, []}
   , {licenses, ["Apache 2.0"]}
   , { links
