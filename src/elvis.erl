@@ -228,14 +228,17 @@ rock_one_song(FileName, Config) ->
 
 -spec default_config() -> elvis_config:config().
 default_config() ->
-    try elvis_config:from_file(?DEFAULT_CONFIG_PATH) of
-        Config -> Config
-    catch _:_ -> do_default_config()
-    end.
+    default_config([ fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end
+                   , fun() -> elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH) end
+                   ]).
 
--spec do_default_config() -> elvis_config:config().
-do_default_config() ->
-    try elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH) of
+-spec default_config(list(Fun)) -> elvis_config:config() when
+      Fun :: fun(() -> elvis_config:config()).
+default_config([Fun | Funs]) ->
+    Config = try Fun() catch _:_ -> [] end,
+    case Config of
+        [] -> default_config(Funs);
         Config -> Config
-    catch _:_ -> application:get_env(elvis, config, [])
-    end.
+    end;
+default_config([]) ->
+    application:get_env(elvis, config, []).
