@@ -13,12 +13,10 @@
     }
   , { env
     , [ { config
-        , [ #{ dirs => [ "apps/*/src"
-                       , "apps/*/test"
-                       , "lib/*/src"
-                       , "lib/*/test"
-                       , "src"
-                       , "test"
+        , [ #{ dirs => [ "apps/**"
+                       , "lib/**"
+                       , "src/**"
+                       , "test/**"
                        ]
              , filter => "*.erl"
              , ruleset => erl_files
@@ -28,8 +26,9 @@
              , ruleset => makefiles
              }
           , #{ dirs => [ "."
-                       , "apps/*"
-                       , "lib/*"
+                       , "apps/**"
+                       , "lib/**"
+                       , "src/**"
                        ]
              , filter => "rebar.config"
              , ruleset => rebar_config
