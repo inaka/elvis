@@ -5,6 +5,7 @@
          repeated_complexity_10/2
         ]).
 
+-spec repeated_complexity_5(any(), any()) -> [any(), ...].
 repeated_complexity_5(X, Y) ->
     Z = X ++ [ok],
     W = Y ++ [ok],
