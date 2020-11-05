@@ -1,5 +1,3 @@
-[![Stories in Ready](https://badge.waffle.io/inaka/elvis.png?label=ready&title=Ready)](https://waffle.io/inaka/elvis)
-
 ![](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
 # elvis [![Build Status](https://travis-ci.org/inaka/elvis.svg?branch=master)](https://travis-ci.org/inaka/elvis)
@@ -45,23 +43,6 @@ There's also a way to use `elvis` as a GitHub [webhook][webhooks] for
 `pull request` (PR) events by calling the `elvis_webhook:event/1` function. This will add
 a comment in each file and rule that is broken, analyzing only the files
 associated with the PR.
-
-#### [elvis.inakalabs.com][elvis-web]
-
-This Website is available for you to add `elvis` as a webhook in your GitHub's
-repositories. Just log in with your GitHub credentials and the site will pull
-all the repos for which you have permissions to add webhooks. The `elvis`
-webhook can always be deactivated at any time using the same mechanism.
-
-When activating the webhook, the site will use the [GitHub API](https://developer.github.com/v3/) to add the user
-`elvisinaka` as a collaborator to your repo, so that it can create comments
-on its pull requests. If the repo belongs to an organization, a **Services**
-team is created instead (if it doesn't exist already), then this team is added
-to the repo and the `elvisinaka` user is added to that team.
-
-When there's no `elvis.config` in the pull request's branch of your repo a default
-set of rules are run. The list of all the rules that are part of this set can be
-found [here](https://github.com/inaka/elvis/wiki/Default-Rules-in-Elvis-Webhook).
 
 #### Running the webhook on your servers
 
@@ -207,4 +188,3 @@ Inspired on [HoundCI][houndci]
   [pre-commit]: http://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks
   [config]: http://www.erlang.org/doc/man/config.html
   [webhooks]: https://developer.github.com/v3/repos/hooks/
-  [elvis-web]: http://elvis.inakalabs.com/
