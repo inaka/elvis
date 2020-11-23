@@ -155,10 +155,10 @@ main_version(_Config) ->
     {ok, AppConfig} = application:get_all_key(elvis),
     Version = proplists:get_value(vsn, AppConfig),
 
-    Expected = ".*Version: " ++ Version,
+    Expected = "Version: " ++ Version,
     OptFun = fun() -> elvis:main("--version") end,
 
-    _ = check_some_line_output(OptFun, Expected, fun matches_regex/2),
+    _ = check_some_line_output(OptFun, Expected, fun contains_string/2),
     ok.
 
 -spec main_rock(config()) -> any().
@@ -323,6 +323,9 @@ starts_with(Result, Expected) ->
         1 -> true;
         _ -> {Expected, Expected} == {Result, Expected}
     end.
+
+contains_string(Result, String) ->
+    0 /= string:str(Result, String).
 
 matches_regex(Result, Regex) ->
     case re:run(Result, Regex) of

@@ -6,6 +6,8 @@
         , default_config/0
         ]).
 
+-elvis([{elvis_style, no_debug_call, disable}]).
+
 -export([start/0]).
 
 -define(APP_NAME, "elvis").
