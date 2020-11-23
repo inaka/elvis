@@ -1,21 +1,79 @@
 # Changelog
 
-## [0.5.0](https://github.com/inaka/elvis/tree/0.5.0)
+## [1.0.0](https://github.com/inaka/elvis/tree/1.0.0) (2020-11-23)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/0.5.0...1.0.0)
+
+**Implemented enhancements:**
+
+- Add a -elvis attribute [\#529](https://github.com/inaka/elvis/issues/529)
+- Add ignore option for all existing rules [\#507](https://github.com/inaka/elvis/issues/507)
+- \[Q\] Ignore existing issues, without ignoring whole modules. [\#497](https://github.com/inaka/elvis/issues/497)
+- Try to implement more M:F/A ignore rules [\#488](https://github.com/inaka/elvis/issues/488)
+
+**Fixed bugs:**
+
+- Prevent hackney compilation warnings on OTP 23 [\#544](https://github.com/inaka/elvis/issues/544)
+- The way globs in elvis.config are interpreted generates duplicated analysis of files [\#508](https://github.com/inaka/elvis/issues/508)
+- Crash reviewing rebar.config deps with pkg\_name [\#395](https://github.com/inaka/elvis/issues/395)
+
+**Closed issues:**
+
+- elvis\_style:is\_otp\_module only checks `behavior` attribute, not `behaviour` [\#550](https://github.com/inaka/elvis/issues/550)
+- elvis\_core link in readme not working [\#545](https://github.com/inaka/elvis/issues/545)
+- Discuss whether seemingly text-oriented rules should move to a new API [\#542](https://github.com/inaka/elvis/issues/542)
+- Document use of `beam\_files` [\#541](https://github.com/inaka/elvis/issues/541)
+- Document use of generic `ignore` option [\#540](https://github.com/inaka/elvis/issues/540)
+- New Rule: avoid high number of export\_types [\#539](https://github.com/inaka/elvis/issues/539)
+- New Rule: Consistency in andalso/orelse v. ;/, in guards [\#538](https://github.com/inaka/elvis/issues/538)
+- Document `-elvis` attribute [\#535](https://github.com/inaka/elvis/issues/535)
+- Dynamic call in `try ... of ... catch` not detected as such [\#532](https://github.com/inaka/elvis/issues/532)
+- New Rule: Define ChildSpecs in either supervisor or worker [\#531](https://github.com/inaka/elvis/issues/531)
+- Document @since in the Rules' Wiki [\#528](https://github.com/inaka/elvis/issues/528)
+- Use of defaults in code [\#525](https://github.com/inaka/elvis/issues/525)
+- Wiki and/or code issues [\#523](https://github.com/inaka/elvis/issues/523)
+- Potential rule duplication [\#522](https://github.com/inaka/elvis/issues/522)
+- Release request for `elvis\_core` [\#520](https://github.com/inaka/elvis/issues/520)
+- New Rule: atom\_naming\_convention [\#516](https://github.com/inaka/elvis/issues/516)
+- Turn macro names into a naming conventions rule [\#515](https://github.com/inaka/elvis/issues/515)
+- Var exposed from the scope without return [\#502](https://github.com/inaka/elvis/issues/502)
+- elvis\_core violates OTP naming conventions [\#491](https://github.com/inaka/elvis/issues/491)
+- Outdated Docs [\#489](https://github.com/inaka/elvis/issues/489)
+- Do not use timer:sleep on tests [\#479](https://github.com/inaka/elvis/issues/479)
+- Rule idea: check map field updates [\#339](https://github.com/inaka/elvis/issues/339)
+- Rule idea: safe binary deserialization [\#306](https://github.com/inaka/elvis/issues/306)
+- Rule idea: application name as module prefix [\#304](https://github.com/inaka/elvis/issues/304)
+- Add Meta Testing [\#303](https://github.com/inaka/elvis/issues/303)
+- Reject use of export\_all [\#290](https://github.com/inaka/elvis/issues/290)
+- Detect and enforce comma placement style [\#276](https://github.com/inaka/elvis/issues/276)
+- Check for unused fields in records [\#117](https://github.com/inaka/elvis/issues/117)
+
+**Merged pull requests:**
+
+- Remove unreachable stuff [\#548](https://github.com/inaka/elvis/pull/548) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+- Prevent eunit issues + Rock with Elvis [\#547](https://github.com/inaka/elvis/pull/547) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+- Prevent hackney warnings on future deprecated functions [\#546](https://github.com/inaka/elvis/pull/546) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+- Prevent a minor warning \(and prepare for the future\) [\#543](https://github.com/inaka/elvis/pull/543) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+- Simplify defaults in .app.src [\#524](https://github.com/inaka/elvis/pull/524) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+- Add non-empty default configuration [\#521](https://github.com/inaka/elvis/pull/521) ([dmitrivereshchagin](https://github.com/dmitrivereshchagin))
+
+## [0.5.0](https://github.com/inaka/elvis/tree/0.5.0) (2020-07-10)
 
 [Full Changelog](https://github.com/inaka/elvis/compare/0.4.2...0.5.0)
 
 **Implemented enhancements:**
 
 - Implement a "confidence score" on each thing Elvis finds [\#138](https://github.com/inaka/elvis/issues/138)
+- Standardize output and make it parseable [\#169](https://github.com/inaka/elvis/issues/169)
 
 **Fixed bugs:**
 
 - FUNCTION\_NAME macro treated as variable [\#505](https://github.com/inaka/elvis/issues/505)
 - Master doesn't build [\#503](https://github.com/inaka/elvis/issues/503)
-- Fix dialyzer warnings on OTP21 [\#486](https://github.com/inaka/elvis/issues/486)
 - operator\_spaces handles +,- and / signs as operator in cases where it is not an operator [\#483](https://github.com/inaka/elvis/issues/483)
 - Elvis is not detecting "Missing space" between a comma [\#376](https://github.com/inaka/elvis/issues/376)
 - Crash elvis on eval formatted string [\#288](https://github.com/inaka/elvis/issues/288)
+- Fix dialyzer warnings on OTP21 [\#486](https://github.com/inaka/elvis/issues/486)
 
 **Closed issues:**
 
@@ -23,13 +81,18 @@
 - Possible problems with state\_record\_and\_type validation [\#490](https://github.com/inaka/elvis/issues/490)
 - Make corrections for detected problems [\#478](https://github.com/inaka/elvis/issues/478)
 - Elvis complains about dynamic function call in behaviour module [\#467](https://github.com/inaka/elvis/issues/467)
-- Rename libraries to match repo names [\#425](https://github.com/inaka/elvis/issues/425)
 - Elvis seems to ignore -ifdef/-else/-endif conditionals and flags disabled code parts as DRY of enabled ones. [\#321](https://github.com/inaka/elvis/issues/321)
+- Change of behavior regarding defines? [\#512](https://github.com/inaka/elvis/issues/512)
+- Verify dependencies are up to date [\#494](https://github.com/inaka/elvis/issues/494)
+- Create elvis.config.sample file [\#438](https://github.com/inaka/elvis/issues/438)
+- Rename libraries to match repo names [\#425](https://github.com/inaka/elvis/issues/425)
+- Properly document elvis.config [\#380](https://github.com/inaka/elvis/issues/380)
 - Create release once ongoing tasks are merged into master [\#287](https://github.com/inaka/elvis/issues/287)
 - Create a stable tag/release in order to have a fixed reference to the latest stable version [\#205](https://github.com/inaka/elvis/issues/205)
 
 **Merged pull requests:**
 
+- Prepare release 0.5.0 [\#514](https://github.com/inaka/elvis/pull/514) ([jfacorro](https://github.com/jfacorro))
 - README.md code block formatting for Erlang [\#513](https://github.com/inaka/elvis/pull/513) ([szTheory](https://github.com/szTheory))
 - \[\#491\] Update elvis\_core with correct OTP naming [\#511](https://github.com/inaka/elvis/pull/511) ([jfacorro](https://github.com/jfacorro))
 - \[\#503\] Update egithub [\#504](https://github.com/inaka/elvis/pull/504) ([jfacorro](https://github.com/jfacorro))
