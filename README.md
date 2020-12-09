@@ -1,10 +1,11 @@
-![](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
-
 # elvis [![Build Status](https://travis-ci.org/inaka/elvis.svg?branch=master)](https://travis-ci.org/inaka/elvis)
+
+![Elvis Presley dancing](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
 Command-line interface for Elvis, the Erlang style reviewer.
 
 ## Contact Us
+
 If you find any **bugs** or have a **problem** while using this library, please
 [open an issue](https://github.com/inaka/elvis/issues/new) in this repo
 (or a pull request :)).
@@ -142,6 +143,7 @@ of files.
 
 For example, configure to check all erlang files under the `src`
 directory using the ruleset `erl_files`:
+
 ```erlang
 [
  {
