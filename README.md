@@ -1,10 +1,11 @@
-![](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
-
 # elvis [![Build Status](https://travis-ci.org/inaka/elvis.svg?branch=master)](https://travis-ci.org/inaka/elvis)
+
+![Elvis Presley dancing](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
 Command-line interface for Elvis, the Erlang style reviewer.
 
 ## Contact Us
+
 If you find any **bugs** or have a **problem** while using this library, please
 [open an issue](https://github.com/inaka/elvis/issues/new) in this repo
 (or a pull request :)).
@@ -36,6 +37,14 @@ elvis rock --config config/elvis.config
 ```
 
 In `0.3.0` a new option was introduced in order to run elvis checks only on the source files that have changed since a particular branch of commit. Example usage would be `elvis git-branch origin/HEAD`.
+
+## Benefits
+
+- Enables consistency in style across all your code base.
+- Encourages the development team to sit down and talk about code conventions.
+- Allows continuous monitoring of code quality.
+- Helps developers avoid repeated mistakes that can be automatically detected.
+- Provides homogenisation among the different projects in a company, therefore facilitating project switching for developers and as well allowing easier code sharing between projects
 
 ### Webhook
 
@@ -134,6 +143,7 @@ of files.
 
 For example, configure to check all erlang files under the `src`
 directory using the ruleset `erl_files`:
+
 ```erlang
 [
  {
