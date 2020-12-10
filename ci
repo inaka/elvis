@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -ex
-
-rebar3 deps
-rebar3 dialyzer -u true -s false
-rebar3 ct
-rebar3 escriptize
-_build/default/bin/elvis rock

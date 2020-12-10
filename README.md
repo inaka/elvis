@@ -1,4 +1,4 @@
-# elvis [![Build Status](https://travis-ci.org/inaka/elvis.svg?branch=master)](https://travis-ci.org/inaka/elvis)
+# elvis [![Build Status](https://github.com/inaka/elvis/workflows/build/badge.svg)](https://github.com/inaka/elvis)
 
 ![Elvis Presley dancing](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
