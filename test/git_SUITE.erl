@@ -86,6 +86,7 @@ ignore_deleted_files(Config) ->
     _ = os:cmd("git init ."),
     ok = file:write_file("test", <<"ingore">>, [append]),
     ok = file:write_file("test2", <<"ignore">>, [append]),
+    maybe_git_config_user(),
     _ = os:cmd("git add . && git commit -m 'Add dummy files'"),
     _ = os:cmd("git rm test"),
     ok = file:write_file("test2", <<"ignore">>, [append]), %modified
@@ -104,6 +105,7 @@ check_branch_files(_Config) ->
     ok = file:write_file(FileLocation, <<"sdsds">>, [append]),
 
     _ = os:cmd("git add " ++ FileLocation),
+    maybe_git_config_user(),
     _ = os:cmd("git commit -m \"some commit\""),
     [#{path := FileName}] = elvis_git:branch_files("HEAD^"),
     _ = os:cmd("git reset --hard HEAD^"),
@@ -116,3 +118,15 @@ check_branch_files(_Config) ->
 random_file_name() ->
   RandomString = integer_to_list(rand:uniform(1 bsl 127)),
   "test_file_" ++ RandomString.
+
+-spec maybe_git_config_user() -> ok.
+maybe_git_config_user() ->
+    case os:getenv("CI") of
+        false ->
+            ok;
+        _ ->
+            _ = os:cmd("git config user.email 'you@example.com'"),
+            _ = os:cmd("git config user.name 'Your Name'"),
+            ok
+    end.
+

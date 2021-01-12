@@ -15,12 +15,34 @@ jobs:
       image: erlang:${{matrix.otp_vsn}}
     strategy:
       matrix:
-        otp_vsn: [19.2, 20.3, 21.3, 22.0]
+        otp_vsn: ["19.3", "20.3", "21.3", "22.3", "23.2"]
         os: [ubuntu-latest]
     steps:
+      - name: Install Git 2.18
+        shell: bash
+        run: |
+          apt-get update
+          apt-get -y install tcl tcl-dev gettext
+          cd /usr/src/
+          wget https://github.com/git/git/archive/v2.18.0.tar.gz -O git.tar.gz
+          tar -xf git.tar.gz
+          cd git-*
+          make prefix=/usr/local all
+          make prefix=/usr/local install
+          cd $HOME
       - uses: actions/checkout@v2
-      - run: rebar3 dialyzer
-      - run: rebar3 ct
-      - run: |
-        rebar3 escriptize
-        _build/default/bin/elvis rock
+        with:
+          fetch-depth: 0
+      - name: Environment versions
+        shell: bash
+        run: |
+          rebar3 --version
+          erl -version
+      - shell: bash
+        run: rebar3 dialyzer
+      - shell: bash
+        run: rebar3 ct --suite=git_SUITE
+      - shell: bash
+        run: rebar3 cover
+      - shell: bash
+        run: rebar3 escriptize && _build/default/bin/elvis rock
