@@ -91,7 +91,7 @@ option_spec_list() ->
       KeepRocking}
     ].
 
--spec process_options([atom()], [string()]) -> ok.
+-spec process_options([atom() | tuple()], [string()]) -> ok.
 process_options(Options, Commands) ->
     try
         Config = default_config(),
@@ -103,7 +103,7 @@ process_options(Options, Commands) ->
             elvis_utils:erlang_halt(1)
     end.
 
--spec process_options([atom()], [string()], elvis_config:config()) ->
+-spec process_options([atom() | tuple()], [string()], elvis_config:configs()) ->
   ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
@@ -142,7 +142,7 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
--spec process_commands([string()], elvis_config:config()) ->ok.
+-spec process_commands([string()], elvis_config:configs()) ->ok.
 process_commands([rock | Files], Config) ->
     case Files of
         [] ->
@@ -177,8 +177,8 @@ help() ->
     OptSpecList = option_spec_list(),
     getopt:usage(OptSpecList, ?APP_NAME, standard_io).
 
--spec help(elvis_config:config()) ->
-    elvis_config:config().
+-spec help(elvis_config:configs()) ->
+    elvis_config:configs().
 help(Config) ->
     help(),
     Config.
@@ -228,13 +228,13 @@ rock_one_song(FileName, Config) ->
         ok -> ok
     end.
 
--spec default_config() -> elvis_config:config().
+-spec default_config() -> elvis_config:configs().
 default_config() ->
     default_config([ fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end
                    , fun() -> elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH) end
                    ]).
 
--spec default_config(list(Fun)) -> elvis_config:config() when
+-spec default_config(list(Fun)) -> elvis_config:configs() when
       Fun :: fun(() -> elvis_config:config()).
 default_config([Fun | Funs]) ->
     Config = try Fun() catch _:_ -> [] end,
