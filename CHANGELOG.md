@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.0.1](https://github.com/inaka/elvis/tree/1.0.1) (2021-03-24)
+
+[Full Changelog](https://github.com/inaka/elvis/compare/1.0.0...1.0.1)
+
+**Implemented enhancements:**
+
+- DRY checks over modules [\#299](https://github.com/inaka/elvis/issues/299)
+
+**Fixed bugs:**
+
+- There's no ignore option for the `state\_record\_and\_type` rule [\#551](https://github.com/inaka/elvis/issues/551)
+
+**Closed issues:**
+
+- Try to have a GitHub Action for elvis [\#557](https://github.com/inaka/elvis/issues/557)
+- Move from Travis CI to GitHub Actions? [\#555](https://github.com/inaka/elvis/issues/555)
+- \[META\] Reorganize issues / projects / wikis [\#553](https://github.com/inaka/elvis/issues/553)
+- Document new rule atom\_naming\_convention [\#527](https://github.com/inaka/elvis/issues/527)
+- Document new macro\_names options [\#526](https://github.com/inaka/elvis/issues/526)
+- rule idea: elvis should work on the real code as well [\#500](https://github.com/inaka/elvis/issues/500)
+- Elvis should suggest replacing throw with ct:fail [\#394](https://github.com/inaka/elvis/issues/394)
+- Detect when a better function should be used [\#184](https://github.com/inaka/elvis/issues/184)
+- Executable Path Length [\#24](https://github.com/inaka/elvis/issues/24)
+
+**Merged pull requests:**
+
+- Approach OTP 24 [\#560](https://github.com/inaka/elvis/pull/560) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+- Fix broken yml for GitHub Actions [\#559](https://github.com/inaka/elvis/pull/559) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+- Replace Travis CI with GitHub Actions [\#558](https://github.com/inaka/elvis/pull/558) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+- Wiki-provoked changes [\#556](https://github.com/inaka/elvis/pull/556) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
+
 ## [1.0.0](https://github.com/inaka/elvis/tree/1.0.0) (2020-11-23)
 
 [Full Changelog](https://github.com/inaka/elvis/compare/0.5.0...1.0.0)
@@ -50,6 +81,7 @@
 
 **Merged pull requests:**
 
+- Bump Version to 1.0.0 [\#552](https://github.com/inaka/elvis/pull/552) ([elbrujohalcon](https://github.com/elbrujohalcon))
 - Remove unreachable stuff [\#548](https://github.com/inaka/elvis/pull/548) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
 - Prevent eunit issues + Rock with Elvis [\#547](https://github.com/inaka/elvis/pull/547) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
 - Prevent hackney warnings on future deprecated functions [\#546](https://github.com/inaka/elvis/pull/546) ([paulo-ferraz-oliveira](https://github.com/paulo-ferraz-oliveira))
