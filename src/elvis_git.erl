@@ -24,7 +24,7 @@
 %%% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec run_hook(elvis_config:config()) -> ok.
+-spec run_hook(elvis_config:configs()) -> ok.
 run_hook(Config) ->
     Files = elvis_git:staged_files(),
     NewConfig = elvis_config:resolve_files(Config, Files),
@@ -33,7 +33,7 @@ run_hook(Config) ->
         ok -> ok
     end.
 
--spec run_branch(string(), elvis_config:config()) -> ok.
+-spec run_branch(string(), elvis_config:configs()) -> ok.
 run_branch(Commit, Config) ->
     Files = elvis_git:branch_files(Commit),
     NewConfig = elvis_config:resolve_files(Config, Files),
