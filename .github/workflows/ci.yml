@@ -11,33 +11,30 @@ jobs:
   ci:
     name: Run checks and tests over ${{matrix.otp_vsn}} and ${{matrix.os}}
     runs-on: ${{matrix.os}}
-    container:
-      image: erlang:${{matrix.otp_vsn}}
     strategy:
       matrix:
-        otp_vsn: ["21.3", "22.3", "23.2"]
+        otp_vsn: ["21", "22", "23"]
         os: [ubuntu-latest]
     steps:
       - name: Install Git 2.18
         shell: bash
         run: |
-          apt-get update
-          apt-get -y install tcl tcl-dev gettext
+          sudo apt-get update
+          sudo apt-get -y install tcl tcl-dev gettext libcurl4-openssl-dev
           cd /usr/src/
-          wget https://github.com/git/git/archive/v2.18.0.tar.gz -O git.tar.gz
-          tar -xf git.tar.gz
+          sudo wget https://github.com/git/git/archive/v2.18.0.tar.gz -O git.tar.gz
+          sudo tar -xf git.tar.gz
           cd git-*
-          make prefix=/usr/local all
-          make prefix=/usr/local install
+          sudo make prefix=/usr/local all
+          sudo make prefix=/usr/local install
           cd $HOME
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Environment versions
-        shell: bash
-        run: |
-          rebar3 --version
-          erl -version
+      - uses: erlef/setup-beam@v1.7.0
+        with:
+          otp-version: ${{matrix.otp_vsn}}
+          rebar3-version: '3.14'
       - shell: bash
         run: rebar3 dialyzer
       - shell: bash
