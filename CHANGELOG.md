@@ -276,7 +276,7 @@
 
 **Implemented enhancements:**
 
-- Remove lager as a dep from elvis\_core since it is practically unsued [\#318](https://github.com/inaka/elvis/issues/318)
+- Remove lager as a dep from elvis\_core since it is practically unused [\#318](https://github.com/inaka/elvis/issues/318)
 
 **Fixed bugs:**
 
@@ -451,10 +451,10 @@
 **Fixed bugs:**
 
 - old\_configuration\_format rule is throwing an error [\#325](https://github.com/inaka/elvis/issues/325)
-- Uncorrect detecting rule missing space after "++" [\#320](https://github.com/inaka/elvis/issues/320)
+- Incorrect detecting rule missing space after "++" [\#320](https://github.com/inaka/elvis/issues/320)
 - Elvis does not distinguish ++ operator from + [\#319](https://github.com/inaka/elvis/issues/319)
-- Uncorrect detecting length of unicode strings  [\#301](https://github.com/inaka/elvis/issues/301)
-- Uncorrect detecting rule missing space after "," [\#296](https://github.com/inaka/elvis/issues/296)
+- Incorrect detecting length of unicode strings  [\#301](https://github.com/inaka/elvis/issues/301)
+- Incorrect detecting rule missing space after "," [\#296](https://github.com/inaka/elvis/issues/296)
 - state\_record\_and\_type false positive when record includes defines from header file [\#295](https://github.com/inaka/elvis/issues/295)
 - Elvis github integration fails when renaming files [\#291](https://github.com/inaka/elvis/issues/291)
 - Elvis failed `badarg` in inaka/serpents\#74 [\#273](https://github.com/inaka/elvis/issues/273)
@@ -475,7 +475,7 @@
 - Add a reference in elvis\_core's README to create issues in elvis repo  [\#312](https://github.com/inaka/elvis/issues/312)
 - What's wrong with the documented configuration? [\#309](https://github.com/inaka/elvis/issues/309)
 - Rule Idea: Missing spec [\#308](https://github.com/inaka/elvis/issues/308)
-- Uncorrect detecting length of unicode strings [\#297](https://github.com/inaka/elvis/issues/297)
+- Incorrect detecting length of unicode strings [\#297](https://github.com/inaka/elvis/issues/297)
 - Make Elvis a third-party Erlang.mk plugin [\#289](https://github.com/inaka/elvis/issues/289)
 - Don't leave debugging calls in your source code [\#270](https://github.com/inaka/elvis/issues/270)
 - Variable Names [\#187](https://github.com/inaka/elvis/issues/187)
@@ -740,7 +740,7 @@
 
 **Merged pull requests:**
 
-- \[Closes \#140\] Udpated erlang-github version and rebar.config. [\#141](https://github.com/inaka/elvis/pull/141) ([jfacorro](https://github.com/jfacorro))
+- \[Closes \#140\] Updated erlang-github version and rebar.config. [\#141](https://github.com/inaka/elvis/pull/141) ([jfacorro](https://github.com/jfacorro))
 
 ## [0.2.2](https://github.com/inaka/elvis/tree/0.2.2) (2014-09-26)
 
