@@ -164,17 +164,17 @@ process_options([], Cmds, Config) ->
                         string()],
                        elvis_config:configs()) ->
                           ok.
+process_commands([rock], Config) ->
+    case elvis_core:rock(Config) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
+    end;
 process_commands([rock | Files], Config) ->
-    case Files of
-        [] ->
-            case elvis_core:rock(Config) of
-                {fail, _} ->
-                    elvis_utils:erlang_halt(1);
-                ok ->
-                    ok
-            end;
-        _ ->
-            lists:map(fun(F) -> rock_one_song(F, Config) end, Files)
+    Paths = [file_to_path(File) || File <- Files],
+    NewConfig = elvis_config:resolve_files(Config, Paths),
+    case elvis_core:rock(NewConfig) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
     end;
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
@@ -192,6 +192,16 @@ process_commands([], _Config) ->
     ok;
 process_commands([_Cmd | _Cmds], _Config) ->
     error(unrecognized_or_unimplemented_command).
+
+
+file_to_path(File) ->
+    Path = atom_to_list(File),
+    Dirname = filename:dirname(Path),
+    Filename = filename:basename(Path),
+    case elvis_file:find_files([Dirname], Filename) of
+        [] -> throw({enoent, Path});
+        [File0] -> File0
+    end.
 
 %%% Options
 
