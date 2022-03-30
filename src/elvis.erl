@@ -164,23 +164,17 @@ process_options([], Cmds, Config) ->
     [elvis_config:t()]
 ) ->
     ok.
+process_commands([rock], Config) ->
+    case elvis_core:rock(Config) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
+    end;
 process_commands([rock | Files], Config) ->
-    case Files of
-        [] ->
-            case elvis_core:rock(Config) of
-                {fail, [{throw, {invalid_config, Reason}}]} ->
-                    io:format("Invalid config: ~ts\n", [Reason]),
-                    elvis_utils:erlang_halt(1);
-                {fail, [{throw, Error}]} ->
-                    io:format("FATAL ERROR while running Elvis:\n\t~p\n", [Error]),
-                    elvis_utils:erlang_halt(1);
-                {fail, _} ->
-                    elvis_utils:erlang_halt(1);
-                ok ->
-                    ok
-            end;
-        _ ->
-            lists:map(fun(F) -> rock_one_song(F, Config) end, Files)
+    Paths = [file_to_path(File) || File <- Files],
+    NewConfig = elvis_config:resolve_files(Config, Paths),
+    case elvis_core:rock(NewConfig) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
     end;
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
@@ -189,6 +183,15 @@ process_commands([], _Config) ->
     ok;
 process_commands([_ | _] = Cmds, _Config) ->
     error({unrecognized_or_unimplemented_command, Cmds}).
+
+file_to_path(File) ->
+    Path = atom_to_list(File),
+    Dirname = filename:dirname(Path),
+    Filename = filename:basename(Path),
+    case elvis_file:find_files([Dirname], Filename) of
+        [] -> throw({enoent, Path});
+        [File0] -> File0
+    end.
 
 %%% Options
 
@@ -232,20 +235,6 @@ version() ->
     io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
 
 %% @private
-rock_one_song(Filename, Config) ->
-    F = atom_to_list(Filename),
-    case elvis_core:rock_this(F, Config) of
-        {fail, _} ->
-            case application:get_env(elvis, keep_rocking, false) of
-                false ->
-                    elvis_utils:erlang_halt(1);
-                true ->
-                    ok
-            end;
-        ok ->
-            ok
-    end.
-
 -spec default_config() -> [elvis_config:t()].
 default_config() ->
     case elvis_config:config() of
