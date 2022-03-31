@@ -255,22 +255,6 @@ version() ->
         "Elvis Core Version: ~s\n",
     io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
 
-%% @private
-rock_one_song(FileName, Config) ->
-    F = atom_to_list(FileName),
-    case elvis_core:rock_this(F, Config) of
-        {fail, _} ->
-            case application:get_env(elvis_core, keep_rocking, false) of
-                false ->
-                    elvis_utils:erlang_halt(1);
-                true ->
-                    ok
-            end;
-        ok ->
-            ok
-    end.
-
-%% @private
 -spec default_config() -> elvis_config:configs().
 default_config() ->
     default_config([fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end,
