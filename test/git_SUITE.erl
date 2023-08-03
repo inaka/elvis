@@ -20,7 +20,8 @@
          end_per_suite
         ]).
 
--type config() :: [{atom(), term()}].
+-type config() :: proplists:proplist().
+-export_type([config/0]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Common test
@@ -129,4 +130,3 @@ maybe_git_config_user() ->
             _ = os:cmd("git config user.name 'Your Name'"),
             ok
     end.
-

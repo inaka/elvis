@@ -1,6 +1,7 @@
 -module(xref_SUITE).
 
 -type config() :: proplists:proplist().
+-export_type([config/0]).
 
 -export(
    [

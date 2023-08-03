@@ -106,7 +106,7 @@ install_hook() ->
 check_git_dir() ->
     case filelib:is_dir(".git") of
         true -> ok;
-        false -> throw("Not a git repository.")
+        false -> error("Not a git repository.")
     end.
 
 %% @doc Adds elvis as a pre commit hook. If a pre-commit file already exists
@@ -123,7 +123,7 @@ add_pre_commit_hook() ->
                 {ok, Content} = file:read_file(?PRE_COMMIT_FILE),
                 case binary:match(Content, <<"elvis">>) of
                     nomatch -> {[append], Command};
-                    _ ->  throw("Elvis is already installed as a git hook.")
+                    _ -> error("Elvis is already installed as a git hook.")
                 end;
             false -> {[write], <<Header/binary, Command/binary>>}
         end,
@@ -155,7 +155,7 @@ patch_line_type(Line) ->
         $+  -> addition;
         $-  -> deletion;
         $\\ -> same;
-        $   -> same %space
+        $\s -> same %space
     end.
 
 %% @private
