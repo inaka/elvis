@@ -32,7 +32,8 @@
          end_per_suite
         ]).
 
--type config() :: [{atom(), term()}].
+-type config() :: proplists:proplist().
+-export_type([config/0]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Common test
@@ -240,7 +241,7 @@ main_default_config(_Config) ->
         meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
         Src = "../../config/elvis-test.config",
         Dest = "./elvis.config",
-        {ok , _} = file:copy(Src, Dest),
+        {ok, _} = file:copy(Src, Dest),
 
         Expected = "# ../../src/elvis.erl.*OK",
         RockFun = fun() -> elvis:main("rock") end,

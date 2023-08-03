@@ -1,10 +1,10 @@
 -module(elvis_meta_SUITE).
--author('felipe@inakanetworks.net').
 
 -export([all/0]).
 -export([dialyzer/1, xref/1, elvis/1]).
 
--type config() :: [{atom(), term()}].
+-type config() :: proplists:proplist().
+-export_type([config/0]).
 
 -spec all() -> [dialyzer | xref | elvis].
 all() -> [dialyzer, xref, elvis].

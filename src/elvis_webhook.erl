@@ -50,10 +50,8 @@ handle_pull_request(Cred, Data, GithubFiles) ->
                    comments => []}}
     end.
 
--spec handle_error( {error, term()}
-                  , egithub_webhook:req_data()
-                  , [egithub_webhook:file()]
-                  ) -> {ok, [], []}.
+-spec handle_error(
+    {error, term()}, egithub_webhook:req_data(), [egithub_webhook:file()]) -> {ok, [], []}.
 handle_error({error, _}, _, _) -> {ok, [], []}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -142,7 +142,7 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
--spec process_commands([string()], elvis_config:configs()) ->ok.
+-spec process_commands([string()], elvis_config:configs()) -> ok.
 process_commands([rock | Files], Config) ->
     case Files of
         [] ->
@@ -168,7 +168,7 @@ process_commands(['git-branch', Commit | Cmds], Config) ->
 process_commands([], _Config) ->
     ok;
 process_commands([_Cmd | _Cmds], _Config) ->
-    throw(unrecognized_or_unimplemented_command).
+    error(unrecognized_or_unimplemented_command).
 
 %%% Options
 
