@@ -13,8 +13,8 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        otp_vsn: ["21", "22", "23"]
-        os: [ubuntu-latest]
+        otp_vsn: [23, 24, 25]
+        os: [ubuntu-20.04, windows-latest]
     steps:
       - name: Install Git 2.18
         shell: bash
@@ -28,13 +28,12 @@ jobs:
           sudo make prefix=/usr/local all
           sudo make prefix=/usr/local install
           cd $HOME
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: erlef/setup-beam@v1.7.0
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        id: setup-beam
         with:
           otp-version: ${{matrix.otp_vsn}}
-          rebar3-version: '3.14'
+          rebar3-version: '3.20'
       - shell: bash
         run: rebar3 dialyzer
       - shell: bash
