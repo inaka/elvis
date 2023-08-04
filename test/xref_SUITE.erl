@@ -6,6 +6,8 @@
 
 -export([all/0, xref/1]).
 
+-hank([unnecessary_function_arguments]).
+
 -spec all() -> [atom()].
 all() ->
     ExcludedFuns = [all, module_info],

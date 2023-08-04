@@ -6,7 +6,6 @@
 -define(LIST_STAGED, "git diff --name-status --staged | awk '$1 != \"D\" { print $2 }'").
 -define(LIST_BRANCH_CHANGES(C),
         "git diff --name-only --ignore-submodules=all --diff-filter=d " ++ C).
--define(STAGED_CONTENT(Path), "git show :" ++ Path).
 -define(PRE_COMMIT_FILE, ".git/hooks/pre-commit").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
