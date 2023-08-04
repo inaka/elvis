@@ -12,6 +12,20 @@
 -define(DEFAULT_CONFIG_PATH, "./elvis.config").
 -define(DEFAULT_REBAR_CONFIG_PATH, "./rebar.config").
 
+-type option() ::
+    commands |
+    help |
+    keep_rocking |
+    quiet |
+    verbose |
+    version |
+    {code_path, [any()]} |
+    {config, [any()]} |
+    {output_format, [any()]} |
+    {parallel, [any()]}.
+
+-export_type([option/0]).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,7 +100,7 @@ option_spec_list() ->
      {code_path, $p, "code-path", string, "Add the directory in the code path."},
      {keep_rocking, $k, "keep-rocking", undefined, KeepRocking}].
 
--spec process_options([atom() | tuple()], [string()]) -> ok.
+-spec process_options([option()], [string()]) -> ok.
 process_options(Options, Commands) ->
     try
         Config = default_config(),
@@ -98,7 +112,7 @@ process_options(Options, Commands) ->
             elvis_utils:erlang_halt(1)
     end.
 
--spec process_options([atom() | tuple()], [string()], elvis_config:configs()) -> ok.
+-spec process_options([option()], [string()], elvis_config:configs()) -> ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
     process_options(Opts, Cmds, Config);
@@ -138,7 +152,14 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
--spec process_commands([string()], elvis_config:configs()) -> ok.
+-spec process_commands([rock |
+                        help |
+                        [install | 'git-hook'] |
+                        'git-hook' |
+                        'git-branch' |
+                        string()],
+                       elvis_config:configs()) ->
+                          ok.
 process_commands([rock | Files], Config) ->
     case Files of
         [] ->

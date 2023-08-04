@@ -9,11 +9,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% External Functions
 
--spec event(egithub_webhook:request()) -> ok | {error, term()}.
+-spec event(egithub_webhook_req:request()) -> ok | {error, term()}.
 event(Request) ->
     event(github_credentials(), Request).
 
--spec event(egithub:credentials(), egithub_webhook:request()) -> ok | {error, term()}.
+-spec event(egithub:credentials(), egithub_webhook_req:request()) -> ok | {error, term()}.
 event(Cred, Request) ->
     egithub_webhook:event(?MODULE, Cred, Request).
 
