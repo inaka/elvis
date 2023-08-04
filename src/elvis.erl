@@ -2,9 +2,7 @@
 
 %% Public API
 
--export([ main/1
-        , default_config/0
-        ]).
+-export([main/1, default_config/0]).
 
 -elvis([{elvis_style, no_debug_call, disable}]).
 
@@ -29,15 +27,19 @@ main(Args) ->
     %% Load the application to be able to access its information
     %% (e.g. --version option)
     ok =
-      case application:load(elvis) of
-        ok -> ok;
-        {error, {already_loaded, elvis}} -> ok
-      end,
+        case application:load(elvis) of
+            ok ->
+                ok;
+            {error, {already_loaded, elvis}} ->
+                ok
+        end,
     ok =
-      case application:load(elvis_core) of
-        ok -> ok;
-        {error, {already_loaded, elvis_core}} -> ok
-      end,
+        case application:load(elvis_core) of
+            ok ->
+                ok;
+            {error, {already_loaded, elvis_core}} ->
+                ok
+        end,
     OptSpecList = option_spec_list(),
     case getopt:parse(OptSpecList, Args) of
         {ok, {[], []}} ->
@@ -58,38 +60,31 @@ main(Args) ->
 
 -spec option_spec_list() -> [getopt:option_spec()].
 option_spec_list() ->
-    Commands = "Provide the path to the configuration file. "
-               "When none is provided elvis checks if there's "
-               "an elvis.config file.",
-    OutputFormat = "It allows you to display the results in plain text. When "
-                   "none is provided elvis displays the results in colors. "
-                   "The options allowed are (plain | colors | parsable).",
-    KeepRocking = "Won't stop rocking on first error"
-                  " when given a list of files",
-    Parallel = "Allows to analyze files concurrently. Provide max number of"
-               " concurrent workers, or specify \"auto\" to peek default value"
-               " based on the number of schedulers.",
-    [
-     {help, $h, "help", undefined,
-      "Show this help information."},
-     {config, $c, "config", string,
-      Commands},
-     {commands, undefined, "commands", undefined,
-      "Show available commands."},
-     {output_format, undefined, "output-format", string,
-      OutputFormat},
+    Commands =
+        "Provide the path to the configuration file. "
+        "When none is provided elvis checks if there's "
+        "an elvis.config file.",
+    OutputFormat =
+        "It allows you to display the results in plain text. When "
+        "none is provided elvis displays the results in colors. "
+        "The options allowed are (plain | colors | parsable).",
+    KeepRocking =
+        "Won't stop rocking on first error"
+        " when given a list of files",
+    Parallel =
+        "Allows to analyze files concurrently. Provide max number of"
+        " concurrent workers, or specify \"auto\" to peek default value"
+        " based on the number of schedulers.",
+    [{help, $h, "help", undefined, "Show this help information."},
+     {config, $c, "config", string, Commands},
+     {commands, undefined, "commands", undefined, "Show available commands."},
+     {output_format, undefined, "output-format", string, OutputFormat},
      {parallel, $P, "parallel", string, Parallel},
-     {quiet, $q, "quiet", undefined,
-      "Suppress all output."},
-     {verbose, $V, "verbose", undefined,
-      "Enable verbose output."},
-     {version, $v, "version", undefined,
-      "Output the current elvis version."},
-     {code_path, $p, "code-path", string,
-      "Add the directory in the code path."},
-     {keep_rocking, $k, "keep-rocking", undefined,
-      KeepRocking}
-    ].
+     {quiet, $q, "quiet", undefined, "Suppress all output."},
+     {verbose, $V, "verbose", undefined, "Enable verbose output."},
+     {version, $v, "version", undefined, "Output the current elvis version."},
+     {code_path, $p, "code-path", string, "Add the directory in the code path."},
+     {keep_rocking, $k, "keep-rocking", undefined, KeepRocking}].
 
 -spec process_options([atom() | tuple()], [string()]) -> ok.
 process_options(Options, Commands) ->
@@ -98,13 +93,12 @@ process_options(Options, Commands) ->
         AtomCommands = lists:map(fun list_to_atom/1, Commands),
         process_options(Options, AtomCommands, Config)
     catch
-        throw:Exception ->
+        Exception ->
             elvis_utils:error_prn("~p.", [Exception]),
             elvis_utils:erlang_halt(1)
     end.
 
--spec process_options([atom() | tuple()], [string()], elvis_config:configs()) ->
-  ok.
+-spec process_options([atom() | tuple()], [string()], elvis_config:configs()) -> ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
     process_options(Opts, Cmds, Config);
@@ -134,8 +128,10 @@ process_options([{code_path, Path} | Opts], Cmds, Config) ->
     process_options(Opts, Cmds, Config);
 process_options([{parallel, Num} | Opts], Cmds, Config) ->
     N = case Num of
-            "auto" -> erlang:system_info(schedulers);
-            _      -> erlang:list_to_integer(Num)
+            "auto" ->
+                erlang:system_info(schedulers);
+            _ ->
+                erlang:list_to_integer(Num)
         end,
     ok = application:set_env(elvis_core, parallel, N),
     process_options(Opts, Cmds, Config);
@@ -147,8 +143,10 @@ process_commands([rock | Files], Config) ->
     case Files of
         [] ->
             case elvis_core:rock(Config) of
-                {fail, _} -> elvis_utils:erlang_halt(1);
-                ok -> ok
+                {fail, _} ->
+                    elvis_utils:erlang_halt(1);
+                ok ->
+                    ok
             end;
         _ ->
             lists:map(fun(F) -> rock_one_song(F, Config) end, Files)
@@ -156,7 +154,7 @@ process_commands([rock | Files], Config) ->
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
-process_commands(['install', 'git-hook' | Cmds], Config) ->
+process_commands([install, 'git-hook' | Cmds], Config) ->
     elvis_git:install_hook(),
     process_commands(Cmds, Config);
 process_commands(['git-hook' | Cmds], Config) ->
@@ -177,15 +175,15 @@ help() ->
     OptSpecList = option_spec_list(),
     getopt:usage(OptSpecList, ?APP_NAME, standard_io).
 
--spec help(elvis_config:configs()) ->
-    elvis_config:configs().
+-spec help(elvis_config:configs()) -> elvis_config:configs().
 help(Config) ->
     help(),
     Config.
 
 -spec commands() -> ok.
 commands() ->
-    Commands = <<"Elvis will do the following things for you when asked nicely:
+    Commands =
+        <<"Elvis will do the following things for you when asked nicely:
 
 rock [file...]   Rock your socks off by running all rules to your source files.
 
@@ -201,7 +199,7 @@ install git-hook
                 Installs Elvis as a pre-commit hook in your current working
                 directory, which should be a git repository.
 ">>,
-   io:put_chars(Commands).
+    io:put_chars(Commands).
 
 -spec version() -> ok.
 version() ->
@@ -209,12 +207,13 @@ version() ->
     {ok, ElvisShellAppConfig} = application:get_all_key(elvis),
     ElvisCoreVsn = proplists:get_value(vsn, ElvisCoreAppConfig),
     ElvisShellVsn = proplists:get_value(vsn, ElvisShellAppConfig),
-    Version = "   ______     _   \n"
-              "  / __/ /  __(_)__\n"
-              " / _// / |/ / (_-<\n"
-              "/___/_/|___/_/___/\n"
-              "Version: ~s\n"
-              "Elvis Core Version: ~s\n",
+    Version =
+        "   ______     _   \n"
+        "  / __/ /  __(_)__\n"
+        " / _// / |/ / (_-<\n"
+        "/___/_/|___/_/___/\n"
+        "Version: ~s\n"
+        "Elvis Core Version: ~s\n",
     io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
 
 rock_one_song(FileName, Config) ->
@@ -222,25 +221,35 @@ rock_one_song(FileName, Config) ->
     case elvis_core:rock_this(F, Config) of
         {fail, _} ->
             case application:get_env(elvis_core, keep_rocking, false) of
-                false -> elvis_utils:erlang_halt(1);
-                true -> ok
+                false ->
+                    elvis_utils:erlang_halt(1);
+                true ->
+                    ok
             end;
-        ok -> ok
+        ok ->
+            ok
     end.
 
 -spec default_config() -> elvis_config:configs().
 default_config() ->
-    default_config([ fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end
-                   , fun() -> elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH) end
-                   ]).
+    default_config([fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end,
+                    fun() -> elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH) end]).
 
--spec default_config(list(Fun)) -> elvis_config:configs() when
-      Fun :: fun(() -> elvis_config:config()).
+-spec default_config([Fun]) -> elvis_config:configs()
+    when Fun :: fun(() -> elvis_config:config()).
 default_config([Fun | Funs]) ->
-    Config = try Fun() catch _:_ -> [] end,
+    Config =
+        try
+            Fun()
+        catch
+            _:_ ->
+                []
+        end,
     case Config of
-        [] -> default_config(Funs);
-        Config -> Config
+        [] ->
+            default_config(Funs);
+        Config ->
+            Config
     end;
 default_config([]) ->
     application:get_env(elvis, config, []).
