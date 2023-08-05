@@ -107,7 +107,7 @@ process_options(Options, Commands) ->
         AtomCommands = lists:map(fun list_to_atom/1, Commands),
         process_options(Options, AtomCommands, Config)
     catch
-        Exception ->
+        _:Exception ->
             elvis_utils:error_prn("~p.", [Exception]),
             elvis_utils:erlang_halt(1)
     end.
