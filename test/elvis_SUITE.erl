@@ -167,6 +167,7 @@ main_git_hook_fail(_Config) ->
         meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
         meck:new(elvis_git, [passthrough]),
+        meck:new(elvis_config, [passthrough]),
         LongLine =
             <<"Loooooooooooooooooooooooooooooooooooooooooooooooooooong ",
               "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
@@ -177,6 +178,7 @@ main_git_hook_fail(_Config) ->
              #{path => "../../src/Makefile", content => <<"@Some text\n\nCT_OPTS =">>}],
         FakeStagedFiles = fun() -> Files end,
         meck:expect(elvis_git, staged_files, FakeStagedFiles),
+        meck:expect(elvis_config, files, fun(_) -> Files end),
 
         Expected = "# ../../src/fake_long_line.erl.*FAIL",
 
