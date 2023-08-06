@@ -90,6 +90,7 @@ install_hook() ->
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% @private
 %% @doc Check if the current dir is a git repository.
 check_git_dir() ->
     case filelib:is_dir(".git") of
@@ -99,6 +100,7 @@ check_git_dir() ->
             error("Not a git repository.")
     end.
 
+%% @private
 %% @doc Adds elvis as a pre commit hook. If a pre-commit file already exists
 %%      appends the command to it, otherwise the file is created.
 add_pre_commit_hook() ->

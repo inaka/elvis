@@ -72,6 +72,7 @@ main(Args) ->
 
 %%% Command Line Interface
 
+%% @private
 -spec option_spec_list() -> [getopt:option_spec()].
 option_spec_list() ->
     Commands =
@@ -100,6 +101,7 @@ option_spec_list() ->
      {code_path, $p, "code-path", string, "Add the directory in the code path."},
      {keep_rocking, $k, "keep-rocking", undefined, KeepRocking}].
 
+%% @private
 -spec process_options([option()], [string()]) -> ok.
 process_options(Options, Commands) ->
     try
@@ -112,6 +114,7 @@ process_options(Options, Commands) ->
             elvis_utils:erlang_halt(1)
     end.
 
+%% @private
 -spec process_options([option()], [string()], elvis_config:configs()) -> ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
@@ -152,6 +155,7 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
+%% @private
 -spec process_commands([rock |
                         help |
                         [install | 'git-hook'] |
@@ -191,16 +195,19 @@ process_commands([_Cmd | _Cmds], _Config) ->
 
 %%% Options
 
+%% @private
 -spec help() -> ok.
 help() ->
     OptSpecList = option_spec_list(),
     getopt:usage(OptSpecList, ?APP_NAME, standard_io).
 
+%% @private
 -spec help(elvis_config:configs()) -> elvis_config:configs().
 help(Config) ->
     help(),
     Config.
 
+%% @private
 -spec commands() -> ok.
 commands() ->
     Commands =
@@ -222,6 +229,7 @@ install git-hook
 ">>,
     io:put_chars(Commands).
 
+%% @private
 -spec version() -> ok.
 version() ->
     {ok, ElvisCoreAppConfig} = application:get_all_key(elvis_core),
@@ -237,6 +245,7 @@ version() ->
         "Elvis Core Version: ~s\n",
     io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
 
+%% @private
 rock_one_song(FileName, Config) ->
     F = atom_to_list(FileName),
     case elvis_core:rock_this(F, Config) of
@@ -251,6 +260,7 @@ rock_one_song(FileName, Config) ->
             ok
     end.
 
+%% @private
 -spec default_config() -> elvis_config:configs().
 default_config() ->
     default_config([fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end,
