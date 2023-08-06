@@ -1,19 +1,9 @@
-_build/
-.erlang.mk/
-elvis_shell.d
-.eunit
-.rebar
-deps
-ebin
-*.o
-*.beam
-*.plt
+_*
 erl_crash.dump
-log*/
-.erlang.mk.packages.*
 rebar3.crashdump
-doc
-compile_commands.json
+.rebar3
+doc/
+logs
 
 # Ignore elvis escript
 elvis
