@@ -254,7 +254,7 @@ main_code_path(_Config) ->
 
             ok = file:make_dir(OutDir),
             {ok, _} = file:copy(Source, Destination ++ ".erl"),
-            compile:file(Destination, [{outdir, OutDir}]),
+            _ = compile:file(Destination, [{outdir, OutDir}]),
 
             CodePathFun = fun() -> elvis:main(Args) end,
             check_some_line_output(CodePathFun, Expected, fun matches_regex/2)

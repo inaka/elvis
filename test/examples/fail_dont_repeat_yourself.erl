@@ -2,13 +2,13 @@
 
 -export([repeated_complexity_5/2, repeated_complexity_10/2]).
 
--spec repeated_complexity_5(any(), any()) -> [any(), ...].
+-spec repeated_complexity_5([any()], [any()]) -> [any(), ...].
 repeated_complexity_5(X, Y) ->
     Z = X ++ [ok],
     W = Y ++ [ok],
     Z ++ W ++ [ok].
 
--spec repeated_complexity_10(any(), any()) -> fun((...) -> any()).
+-spec repeated_complexity_10(any(), any()) -> fun((_) -> ok | <<_:16>>).
 repeated_complexity_10(X, Y) ->
     Z = case X of
             Y ->

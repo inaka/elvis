@@ -9,7 +9,7 @@
 
 -hank([unnecessary_function_arguments]).
 
--spec all() -> [dialyzer | xref | elvis].
+-spec all() -> [dialyzer | xref | elvis, ...].
 all() ->
     [dialyzer, xref, elvis].
 

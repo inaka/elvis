@@ -103,7 +103,7 @@ check_branch_files(_Config) ->
 
     file:delete(FileLocation).
 
--spec random_file_name() -> string().
+-spec random_file_name() -> nonempty_string().
 random_file_name() ->
     RandomString = integer_to_list(rand:uniform(1 bsl 127)),
     "test_file_" ++ RandomString.
