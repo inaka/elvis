@@ -16,6 +16,24 @@ jobs:
         with:
           otp-version: ${{matrix.otp_vsn}}
           rebar3-version: ${{matrix.rebar3_vsn}}
+      - name: Restore _build
+        uses: actions/cache@v3
+        with:
+          path: _build
+          key: "_build-cache-for\
+                -os-${{runner.os}}\
+                -otp-${{steps.setup-beam.outputs.otp-version}}\
+                -rebar3-${{steps.setup-beam.outputs.rebar3-version}}\
+                -hash-${{hashFiles('rebar.lock')}}"
+      - name: Restore rebar3's cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/rebar3
+          key: "rebar3-cache-for\
+                -os-${{runner.os}}\
+                -otp-${{steps.setup-beam.outputs.otp-version}}\
+                -rebar3-${{steps.setup-beam.outputs.rebar3-version}}\
+                -hash-${{hashFiles('rebar.lock')}}"
       - name: Format check
         run: rebar3 format --verify
       - shell: bash
