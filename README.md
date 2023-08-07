@@ -1,6 +1,6 @@
 # elvis [![Build Status](https://github.com/inaka/elvis/workflows/build/badge.svg)](https://github.com/inaka/elvis)
 
-![Elvis Presley dancing](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
+![Elvis Presley dancing](https://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
 Command-line interface for Elvis, the Erlang style reviewer.
 
@@ -195,6 +195,6 @@ Inspired on [HoundCI][houndci]
   [erlang]: http://www.erlang.org/download_release/24
   [make]: http://www.gnu.org/software/make/
   [git]: http://git-scm.com/
-  [pre-commit]: http://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks
-  [config]: http://www.erlang.org/doc/man/config.html
+  [pre-commit]: https://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks
+  [config]: https://www.erlang.org/doc/man/config.html
   [webhooks]: https://developer.github.com/v3/repos/hooks/
