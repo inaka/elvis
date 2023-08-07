@@ -1,49 +1,25 @@
-{ application, elvis
-, [ {pkg_name, elvis}
-  , {description, "CLI for the Elvis Erlang Style Reviewer"}
-  , {vsn, git}
-  , { applications
-    , [kernel, stdlib, ssl, elvis_core, egithub, katana_code, getopt]
-    }
-  , { modules
-    , [ elvis
-      , elvis_git
-      , elvis_webhook
-      ]
-    }
-  , { env
-    , [ { config
-        , [ #{ dirs => [ "apps/**"
-                       , "lib/**"
-                       , "src/**"
-                       , "test/**"
-                       ]
-             , filter => "*.erl"
-             , ruleset => erl_files
-             }
-          , #{ dirs => ["."]
-             , filter => "Makefile"
-             , ruleset => makefiles
-             }
-          , #{ dirs => [ "."
-                       , "apps/**"
-                       , "lib/**"
-                       , "src/**"
-                       ]
-             , filter => "rebar.config"
-             , ruleset => rebar_config
-             }
-          ]
-        }
-      ]
-    }
-  , {registered, []}
-  , {licenses, ["Apache 2.0"]}
-  , { links
-    , [ {"Github", "https://github.com/inaka/elvis"}
-      , {"Blog", "http://inaka.net/blog/2014/09/05/erlang-standards-and-elvis-rock/"}
-      ]
-    }
-  , {build_tools, ["rebar3"]}
-  ]
-}.
+{application,
+ elvis,
+ [{pkg_name, elvis},
+  {description, "CLI for the Elvis Erlang Style Reviewer"},
+  {vsn, git},
+  {applications, [kernel, stdlib, ssl, elvis_core, egithub, katana_code, getopt]},
+  {modules, [elvis, elvis_git, elvis_webhook]},
+  {env,
+   [{config,
+     [#{dirs => ["apps/**", "lib/**", "src/**", "test/**"],
+        filter => "*.erl",
+        ruleset => erl_files},
+      #{dirs => ["."],
+        filter => "Makefile",
+        ruleset => makefiles},
+      #{dirs => [".", "apps/**", "lib/**", "src/**"],
+        filter => "rebar.config",
+        ruleset => rebar_config}]}]},
+  {registered, []},
+  {licenses, ["Apache 2.0"]},
+  {links,
+   [{"GitHub", "https://github.com/inaka/elvis"},
+    {"Blog",
+     "https://web.archive.org/web/20180317191435/https://inaka.net/blog/2014/09/05/erlang-standards-and-elvis-rock/"}]},
+  {build_tools, ["rebar3"]}]}.
