@@ -296,12 +296,7 @@ contains_string(Result, String) ->
     0 /= string:str(Result, String).
 
 matches_regex(Result, Regex) ->
-    case re:run(Result, Regex) of
-        {match, _} ->
-            true;
-        nomatch ->
-            false
-    end.
+    nomatch =/= re:run(Result, Regex).
 
 check_empty_output(Fun) ->
     Fun(),
