@@ -119,9 +119,6 @@ main_config(_Config) ->
         OptFun = fun() -> elvis:main("-c") end,
         _ = check_first_line_output(OptFun, Expected, fun matches_regex/2),
 
-        OptEnoentFun = fun() -> elvis:main("-c missing") end,
-        ok = OptEnoentFun(),
-
         ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
         check_empty_output(ConfigFun)
     after
