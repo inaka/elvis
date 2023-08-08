@@ -1,23 +1,11 @@
 -module(elvis_git).
 
--export([
-         run_hook/1,
-         run_branch/2,
-         staged_files/0,
-         branch_files/1,
-         relative_position/2,
-         install_hook/0
-        ]).
+-export([run_hook/1, run_branch/2, staged_files/0, branch_files/1, relative_position/2,
+         install_hook/0]).
 
--define(LIST_STAGED,
-        "git diff --name-status --staged | awk '$1 != \"D\" { print $2 }'").
-
+-define(LIST_STAGED, "git diff --name-status --staged | awk '$1 != \"D\" { print $2 }'").
 -define(LIST_BRANCH_CHANGES(C),
         "git diff --name-only --ignore-submodules=all --diff-filter=d " ++ C).
-
--define(STAGED_CONTENT(Path),
-        "git show :" ++ Path).
-
 -define(PRE_COMMIT_FILE, ".git/hooks/pre-commit").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -29,8 +17,10 @@ run_hook(Config) ->
     Files = elvis_git:staged_files(),
     NewConfig = elvis_config:resolve_files(Config, Files),
     case elvis_core:rock(NewConfig) of
-        {fail, _} -> elvis_utils:erlang_halt(1);
-        ok -> ok
+        {fail, _} ->
+            elvis_utils:erlang_halt(1);
+        ok ->
+            ok
     end.
 
 -spec run_branch(string(), elvis_config:configs()) -> ok.
@@ -38,8 +28,10 @@ run_branch(Commit, Config) ->
     Files = elvis_git:branch_files(Commit),
     NewConfig = elvis_config:resolve_files(Config, Files),
     case elvis_core:rock(NewConfig) of
-        {fail, _} -> elvis_utils:erlang_halt(1);
-        ok -> ok
+        {fail, _} ->
+            elvis_utils:erlang_halt(1);
+        ok ->
+            ok
     end.
 
 -spec branch_files(string()) -> [elvis_file:file()].
@@ -63,8 +55,7 @@ elvis_file(Path) ->
 
 %% @doc Takes a git patch and an absolute file line number and returns a
 %%      relative position for that line in the patch.
--spec relative_position(binary(), integer()) ->
-    {ok, integer()} | not_found.
+-spec relative_position(binary(), integer()) -> {ok, integer()} | not_found.
 relative_position(Patch, LineNum) ->
     Lines = binary:split(Patch, <<"\n">>, [global]),
     relative_position(Lines, LineNum, {-1, undefined}).
@@ -74,10 +65,7 @@ relative_position([], _Num, _Positions) ->
 relative_position([Line | Lines], Num, Positions) ->
     Type = patch_line_type(Line),
     case new_position(Line, Positions) of
-        {NewLocal, NewGlobal} when
-              NewGlobal == Num,
-              Type =/= patch,
-              Type =/= deletion ->
+        {NewLocal, NewGlobal} when NewGlobal == Num, Type =/= patch, Type =/= deletion ->
             {ok, NewLocal};
         NewPositions ->
             relative_position(Lines, Num, NewPositions)
@@ -102,13 +90,17 @@ install_hook() ->
 %%% Private
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% @private
 %% @doc Check if the current dir is a git repository.
 check_git_dir() ->
     case filelib:is_dir(".git") of
-        true -> ok;
-        false -> error("Not a git repository.")
+        true ->
+            ok;
+        false ->
+            error("Not a git repository.")
     end.
 
+%% @private
 %% @doc Adds elvis as a pre commit hook. If a pre-commit file already exists
 %%      appends the command to it, otherwise the file is created.
 add_pre_commit_hook() ->
@@ -122,10 +114,13 @@ add_pre_commit_hook() ->
             true ->
                 {ok, Content} = file:read_file(?PRE_COMMIT_FILE),
                 case binary:match(Content, <<"elvis">>) of
-                    nomatch -> {[append], Command};
-                    _ -> error("Elvis is already installed as a git hook.")
+                    nomatch ->
+                        {[append], Command};
+                    _ ->
+                        error("Elvis is already installed as a git hook.")
                 end;
-            false -> {[write], <<Header/binary, Command/binary>>}
+            false ->
+                {[write], <<Header/binary, Command/binary>>}
         end,
 
     ok = file:write_file(Filename, Data, Mode),
@@ -151,11 +146,16 @@ new_position(Line, {Local, Global}) ->
 patch_line_type(Line) ->
     [Head | _] = elvis_utils:to_str(Line),
     case Head of
-        $@  -> patch;
-        $+  -> addition;
-        $-  -> deletion;
-        $\\ -> same;
-        $\s -> same %space
+        $@ ->
+            patch;
+        $+ ->
+            addition;
+        $- ->
+            deletion;
+        $\\ ->
+            same;
+        $\s ->
+            same %space
     end.
 
 %% @private
@@ -164,5 +164,5 @@ patch_line_type(Line) ->
 patch_position(Line) ->
     Regex = "^@@ .*? \\+(\\d+),.*$",
     Opts = [{capture, all_but_first, list}],
-    {match, [PositionStr | _ ]} = re:run(Line, Regex, Opts),
+    {match, [PositionStr | _]} = re:run(Line, Regex, Opts),
     list_to_integer(PositionStr).

@@ -1,27 +1,16 @@
 -module(git_SUITE).
 
--export([
-         all/0
-        ]).
+-export([all/0]).
+-export([relative_position_from_patch/1, check_staged_files/1, ignore_deleted_files/1,
+         check_branch_files/1]).
 
--export([
-         relative_position_from_patch/1,
-         check_staged_files/1,
-         ignore_deleted_files/1,
-         check_branch_files/1
-        ]).
-
--define(EXCLUDED_FUNS,
-        [
-         module_info,
-         all,
-         test,
-         init_per_suite,
-         end_per_suite
-        ]).
+-define(EXCLUDED_FUNS, [module_info, all, test, init_per_suite, end_per_suite]).
 
 -type config() :: proplists:proplist().
+
 -export_type([config/0]).
+
+-hank([unnecessary_function_arguments]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Common test
@@ -38,18 +27,19 @@ all() ->
 
 -spec relative_position_from_patch(config()) -> any().
 relative_position_from_patch(_Config) ->
-    Patch = <<"@@ -109,7 +109,7 @@ option_spec_list() ->\n     [\n      {help,"
-              " $h, \"help\", undefined, \"Show this help information.\"},\n"
-              "      {config, $c, \"config\", string, Commands},\n-     "
-              "{commands, undefined, \"commands\", undefined, \"Show available"
-              " commands.\"}\n+     {commands, undefined, \"commands\", "
-              "undefined, \"Show available commands.\"} %% Long Line\n    "
-              " ].\n \n -spec process_options([atom()], [string()]) -> ok."
-              "\n@@ -175,3 +175,5 @@ git-hook         Pre-commit Git Hook: "
-              "Gets all staged files and runs the rules\n                  "
-              "                     files.\n \">>,\n    io:put_chars(Commands)."
-              "\n+\n+%% Another dummy change to check how patches are built "
-              "with changes wide apart.">>,
+    Patch =
+        <<"@@ -109,7 +109,7 @@ option_spec_list() ->\n     [\n      {help,"
+          " $h, \"help\", undefined, \"Show this help information.\"},\n"
+          "      {config, $c, \"config\", string, Commands},\n-     "
+          "{commands, undefined, \"commands\", undefined, \"Show available"
+          " commands.\"}\n+     {commands, undefined, \"commands\", "
+          "undefined, \"Show available commands.\"} %% Long Line\n    "
+          " ].\n \n -spec process_options([atom()], [string()]) -> ok."
+          "\n@@ -175,3 +175,5 @@ git-hook         Pre-commit Git Hook: "
+          "Gets all staged files and runs the rules\n                  "
+          "                     files.\n \">>,\n    io:put_chars(Commands)."
+          "\n+\n+%% Another dummy change to check how patches are built "
+          "with changes wide apart.">>,
 
     {ok, 1} = elvis_git:relative_position(Patch, 109),
     {ok, 5} = elvis_git:relative_position(Patch, 112),
@@ -65,7 +55,6 @@ relative_position_from_patch(_Config) ->
     not_found = elvis_git:relative_position(Patch, 174),
     not_found = elvis_git:relative_position(Patch, 180).
 
-
 -spec check_staged_files(config()) -> any().
 check_staged_files(_Config) ->
     FileName = random_file_name(),
@@ -74,7 +63,7 @@ check_staged_files(_Config) ->
 
     _ = os:cmd("git add " ++ FileLocation),
     StagedFiles = elvis_git:staged_files(),
-    FilterFun = fun (#{path := Path}) -> Path == FileName end,
+    FilterFun = fun(#{path := Path}) -> Path == FileName end,
     [_] = lists:filter(FilterFun, StagedFiles),
     _ = os:cmd("git reset " ++ FileLocation),
 
@@ -93,8 +82,7 @@ ignore_deleted_files(Config) ->
     ok = file:write_file("test2", <<"ignore">>, [append]), %modified
     ok = file:write_file("test3", <<"ignore">>, [append]), %new
     _ = os:cmd("git add ."),
-    StagedFiles = lists:sort([Path
-                              || #{path := Path} <- elvis_git:staged_files()]),
+    StagedFiles = lists:sort([Path || #{path := Path} <- elvis_git:staged_files()]),
     ["test2", "test3"] = StagedFiles.
 
 -spec check_branch_files(config()) -> any().
@@ -115,10 +103,10 @@ check_branch_files(_Config) ->
 
     file:delete(FileLocation).
 
--spec random_file_name() -> string().
+-spec random_file_name() -> nonempty_string().
 random_file_name() ->
-  RandomString = integer_to_list(rand:uniform(1 bsl 127)),
-  "test_file_" ++ RandomString.
+    RandomString = integer_to_list(rand:uniform(1 bsl 127)),
+    "test_file_" ++ RandomString.
 
 -spec maybe_git_config_user() -> ok.
 maybe_git_config_user() ->

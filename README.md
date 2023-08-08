@@ -1,6 +1,6 @@
 # elvis [![Build Status](https://github.com/inaka/elvis/workflows/build/badge.svg)](https://github.com/inaka/elvis)
 
-![Elvis Presley dancing](http://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
+![Elvis Presley dancing](https://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
 Command-line interface for Elvis, the Erlang style reviewer.
 
@@ -61,7 +61,7 @@ added to `elvis`'s [configuration](#configuration) and also the credentials used
 must be from an admin of the repo or someone with permissions for requesting changes
 on PRs.
 
-The `webhook/1` function takes a map containing the keys `headers` and `body`,
+The `elvis_webhook:event/1` function takes a map containing the keys `headers` and `body`,
 whose values should be the map of headers and the body from the GitHub's event
 request.
 
@@ -165,8 +165,7 @@ You can use four different rulesets `erl_files`, `makefiles`, `rebar_config` or 
 
 ## Implemented Rules
 
-A reference of all rules implemented in Elvis can be found in this wiki page:
-[Rules](https://github.com/inaka/elvis_core/wiki/Rules).
+A reference of all rules implemented in Elvis can be found in this `elvis_core`'s [RULES.md](https://github.com/inaka/elvis_core/blob/main/RULES.md).
 
 ## User Defined Rules
 
@@ -184,7 +183,7 @@ elvis rock -p deps/elvis_rules/ebin -c elvis.config
 
 ## Dependencies
 
-- Erlang/OTP 18+
+- Erlang/OTP 24+
 - git
 
 ## References
@@ -192,9 +191,6 @@ elvis rock -p deps/elvis_rules/ebin -c elvis.config
 Inspired on [HoundCI][houndci]
 
   [houndci]: https://houndci.com/
-  [erlang]: http://www.erlang.org/download_release/24
-  [make]: http://www.gnu.org/software/make/
-  [git]: http://git-scm.com/
-  [pre-commit]: http://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks
-  [config]: http://www.erlang.org/doc/man/config.html
+  [pre-commit]: https://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks
+  [config]: https://www.erlang.org/doc/man/config.html
   [webhooks]: https://developer.github.com/v3/repos/hooks/

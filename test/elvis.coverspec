@@ -1,7 +1,2 @@
 %% Specific modules to include in cover.
-{ incl_mods
-, [ elvis
-  , elvis_git
-  , elvis_webhook
-  ]
-}.
+{incl_mods, [elvis, elvis_git, elvis_webhook]}.

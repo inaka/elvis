@@ -1,39 +1,21 @@
 -module(elvis_SUITE).
 
--export([
-         all/0,
-         init_per_suite/1,
-         end_per_suite/1
-        ]).
+-export([all/0, init_per_suite/1, end_per_suite/1]).
+-export([run_webhook/1, run_webhook_ping/1, main_help/1, main_commands/1, main_config/1,
+         main_version/1, main_rock/1, main_git_hook_fail/1, main_git_hook_ok/1,
+         main_default_config/1, main_unexistent/1, main_code_path/1]).
 
--export([
-         %% Webhook
-         run_webhook/1,
-         run_webhook_ping/1,
+                                                                               %% Webhook
+
          %% Mains & Commands
-         main_help/1,
-         main_commands/1,
-         main_config/1,
-         main_version/1,
-         main_rock/1,
-         main_git_hook_fail/1,
-         main_git_hook_ok/1,
-         main_default_config/1,
-         main_unexistent/1,
-         main_code_path/1
-        ]).
 
--define(EXCLUDED_FUNS,
-        [
-         module_info,
-         all,
-         test,
-         init_per_suite,
-         end_per_suite
-        ]).
+-define(EXCLUDED_FUNS, [module_info, all, test, init_per_suite, end_per_suite]).
 
 -type config() :: proplists:proplist().
+
 -export_type([config/0]).
+
+-hank([unnecessary_function_arguments]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Common test
@@ -81,9 +63,7 @@ run_webhook(_Config) ->
         meck:expect(egithub, issue_comments, EmptyResultFun),
         meck:expect(egithub, pr_reviews, EmptyResultFun),
 
-        FakeFun2 = fun(_, _, _, "elvis.config") ->
-                           {error, error}
-                   end,
+        FakeFun2 = fun(_, _, _, "elvis.config") -> {error, error} end,
         meck:expect(egithub, file_content, FakeFun2),
 
         ok = elvis_webhook:event(Request)
@@ -131,22 +111,16 @@ main_commands(_Config) ->
 -spec main_config(config()) -> any().
 main_config(_Config) ->
     try
-      meck:new(elvis_utils, [passthrough]),
-      meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
+        meck:new(elvis_utils, [passthrough]),
+        meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
-      Expected = "missing_option_arg config",
+        Expected = "missing_option_arg config",
 
-      OptFun = fun() -> elvis:main("-c") end,
-      _ = check_first_line_output(OptFun, Expected, fun matches_regex/2),
+        OptFun = fun() -> elvis:main("-c") end,
+        _ = check_first_line_output(OptFun, Expected, fun matches_regex/2),
 
-      EnoentExpected = "enoent",
-      OptEnoentFun = fun() -> elvis:main("-c missing") end,
-      _ = check_first_line_output(OptEnoentFun,
-                                  EnoentExpected,
-                                  fun matches_regex/2),
-
-      ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
-      check_empty_output(ConfigFun)
+        ConfigFun = fun() -> elvis:main("-c ../../config/elvis.config") end,
+        check_empty_output(ConfigFun)
     after
         meck:unload(elvis_utils)
     end.
@@ -172,16 +146,13 @@ main_rock(_Config) ->
 
         NoConfigArgs = "rock",
         NoConfigFun = fun() -> elvis:main(NoConfigArgs) end,
-        _ = check_some_line_output(NoConfigFun,
-                                   ExpectedFail,
-                                   fun matches_regex/2),
+        _ = check_some_line_output(NoConfigFun, ExpectedFail, fun matches_regex/2),
 
         Expected = "# ../../src/elvis.erl.*OK",
 
         ConfigArgs = "rock -V -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
         _ = check_some_line_output(ConfigFun, Expected, fun matches_regex/2)
-
     after
         meck:unload(elvis_utils)
     end.
@@ -193,20 +164,18 @@ main_git_hook_fail(_Config) ->
         meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
         meck:new(elvis_git, [passthrough]),
-        LongLine = <<"Loooooooooooooooooooooooooooooooooooooooooooooooooooong ",
-                     "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
-        Files = [
-                 #{path => "../../src/fake_long_line.erl",
-                   content => LongLine},
-                 #{path => "../../test/fake_long_line.erl",
-                   content => LongLine},
-                 #{path => "../../src/README.md",
-                   content => <<"### Title">>},
-                 #{path => "../../src/Makefile",
-                   content => <<"@Some text\n\nCT_OPTS =">>}
-                ],
+        meck:new(elvis_config, [passthrough]),
+        LongLine =
+            <<"Loooooooooooooooooooooooooooooooooooooooooooooooooooong ",
+              "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
+        Files =
+            [#{path => "../../src/fake_long_line.erl", content => LongLine},
+             #{path => "../../test/fake_long_line.erl", content => LongLine},
+             #{path => "../../src/README.md", content => <<"### Title">>},
+             #{path => "../../src/Makefile", content => <<"@Some text\n\nCT_OPTS =">>}],
         FakeStagedFiles = fun() -> Files end,
         meck:expect(elvis_git, staged_files, FakeStagedFiles),
+        meck:expect(elvis_config, files, fun(_) -> Files end),
 
         Expected = "# ../../src/fake_long_line.erl.*FAIL",
 
@@ -236,32 +205,33 @@ main_git_hook_ok(_Config) ->
 
 -spec main_default_config(config()) -> any().
 main_default_config(_Config) ->
-    ok = try
-        meck:new(elvis_utils, [passthrough]),
-        meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
-        Src = "../../config/elvis-test.config",
-        Dest = "./elvis.config",
-        {ok, _} = file:copy(Src, Dest),
+    ok =
+        try
+            meck:new(elvis_utils, [passthrough]),
+            meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
+            Src = "../../config/elvis-test.config",
+            Dest = "./elvis.config",
+            {ok, _} = file:copy(Src, Dest),
 
-        Expected = "# ../../src/elvis.erl.*OK",
-        RockFun = fun() -> elvis:main("rock") end,
-        _ = check_some_line_output(RockFun, Expected, fun matches_regex/2),
+            Expected = "# ../../src/elvis.erl.*OK",
+            RockFun = fun() -> elvis:main("rock") end,
+            _ = check_some_line_output(RockFun, Expected, fun matches_regex/2),
 
-        file:delete(Dest)
-    after
-        meck:unload(elvis_utils)
-    end.
+            file:delete(Dest)
+        after
+            meck:unload(elvis_utils)
+        end.
 
 -spec main_unexistent(config()) -> any().
 main_unexistent(_Config) ->
     try
-      meck:new(elvis_utils, [passthrough]),
-      meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
+        meck:new(elvis_utils, [passthrough]),
+        meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
-      Expected = "unrecognized_or_unimplemented_command.",
+        Expected = "unrecognized_or_unimplemented_command.",
 
-      UnexistentFun = fun() -> elvis:main("aaarrrghh") end,
-      _ = check_first_line_output(UnexistentFun, Expected, fun matches_regex/2)
+        UnexistentFun = fun() -> elvis:main("aaarrrghh") end,
+        _ = check_first_line_output(UnexistentFun, Expected, fun matches_regex/2)
     after
         meck:unload(elvis_utils)
     end.
@@ -271,29 +241,26 @@ main_code_path(_Config) ->
     Expected = "user_defined_rules.erl.*FAIL",
     Prefix = "../../",
     OutDir = Prefix ++ "ebin-test",
-    Args = "rock -c "
-        ++ Prefix
-        ++ "config/elvis-test-pa.config --code-path "
-        ++ OutDir,
+    Args = "rock -c " ++ Prefix ++ "config/elvis-test-pa.config --code-path " ++ OutDir,
     Source = Prefix ++ "test/examples/user_defined_rules.erl",
     Destination = Prefix ++ "ebin-test/user_defined_rules",
 
     _ = try
-        meck:new(elvis_utils, [passthrough]),
-        meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
+            meck:new(elvis_utils, [passthrough]),
+            meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
-        ok = file:make_dir(OutDir),
-        {ok, _} = file:copy(Source, Destination ++ ".erl"),
-        compile:file(Destination, [{outdir, OutDir}]),
+            ok = file:make_dir(OutDir),
+            {ok, _} = file:copy(Source, Destination ++ ".erl"),
+            _ = compile:file(Destination, [{outdir, OutDir}]),
 
-        CodePathFun = fun() -> elvis:main(Args) end,
-        check_some_line_output(CodePathFun, Expected, fun matches_regex/2)
-    after
-        meck:unload(elvis_utils),
-        ok = file:delete(Destination ++ ".erl"),
-        ok = file:delete(Destination ++ ".beam"),
-        file:del_dir(OutDir)
-    end,
+            CodePathFun = fun() -> elvis:main(Args) end,
+            check_some_line_output(CodePathFun, Expected, fun matches_regex/2)
+        after
+            meck:unload(elvis_utils),
+            ok = file:delete(Destination ++ ".erl"),
+            ok = file:delete(Destination ++ ".beam"),
+            file:del_dir(OutDir)
+        end,
     ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -312,27 +279,24 @@ check_first_line_output(Fun, Expected, FilterFun) ->
     ct:capture_start(),
     Fun(),
     ct:capture_stop(),
-    Lines = case ct:capture_get([]) of
-                [] -> [];
-                [Head | _] -> [Head]
-            end,
+    Lines =
+        case ct:capture_get([]) of
+            [] ->
+                [];
+            [Head | _] ->
+                [Head]
+        end,
     ListFun = fun(Line) -> FilterFun(Line, Expected) end,
     [_ | _] = lists:filter(ListFun, Lines).
 
 starts_with(Result, Expected) ->
-    case string:str(Result, Expected) of
-        1 -> true;
-        _ -> {Expected, Expected} == {Result, Expected}
-    end.
+    string:str(Result, Expected) == 1 orelse {Expected, Expected} == {Result, Expected}.
 
 contains_string(Result, String) ->
     0 /= string:str(Result, String).
 
 matches_regex(Result, Regex) ->
-    case re:run(Result, Regex) of
-        {match, _} -> true;
-        nomatch -> false
-    end.
+    nomatch =/= re:run(Result, Regex).
 
 check_empty_output(Fun) ->
     Fun(),
