@@ -290,12 +290,7 @@ check_first_line_output(Fun, Expected, FilterFun) ->
     [_ | _] = lists:filter(ListFun, Lines).
 
 starts_with(Result, Expected) ->
-    case string:str(Result, Expected) of
-        1 ->
-            true;
-        _ ->
-            {Expected, Expected} == {Result, Expected}
-    end.
+    string:str(Result, Expected) == 1 orelse {Expected, Expected} == {Result, Expected}.
 
 contains_string(Result, String) ->
     0 /= string:str(Result, String).
