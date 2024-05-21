@@ -1,6 +1,6 @@
 ---
 name: build
-on: [push, pull_request]
+on: [push]
 jobs:
   ci:
     name: Run checks and tests over ${{matrix.otp_vsn}}
