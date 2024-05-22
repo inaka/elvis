@@ -1,5 +1,8 @@
 # Changelog
 
+⚠️ this file is no longer maintained. For the latest releases refer to
+the [GitHub releases](https://github.com/inaka/elvis/releases) page.
+
 ## [1.0.1](https://github.com/inaka/elvis/tree/1.0.1) (2021-03-24)
 
 [Full Changelog](https://github.com/inaka/elvis/compare/1.0.0...1.0.1)
