@@ -1,6 +1,13 @@
 ---
 name: build
-on: [push]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - "*"
+  workflow_dispatch: {}
 jobs:
   ci:
     name: Run checks and tests over ${{matrix.otp_vsn}}
