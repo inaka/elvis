@@ -162,13 +162,9 @@ shouldn't be made.
 
 ## As a webhook
 
-### Webhook
-
 `elvis` can be used as a GitHub [webhook](https://developer.github.com/v3/repos/hooks/) for
 `pull request` (PR) events, by calling the `elvis_webhook:event/1` function. This will add
 a comment in each file and rule that is broken, analyzing only the files associated with the PR.
-
-#### Running the webhook on your servers
 
 Since GitHub's API needs a valid username and password to allow the creation of
 reviews on PRs, parameters `github_user` and `github_password` need to be
