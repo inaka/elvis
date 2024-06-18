@@ -1,65 +1,180 @@
-# elvis [![Build Status](https://github.com/inaka/elvis/workflows/build/badge.svg)](https://github.com/inaka/elvis)
+# `elvis` [![CI][build-badge]][elvis]
+
+[elvis]: https://github.com/inaka/elvis
+[build-badge]: https://github.com/inaka/elvis/workflows/build/badge.svg
 
 ![Elvis Presley dancing](https://www.reactiongifs.com/wp-content/uploads/2013/01/elvis-dance.gif)
 
-Command-line interface for Elvis, the Erlang style reviewer.
+`elvis`, the Erlang style reviewer, is the command-line interface for
+[`elvis_core`](https://github.com/inaka/elvis_core).
 
-## Contact Us
+## What is `elvis`?
 
-If you find any **bugs** or have a **problem** while using this library, please
-[open an issue](https://github.com/inaka/elvis/issues/new) in this repo
-(or a pull request :)).
+`elvis` is an Erlang generic style reviewer that focuses on code and configuration consistency,
+as well as readability, across your whole code base. By the very nature of the rules applied from
+`elvis_core` it can also be considered a learning tool, by trying to generalize good practices and
+allowing teams to adapt it to their own specific needs, while fostering discussions around code
+conventions.
+
+### Advantages of using it
+
+Some of the advantages of using `elvis` are:
+
+* enabling consistency in style across all your code base
+* encouraging the development team to sit down and talk about code conventions
+* allowing continuous monitoring of code quality
+* helping developers avoid repeated mistakes that can be automatically detected
+* providing homogenisation among different projects in a company, therefore facilitating project
+switching for developers, as well as allowing easier code sharing between projects
+* learning, since some of the conventions it proposes are themselves the distilled result of
+working in very large code bases
 
 ## Installation
 
-1. Clone the repo
-2. `rebar3 compile`
+To use `elvis` as a standalone tool, you need to:
+
+```console
+git clone https://github.com/inaka/elvis
+cd elvis
+rebar3 escriptize
+export PATH=${PWD}/_build/default/bin:${PATH}
+```
+
+(to make the env. variable export more permanent add it to your shell's configuration file,
+i.e. `.bashrc`, `.zshrc`, ...)
+
+Now run it by calling `elvis` (or `elvis help`), and you should get to the `Usage: elvis`
+instructions.
 
 ## Usage
 
-In any `elvis`-enabled product, `elvis rock` will trigger a rule check.
+The most common use case is to `cd` into a folder containing an `elvis.config` file
+and executing `elvis rock`.
 
-### Script
+If you just execute `elvis` with no arguments or options you'll get to the usage instructions
+outlined in this README.
 
-`elvis` can be turned into a script by executing `rebar3 escriptize`. This will
-generate an `elvis` self-contained executable script, from which you can get
-help by typing `elvis help`. A list of available commands can be shown using the
-`--commands` option (i.e. `elvis --commands`).
+## Options
 
-To run `elvis` from the terminal use the `rock` command (i.e. `elvis
-rock`). There's no need to specify a configuration file path if you have an
-`elvis.config` file in the same location where you are executing the script,
-otherwise a configuration file can be specified through the use of the
-`--config` (or just `-c`) option.
+While you can get a more complete list of options by executing `elvis help`, we try to keep them
+documented below.
 
-```bash
-elvis rock --config config/elvis.config
+### `--code-path <dir>` (`-p <dir>`)
+
+Adds `<dir>` to the analysis' code path.
+
+### `--commands`
+
+Outputs the list of commands under stood by `elvis`.
+
+#### `git-branch <branch | commit>`
+
+Executes `elvis` on source files that have changed since `<branch>` or `<commit>`.
+
+#### `git-hook`
+
+Executes `elvis` (with the specific configuration file) on the pre-commit hook Git-staged files.
+
+#### `install git-hook`
+
+Installs `elvis` in your current Git repository, as a pre-commit hook.
+
+#### `rock [file...]`
+
+Executes `elvis` analysis on identified files. It will, by default, consider all the files
+in the configuration (i.e. either `elvis.config` or the path set by option `--config`).
+
+### `--config <file>` (`-c <file>`)
+
+Allows providing the path to the config. file (by default `elvis.config` is assumed).
+
+### `--help` (`-h`)
+
+Shows help information.
+
+### `--keep-rocking` (`-k`)
+
+Doesn't stop analysis when erroring out on a file, if given a list of files to analyse.
+
+### `--output-format <plain | colors | parsable>`
+
+Allows controlling the output format of the analysis' results.
+
+The default value is `colors`.
+
+`plain` will output results without colors.
+`parsable` will allow for consumption by systems (it's less readable for humans).
+
+### `--parallel <n | auto>` (`-P <n | auto>`)
+
+Allows analyzing files concurrently.
+
+Use `n` to set the desired number of parallel workers, or `auto` to have the application choose
+an appropriate value (based on the number of schedulers).
+
+### `--quiet` (`-q`)
+
+Allows suppressing all output. The exit code will still be non-`0` if there are failing rules.
+
+### `--verbose` (`-V`)
+
+Allows verbose output.
+
+### `--version` (`-v`)
+
+Outputs the application's version.
+
+## Configuration
+
+`elvis` is configured via `elvis_core`'s `elvis.config` as detailed under
+[`elvis_core / Configuration`](https://github.com/inaka/elvis_core?tab=readme-ov-file#configuration).
+
+### Rules
+
+A reference of all rules implemented in `elvis` can be found in `elvis_core`'s [RULES.md](https://github.com/inaka/elvis_core/blob/main/RULES.md).
+
+### User-defined rules
+
+If you have implemented `elvis` rule that are in your local repository or in one of
+your dependencies, you can add these rule to your `elvis.config` file and
+tell `elvis` where to find the `.beam` that contains the compiled rule using
+the `--code-path` option.
+
+For example, if the rule is in one of your dependencies, you can run `elvis rock -p deps/elvis_rules/ebin -c elvis.config`.
+
+## As a Git hook
+
+`elvis` can be used as a [`git` pre-commit hook](https://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks)
+using the `git-hook` command (installable via `install git-hook`) as:
+
+```sh
+#!/bin/sh
+elvis git-hook
 ```
 
-In `0.3.0` a new option was introduced in order to run elvis checks only on the source files that have changed since a particular branch of commit. Example usage would be `elvis git-branch origin/HEAD`.
+This will have `elvis` execute on staged files, as per its configuration.
 
-## Benefits
+If any rule fails, `elvis` exits with a non-zero code, which signals to `git` that the commit
+shouldn't be made.
 
-- Enables consistency in style across all your code base.
-- Encourages the development team to sit down and talk about code conventions.
-- Allows continuous monitoring of code quality.
-- Helps developers avoid repeated mistakes that can be automatically detected.
-- Provides homogenisation among the different projects in a company, therefore facilitating project switching for developers and as well allowing easier code sharing between projects
+**Note**: your pre-commit hook script should be executable (i.e. by running
+`chmod +x .git/hooks/pre-commit`), otherwise `git` won't be able to execute it.
+
+## As a webhook
 
 ### Webhook
 
-There's also a way to use `elvis` as a GitHub [webhook][webhooks] for
-`pull request` (PR) events by calling the `elvis_webhook:event/1` function. This will add
-a comment in each file and rule that is broken, analyzing only the files
-associated with the PR.
+`elvis` can be used as a GitHub [webhook](https://developer.github.com/v3/repos/hooks/) for
+`pull request` (PR) events, by calling the `elvis_webhook:event/1` function. This will add
+a comment in each file and rule that is broken, analyzing only the files associated with the PR.
 
 #### Running the webhook on your servers
 
-Since GitHub's API needs a valid user and password to allow the creation of
-reviews on PRs, the parameters `github_user` and `github_password` need to be
-added to `elvis`'s [configuration](#configuration) and also the credentials used
-must be from an admin of the repo or someone with permissions for requesting changes
-on PRs.
+Since GitHub's API needs a valid username and password to allow the creation of
+reviews on PRs, parameters `github_user` and `github_password` need to be
+added to `elvis`'s configuration file (mind you that the credentials used
+must be from an admin. of the repo or someone with permissions for requesting changes
+to PRs).
 
 The `elvis_webhook:event/1` function takes a map containing the keys `headers` and `body`,
 whose values should be the map of headers and the body from the GitHub's event
@@ -67,130 +182,37 @@ request.
 
 ```erlang
 Headers = #{<<"X-GitHub-Event">>, <<"pull_request">>},
-Body = <<"{}">>, %% JSON data form GitHub's event.
+Body = <<"{}">>, %% JSON data from GitHub's event.
 Request = #{headers => Headers, body => Body},
 elvis:webhook(Request).
 ```
 
-### Git hook
-
-`elvis` can also be used as a [`git` pre-commit hook][pre-commit]
-using the `git-hook` command, just use something like the following as
-your pre-commit script:
-
-```bash
-#!/bin/sh
-#
-# Runs elvis rules to staged files where applicable.
-
-elvis git-hook
-```
-
-As the comment states, `elvis` will search for files that match the `filter` of
-each rule group (see [configuration](#configuration)) among the staged files,
-get their staged content and run the rules specified in the configuration.
-If any rule fails then `elvis` exits with a non-zero code,
-which signals `git` that the commit shouldn't be made.
-
-Make sure your pre-commit hook script is executable (i.e. by running
-`chmod +x pre-commit`), otherwise `git` won't be able to run it.
-
-### Erlang Shell
-
-If you only need to use `elvis` in the Erlang shell you might want to
-consider only including the [`elvis_core`](https://github.com/inaka/elvis_core)
-library as a dependency.
-
-## Configuration
-
-To provide a default configuration for `elvis` you should either create an
-`elvis.config` file located in the root directory or set the following
-environment values in your [configuration][config] file:
+The extension to the configuration is as follows:
 
 ```erlang
 [
- {
-   elvis,
-   [
+  {elvis, [
     {config, [...]},
-    {output_format, plain},
-
-    %% Only necessary for the 'webhook' functionality
+    %% webhook configuration parameters
     {github_user, "user"},
     {github_password, "password"}
-   ]
- }
+  ]}
 ].
 ```
 
-The `config` and `output_format` are explained in [`elvis_core`](https://github.com/inaka/elvis_core).
+## Documentation
 
-The GitHub configuration parameters `github_user` and `github_password` are
-required only when `elvis` is used as a [webhook](#webhook).
+You can generate local documentation with `rebar3 ex_doc` and then access it with `open doc/index.html`.
 
-### elvis.config
+## Contributing
 
-In your `elvis.config` file you can setup which rules should be
-applied, on what files and in which directories to do it.
+`elvis` is a FOSS application, and as such contributions are welcome. Be sure to read
+the [contributing guide](CONTRIBUTING.md) for more detailed information.
 
-The configuration is in Erlang format, it is not that hard to write
-but it is easier if you use the `elvis.config` file in this reposiotry
-as a template.
+## License
 
-In the `elvis.config` file you create an elvis config where for a set
-of directories, you want to run a ruleset (or specific rules) on a set
-of files.
+`elvis` is licensed under the [Apache License, Version 2.0](LICENSE).
 
-For example, configure to check all erlang files under the `src`
-directory using the ruleset `erl_files`:
+## Inspiration
 
-```erlang
-[
- {
-   elvis,
-   [
-    {config,
-     [#{dirs => ["src"],
-        filter => "*.erl",
-        ruleset => erl_files
-       }
-     ]
-    }
-   ]
- }
-].
-```
-
-You can use four different rulesets `erl_files`, `makefiles`, `rebar_config` or `elvis_config`.
-
-## Implemented Rules
-
-A reference of all rules implemented in Elvis can be found in this `elvis_core`'s [RULES.md](https://github.com/inaka/elvis_core/blob/main/RULES.md).
-
-## User Defined Rules
-
-If you have implemented an Elvis rule that's in your local repo or in one of
-your dependencies, you can add this rule to your `elvis.config` file and
-tell Elvis where to find the `.beam` that contains the compiled rule using
-the `--code-path` (`-p`) option.
-
-For example if the rule is in one of your deps, you could run Elvis in the
-following way:
-
-```shell
-elvis rock -p deps/elvis_rules/ebin -c elvis.config
-```
-
-## Dependencies
-
-- Erlang/OTP 24+
-- git
-
-## References
-
-Inspired on [HoundCI][houndci]
-
-  [houndci]: https://houndci.com/
-  [pre-commit]: https://git-scm.com/book/en/Customizing-Git-Git-Hooks#Client-Side-Hooks
-  [config]: https://www.erlang.org/doc/man/config.html
-  [webhooks]: https://developer.github.com/v3/repos/hooks/
+`elvis` got some of its inspiration from [HoundCI](https://houndci.com/).
