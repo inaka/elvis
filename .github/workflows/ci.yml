@@ -11,20 +11,20 @@ on:
 jobs:
   ci:
     name: Run checks and tests over ${{matrix.otp_vsn}}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        otp_vsn: ['24', '25', '26', '27']
-        rebar3_vsn: ['3.23']
+        otp_vsn: ['25', '26', '27']
+        rebar3_vsn: ['3.24']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         id: setup-beam
         with:
           otp-version: ${{matrix.otp_vsn}}
           rebar3-version: ${{matrix.rebar3_vsn}}
       - name: Restore _build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: _build
           key: "_build-cache-for\
@@ -33,7 +33,7 @@ jobs:
                 -rebar3-${{steps.setup-beam.outputs.rebar3-version}}\
                 -hash-${{hashFiles('rebar.lock')}}"
       - name: Restore rebar3's cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/rebar3
           key: "rebar3-cache-for\
