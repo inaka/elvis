@@ -1,0 +1,63 @@
+#compdef elvis
+
+# Bash completion for Elvis, the Erlang style reviewer
+
+_elvis() {
+    local -a commands
+    local -a formats
+    local -a parallel_opts
+    local -a branches
+    local cur prev
+
+    cur="${1}"
+    prev="${2}"
+
+    commands=(
+        '--help[Show help information]'
+        '--config[Provide path to a non-default configuration file]'
+        '--commands[Show available commands]'
+        'git-branch[Execute on files changed since <branch> or <commit>]'
+        'git-hook[Execute on the pre-commit hook Git-staged files]'
+        'install[Install as a Git pre-commit hook]'
+        'rock[Execute on identified files]'
+        '--output_format[Control the output format]'
+        '--parallel[Analyze files concurrently]'
+        '--quiet[Suppress all output]'
+        '--verbose[Enable verbose output]'
+        '--version[Show the current version]'
+        '--code_path[Add <dir> to analysis code path]'
+        '--keep_rocking[Don’t stop on errors]'
+    )
+
+    formats=(
+        'plain[Plain text output]'
+        'colors[Colored output]'
+        'parsable[Output suitable for parsing]'
+    )
+
+    parallel_opts=(
+        'auto[Automatically determine parallelism]'
+        'n[Specify number of parallel processes]'
+    )
+
+    if [[ "$prev" == "--config" ]]; then
+        _files
+    elif [[ "$prev" == "--code_path" ]]; then
+        _files -d
+    elif [[ "$prev" == "--output_format" ]]; then
+        _describe -t formats
+    elif [[ "$prev" == "--parallel" ]]; then
+        _describe -t parallel 'Parallel options' parallel_opts
+    elif [[ "$prev" == "git-branch" ]]; then
+        branches=($(git branch --format='%(refname)' | sed 's|refs/heads/||' || true))
+        _describe -t branches 'Git branches' branches
+    elif [[ "$prev" == "install" ]]; then
+        _describe -t install 'Install commands' 'git-hook'
+    elif [[ "$prev" == "rock" ]]; then
+        _files
+    else
+        _describe -t commands 'elvis commands' commands
+    fi
+}
+
+compdef _elvis elvis

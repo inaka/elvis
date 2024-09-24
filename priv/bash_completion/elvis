@@ -1,0 +1,40 @@
+#!/bin/bash
+# shellcheck disable=SC2207  # Prefer mapfile or read -a to split command output (or quote to avoid splitting)
+
+# Bash completion for Elvis, the Erlang style reviewer
+_elvis() {
+  local cur prev
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD - 1]}"
+
+  if [[ ${prev} == "--config" ]] || [[ ${prev} == "rock" ]]; then
+    local files_and_dirs=($(compgen -f -- "${cur}"))
+    for item in "${files_and_dirs[@]}"; do
+      if [[ -d "${item}" ]]; then
+        compopt -o nospace
+        COMPREPLY+=("${item}/")
+      else
+        COMPREPLY+=("${item}")
+      fi
+    done
+    return 0
+  elif [[ ${prev} == "--code_path" ]]; then
+    compopt -o nospace
+    COMPREPLY=($(compgen -d -- "${cur}"))
+  elif [[ ${prev} == "install" ]]; then
+    COMPREPLY=($(compgen -W "git-hook" -- "${cur}"))
+  elif [[ ${prev} == "--output_format" ]]; then
+    COMPREPLY=($(compgen -W "plain colors parsable" -- "${cur}"))
+  elif [[ ${prev} == "--parallel" ]]; then
+    COMPREPLY=($(compgen -W "auto" -- "${cur}"))
+  elif [[ ${prev} == "git-branch" ]]; then
+    COMPREPLY=($(compgen -W "$(git branch --format='%(refname)' | sed 's|refs/heads/||' || true)" -- "${cur}"))
+  else
+    COMPREPLY=($(compgen -W '--help --config --commands git-branch git-hook install rock --output_format --parallel --quiet --verbose --version --code_path --keep_rocking' -- "${cur}"))
+  fi
+
+  return 0
+}
+
+complete -F _elvis elvis
