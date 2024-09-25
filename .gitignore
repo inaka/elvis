@@ -7,3 +7,5 @@ logs
 
 # Ignore elvis escript
 elvis
+!priv/bash_completion/elvis
+!priv/zsh_completion/_elvis

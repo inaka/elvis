@@ -46,6 +46,17 @@ i.e. `.bashrc`, `.zshrc`, ...)
 Now run it by calling `elvis` (or `elvis help`), and you should get to the `Usage: elvis`
 instructions.
 
+### Shell completion
+
+Elvis also comes with shell completions.
+
+Optionally, download and install:
+
+- Bash completion from <https://github.com/inaka/elvis/raw/master/priv/bash_completion/elvis>
+- Zsh completion from <https://github.com/inaka/elvis/master/priv/zsh_completion/_elvis>
+
+depending on your preferred shell.
+
 ## Usage
 
 The most common use case is to `cd` into a folder containing an `elvis.config` file
