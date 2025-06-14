@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        otp_vsn: ['25', '26', '27']
-        rebar3_vsn: ['3.24']
+        otp_vsn: ['26', '27', '28']
+        rebar3_vsn: ['3.25']
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
