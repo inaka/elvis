@@ -246,22 +246,15 @@ rock_one_song(Filename, Config) ->
             ok
     end.
 
-%% @private
 -spec default_config() -> [elvis_config:t()].
 default_config() ->
-    default_config([fun() -> elvis_config:from_file("elvis.config") end,
-                    fun() -> elvis_config:from_rebar("rebar.config") end]).
-
--spec default_config([Fun]) -> [elvis_config:t()]
-    when Fun :: fun(() -> [elvis_config:t()] | elvis_config:fail_validation()).
-default_config([Fun | Funs]) ->
-    case Fun() of
+    case elvis_config:config() of
         {fail, [{throw, {invalid_config, _}}]} ->
-            default_config(Funs);
-        [] ->
-            default_config(Funs);
+            % When we implement warnings_as_errors, where the default is false,
+            % replace the next line with elvis_config:default() alone
+            % Maybe think about make this the default for `elvis_config:config()`
+            % with an output notice
+            application:get_env(elvis, config, elvis_config:default());
         Config ->
             Config
-    end;
-default_config([]) ->
-    application:get_env(elvis, config, elvis_config:default()).
+    end.
