@@ -47,3 +47,5 @@ jobs:
         run: rebar3 test
       - shell: bash
         run: rebar3 escriptize && _build/default/bin/elvis rock
+      - shell: bash
+        run: rebar3 as test test
