@@ -253,7 +253,7 @@ default_config() ->
                     fun() -> elvis_config:from_rebar("rebar.config") end]).
 
 -spec default_config([Fun]) -> [elvis_config:t()]
-    when Fun :: fun(() -> [elvis_config:t()]).
+    when Fun :: fun(() -> [elvis_config:t()] | elvis_config:fail_validation()).
 default_config([Fun | Funs]) ->
     case Fun() of
         {fail, [{throw, {invalid_config, _}}]} ->
