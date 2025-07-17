@@ -2,19 +2,14 @@
     {pkg_name, elvis},
     {description, "CLI for the Elvis Erlang Style Reviewer"},
     {vsn, git},
-    {applications, [kernel, stdlib, ssl, elvis_core, katana_code, getopt]},
-    {modules, [elvis]},
+    {applications, [kernel, stdlib, ssl, elvis_core, egithub, katana_code, getopt]},
+    {modules, [elvis, elvis_git, elvis_webhook]},
     {env, [
         {config, [
             #{
                 dirs => ["apps/**", "lib/**", "src/**", "test/**"],
                 filter => "*.erl",
                 ruleset => erl_files
-            },
-            #{
-                dirs => ["."],
-                filter => "Makefile",
-                ruleset => makefiles
             },
             #{
                 dirs => [".", "apps/**", "lib/**", "src/**"],
