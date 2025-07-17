@@ -12,7 +12,7 @@
 %%% Public
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--spec run_hook(elvis_config:configs()) -> ok.
+-spec run_hook([elvis_config:t()]) -> ok.
 run_hook(Config) ->
     Files = elvis_git:staged_files(),
     NewConfig = elvis_config:resolve_files(Config, Files),
@@ -23,7 +23,7 @@ run_hook(Config) ->
             ok
     end.
 
--spec run_branch(string(), elvis_config:configs()) -> ok.
+-spec run_branch(string(), [elvis_config:t()]) -> ok.
 run_branch(Commit, Config) ->
     Files = elvis_git:branch_files(Commit),
     NewConfig = elvis_config:resolve_files(Config, Files),
@@ -34,11 +34,11 @@ run_branch(Commit, Config) ->
             ok
     end.
 
--spec branch_files(string()) -> [elvis_file:file()].
+-spec branch_files(string()) -> [elvis_file:t()].
 branch_files(Commit) ->
     process_files(?LIST_BRANCH_CHANGES(Commit)).
 
--spec staged_files() -> [elvis_file:file()].
+-spec staged_files() -> [elvis_file:t()].
 staged_files() ->
     process_files(?LIST_STAGED).
 
@@ -49,7 +49,7 @@ process_files(Cmd) ->
     Paths = [binary_to_list(Path) || Path <- Lines, byte_size(Path) > 0],
     lists:map(fun elvis_file/1, Paths).
 
--spec elvis_file(string()) -> elvis_file:file().
+-spec elvis_file(string()) -> elvis_file:t().
 elvis_file(Path) ->
     #{path => Path}.
 
@@ -79,11 +79,10 @@ install_hook() ->
         check_git_dir(),
         ok = filelib:ensure_dir(?PRE_COMMIT_FILE),
         _ = add_pre_commit_hook(),
-        elvis_utils:info("Elvis pre-commit hook installed. "
-                         "Wop-bop-a-loom-a-blop-bam-boom!")
+        elvis_utils:info("Elvis pre-commit hook installed. Wop-bop-a-loom-a-blop-bam-boom!", [])
     catch
         _:Reason ->
-            elvis_utils:error_prn(Reason)
+            elvis_utils:error(Reason, [])
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
