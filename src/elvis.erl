@@ -252,7 +252,7 @@ default_config() ->
         {fail, [{throw, {invalid_config, _}}]} ->
             % When we implement warnings_as_errors, where the default is false,
             % replace the next line with elvis_config:default() alone
-            % Maybe think about make this the default for `elvis_config:config()`
+            % Maybe think about making this the default for `elvis_config:config()`
             % with an output notice
             application:get_env(elvis, config, elvis_config:default());
         Config ->
