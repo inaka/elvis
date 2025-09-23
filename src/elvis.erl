@@ -115,7 +115,7 @@ process_options(Options, Commands) ->
     end.
 
 %% @private
--spec process_options([option()], [string()], elvis_config:configs()) -> ok.
+-spec process_options([option()], [string()], [map()]) -> ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
     process_options(Opts, Cmds, Config);
@@ -162,7 +162,7 @@ process_options([], Cmds, Config) ->
                         'git-hook' |
                         'git-branch' |
                         string()],
-                       elvis_config:configs()) ->
+                       [map()]) ->
                           ok.
 process_commands([rock | Files], Config) ->
     case Files of
@@ -179,15 +179,6 @@ process_commands([rock | Files], Config) ->
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
-process_commands([install, 'git-hook' | Cmds], Config) ->
-    elvis_git:install_hook(),
-    process_commands(Cmds, Config);
-process_commands(['git-hook' | Cmds], Config) ->
-    elvis_git:run_hook(Config),
-    process_commands(Cmds, Config);
-process_commands(['git-branch', Commit | Cmds], Config) ->
-    elvis_git:run_branch(atom_to_list(Commit), Config),
-    process_commands(Cmds, Config);
 process_commands([], _Config) ->
     ok;
 process_commands([_Cmd | _Cmds], _Config) ->
@@ -202,7 +193,7 @@ help() ->
     getopt:usage(OptSpecList, ?APP_NAME, standard_io).
 
 %% @private
--spec help(elvis_config:configs()) -> elvis_config:configs().
+-spec help([map()]) -> [map()].
 help(Config) ->
     help(),
     Config.
@@ -261,13 +252,12 @@ rock_one_song(FileName, Config) ->
     end.
 
 %% @private
--spec default_config() -> elvis_config:configs().
+-spec default_config() -> [map()].
 default_config() ->
     default_config([fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end,
                     fun() -> elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH) end]).
 
--spec default_config([Fun]) -> elvis_config:configs()
-    when Fun :: fun(() -> elvis_config:config()).
+-spec default_config([Fun]) -> [map()] when Fun :: fun(() -> map()).
 default_config([Fun | Funs]) ->
     Config =
         try
