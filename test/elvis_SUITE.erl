@@ -1,13 +1,18 @@
 -module(elvis_SUITE).
 
 -export([all/0, init_per_suite/1, end_per_suite/1]).
--export([run_webhook/1, run_webhook_ping/1, main_help/1, main_commands/1, main_config/1,
-         main_version/1, main_rock/1, main_git_hook_fail/1, main_git_hook_ok/1,
-         main_default_config/1, main_unexistent/1, main_code_path/1]).
+-export([
+    main_help/1,
+    main_commands/1,
+    main_config/1,
+    main_version/1,
+    main_rock/1,
+    main_default_config/1,
+    main_unexistent/1,
+    main_code_path/1
+]).
 
-                                                                               %% Webhook
-
-         %% Mains & Commands
+%% Mains & Commands
 
 -define(EXCLUDED_FUNS, [module_info, all, test, init_per_suite, end_per_suite]).
 
@@ -28,7 +33,7 @@ all() ->
 
 -spec init_per_suite(config()) -> config().
 init_per_suite(Config) ->
-    _ = application:start(elvis),
+    {ok, _} = application:ensure_all_started(elvis),
     Config.
 
 -spec end_per_suite(config()) -> config().
@@ -39,44 +44,6 @@ end_per_suite(Config) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test Cases
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%
-%%% Webhook
-
--spec run_webhook(config()) -> any().
-run_webhook(_Config) ->
-    Headers = #{<<"x-github-event">> => <<"pull_request">>},
-    Path = "../../test/examples/pull_request.js",
-    {ok, Body} = file:read_file(Path),
-    Request = egithub_webhook_req:new(Headers, Body),
-
-    try
-        elvis:start(),
-
-        meck:new(egithub, [passthrough]),
-        Files = [#{<<"filename">> => <<"test/examples/rebar.config.fail">>}],
-        FakeFun1 = fun(_, _, _) -> {ok, Files} end,
-        meck:expect(egithub, pull_req_files, FakeFun1),
-
-        EmptyResultFun = fun(_, _, _) -> {ok, []} end,
-        meck:expect(egithub, pull_req_comments, EmptyResultFun),
-        meck:expect(egithub, issue_comments, EmptyResultFun),
-        meck:expect(egithub, pr_reviews, EmptyResultFun),
-
-        FakeFun2 = fun(_, _, _, "elvis.config") -> {error, error} end,
-        meck:expect(egithub, file_content, FakeFun2),
-
-        ok = elvis_webhook:event(Request)
-    after
-        meck:unload(egithub)
-    end.
-
--spec run_webhook_ping(config()) -> ok.
-run_webhook_ping(_Config) ->
-    Headers = #{<<"x-github-event">> => <<"ping">>},
-    Body = <<"[]">>,
-    Request = egithub_webhook_req:new(Headers, Body),
-    ok = elvis_webhook:event(Request).
 
 %%%%%%%%%%%%%%%
 %%% Main & Commands
@@ -157,52 +124,6 @@ main_rock(_Config) ->
         meck:unload(elvis_utils)
     end.
 
--spec main_git_hook_fail(config()) -> any().
-main_git_hook_fail(_Config) ->
-    try
-        meck:new(elvis_utils, [passthrough]),
-        meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
-
-        meck:new(elvis_git, [passthrough]),
-        meck:new(elvis_config, [passthrough]),
-        LongLine =
-            <<"Loooooooooooooooooooooooooooooooooooooooooooooooooooong ",
-              "Liiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiine">>,
-        Files =
-            [#{path => "../../src/fake_long_line.erl", content => LongLine},
-             #{path => "../../test/fake_long_line.erl", content => LongLine},
-             #{path => "../../src/README.md", content => <<"### Title">>},
-             #{path => "../../src/Makefile", content => <<"@Some text\n\nCT_OPTS =">>}],
-        FakeStagedFiles = fun() -> Files end,
-        meck:expect(elvis_git, staged_files, FakeStagedFiles),
-        meck:expect(elvis_config, files, fun(_) -> Files end),
-
-        Expected = "# ../../src/fake_long_line.erl.*FAIL",
-
-        ConfigArgs = "git-hook -c ../../config/elvis-test.config",
-        ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        _ = check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
-
-        meck:expect(elvis_git, staged_files, fun() -> [] end),
-        check_empty_output(ConfigFun)
-    after
-        meck:unload(elvis_utils),
-        meck:unload(elvis_git)
-    end.
-
--spec main_git_hook_ok(config()) -> any().
-main_git_hook_ok(_Config) ->
-    try
-        meck:new(elvis_git, [passthrough]),
-        meck:expect(elvis_git, staged_files, fun() -> [] end),
-
-        ConfigArgs = "git-hook -c ../../config/elvis-test.config",
-        ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        check_empty_output(ConfigFun)
-    after
-        meck:unload(elvis_git)
-    end.
-
 -spec main_default_config(config()) -> any().
 main_default_config(_Config) ->
     ok =
@@ -245,13 +166,14 @@ main_code_path(_Config) ->
     Source = Prefix ++ "test/examples/user_defined_rules.erl",
     Destination = Prefix ++ "ebin-test/user_defined_rules",
 
-    _ = try
+    _ =
+        try
             meck:new(elvis_utils, [passthrough]),
             meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
 
             ok = file:make_dir(OutDir),
             {ok, _} = file:copy(Source, Destination ++ ".erl"),
-            _ = compile:file(Destination, [{outdir, OutDir}]),
+            {ok, user_defined_rules} = compile:file(Destination, [{outdir, OutDir}]),
 
             CodePathFun = fun() -> elvis:main(Args) end,
             check_some_line_output(CodePathFun, Expected, fun matches_regex/2)

@@ -13,16 +13,16 @@
 -define(DEFAULT_REBAR_CONFIG_PATH, "./rebar.config").
 
 -type option() ::
-    commands |
-    help |
-    keep_rocking |
-    quiet |
-    verbose |
-    version |
-    {code_path, [any()]} |
-    {config, [any()]} |
-    {output_format, [any()]} |
-    {parallel, [any()]}.
+    commands
+    | help
+    | keep_rocking
+    | quiet
+    | verbose
+    | version
+    | {code_path, [any()]}
+    | {config, [any()]}
+    | {output_format, [any()]}
+    | {parallel, [any()]}.
 
 -export_type([option/0]).
 
@@ -61,7 +61,7 @@ main(Args) ->
         {ok, {Options, Commands}} ->
             process_options(Options, Commands);
         {error, {Reason, Data}} ->
-            elvis_utils:error_prn("~s ~p~n", [Reason, Data]),
+            elvis_utils:error("~s ~p~n", [Reason, Data]),
             help(),
             elvis_utils:erlang_halt(1)
     end.
@@ -90,16 +90,18 @@ option_spec_list() ->
         "Allows to analyze files concurrently. Provide max number of"
         " concurrent workers, or specify \"auto\" to peek default value"
         " based on the number of schedulers.",
-    [{help, $h, "help", undefined, "Show this help information."},
-     {config, $c, "config", string, Commands},
-     {commands, undefined, "commands", undefined, "Show available commands."},
-     {output_format, undefined, "output-format", string, OutputFormat},
-     {parallel, $P, "parallel", string, Parallel},
-     {quiet, $q, "quiet", undefined, "Suppress all output."},
-     {verbose, $V, "verbose", undefined, "Enable verbose output."},
-     {version, $v, "version", undefined, "Output the current elvis version."},
-     {code_path, $p, "code-path", string, "Add the directory in the code path."},
-     {keep_rocking, $k, "keep-rocking", undefined, KeepRocking}].
+    [
+        {help, $h, "help", undefined, "Show this help information."},
+        {config, $c, "config", string, Commands},
+        {commands, undefined, "commands", undefined, "Show available commands."},
+        {output_format, undefined, "output-format", string, OutputFormat},
+        {parallel, $P, "parallel", string, Parallel},
+        {quiet, $q, "quiet", undefined, "Suppress all output."},
+        {verbose, $V, "verbose", undefined, "Enable verbose output."},
+        {version, $v, "version", undefined, "Output the current elvis version."},
+        {code_path, $p, "code-path", string, "Add the directory in the code path."},
+        {keep_rocking, $k, "keep-rocking", undefined, KeepRocking}
+    ].
 
 %% @private
 -spec process_options([option()], [string()]) -> ok.
@@ -109,13 +111,13 @@ process_options(Options, Commands) ->
         AtomCommands = lists:map(fun list_to_atom/1, Commands),
         process_options(Options, AtomCommands, Config)
     catch
-        _:Exception ->
-            elvis_utils:error_prn("~p.", [Exception]),
+        _:Reason:Stack ->
+            elvis_utils:error("Error processing options: ~p\nStack: ~p", [Reason, Stack]),
             elvis_utils:erlang_halt(1)
     end.
 
 %% @private
--spec process_options([option()], [string()], elvis_config:configs()) -> ok.
+-spec process_options([option()], [string()], [elvis_config:t()]) -> ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
     process_options(Opts, Cmds, Config);
@@ -144,7 +146,8 @@ process_options([{code_path, Path} | Opts], Cmds, Config) ->
     true = code:add_path(Path),
     process_options(Opts, Cmds, Config);
 process_options([{parallel, Num} | Opts], Cmds, Config) ->
-    N = case Num of
+    N =
+        case Num of
             "auto" ->
                 erlang:system_info(schedulers);
             _ ->
@@ -156,18 +159,25 @@ process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
 %% @private
--spec process_commands([rock |
-                        help |
-                        [install | 'git-hook'] |
-                        'git-hook' |
-                        'git-branch' |
-                        string()],
-                       elvis_config:configs()) ->
-                          ok.
+-spec process_commands(
+    [
+        rock
+        | help
+        | string()
+    ],
+    [elvis_config:t()]
+) ->
+    ok.
 process_commands([rock | Files], Config) ->
     case Files of
         [] ->
             case elvis_core:rock(Config) of
+                {fail, [{throw, {invalid_config, Reason}}]} ->
+                    io:format("Invalid config: ~ts\n", [Reason]),
+                    elvis_utils:erlang_halt(1);
+                {fail, [{throw, Error}]} ->
+                    io:format("FATAL ERROR while running Elvis:\n\t~p\n", [Error]),
+                    elvis_utils:erlang_halt(1);
                 {fail, _} ->
                     elvis_utils:erlang_halt(1);
                 ok ->
@@ -179,19 +189,10 @@ process_commands([rock | Files], Config) ->
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
-process_commands([install, 'git-hook' | Cmds], Config) ->
-    elvis_git:install_hook(),
-    process_commands(Cmds, Config);
-process_commands(['git-hook' | Cmds], Config) ->
-    elvis_git:run_hook(Config),
-    process_commands(Cmds, Config);
-process_commands(['git-branch', Commit | Cmds], Config) ->
-    elvis_git:run_branch(atom_to_list(Commit), Config),
-    process_commands(Cmds, Config);
 process_commands([], _Config) ->
     ok;
-process_commands([_Cmd | _Cmds], _Config) ->
-    error(unrecognized_or_unimplemented_command).
+process_commands([_ | _] = Cmds, _Config) ->
+    error({unrecognized_or_unimplemented_command, Cmds}).
 
 %%% Options
 
@@ -202,7 +203,7 @@ help() ->
     getopt:usage(OptSpecList, ?APP_NAME, standard_io).
 
 %% @private
--spec help(elvis_config:configs()) -> elvis_config:configs().
+-spec help([elvis_config:t()]) -> [elvis_config:t()].
 help(Config) ->
     help(),
     Config.
@@ -211,22 +212,11 @@ help(Config) ->
 -spec commands() -> ok.
 commands() ->
     Commands =
-        <<"Elvis will do the following things for you when asked nicely:
-
-rock [file...]   Rock your socks off by running all rules to your source files.
-
-git-hook         Pre-commit Git Hook: Gets all staged files and runs the rules
-                                      specified in the configuration to those
-                                      files.
-
-git-branch [branch|commit]
-                 Rock your socks off by running all rules on source files that
-                 have changed since branch or commit.
-
-install git-hook
-                Installs Elvis as a pre-commit hook in your current working
-                directory, which should be a git repository.
-">>,
+        <<
+            "Elvis will do the following things for you when asked nicely:\n"
+            "\n"
+            "rock [file...] Rock your socks off by running all rules to your source files.\n"
+        >>,
     io:put_chars(Commands).
 
 %% @private
@@ -246,8 +236,8 @@ version() ->
     io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
 
 %% @private
-rock_one_song(FileName, Config) ->
-    F = atom_to_list(FileName),
+rock_one_song(Filename, Config) ->
+    F = atom_to_list(Filename),
     case elvis_core:rock_this(F, Config) of
         {fail, _} ->
             case application:get_env(elvis_core, keep_rocking, false) of
@@ -261,17 +251,32 @@ rock_one_song(FileName, Config) ->
     end.
 
 %% @private
--spec default_config() -> elvis_config:configs().
+-spec default_config() -> [elvis_config:t()].
 default_config() ->
-    default_config([fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end,
-                    fun() -> elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH) end]).
+    default_config([
+        {?DEFAULT_CONFIG_PATH, fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end},
+        {?DEFAULT_REBAR_CONFIG_PATH, fun() ->
+            elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH)
+        end}
+    ]).
 
--spec default_config([Fun]) -> elvis_config:configs()
-    when Fun :: fun(() -> elvis_config:config()).
-default_config([Fun | Funs]) ->
+-spec default_config([{Filename, Fun}]) -> [elvis_config:t()] when
+    Filename :: file:name_all(),
+    Fun :: fun(() -> elvis_config:t()).
+default_config([{Filename, Fun} | Funs]) ->
     Config =
-        try
-            Fun()
+        try Fun() of
+            {fail, Errors} ->
+                io:format(
+                    standard_error,
+                    "Failed to read config from ~ts:\n\t~p\nUsing default Elvis configuration.\n",
+                    [
+                        filename:absname(Filename), Errors
+                    ]
+                ),
+                [];
+            Configs ->
+                Configs
         catch
             _:_ ->
                 []
@@ -283,4 +288,4 @@ default_config([Fun | Funs]) ->
             Config
     end;
 default_config([]) ->
-    application:get_env(elvis, config, []).
+    application:get_env(elvis, config, elvis_config:default()).
