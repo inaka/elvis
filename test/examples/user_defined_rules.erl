@@ -6,4 +6,4 @@
 
 -spec rule(any(), any()) -> [elvis_result:item(), ...].
 rule(_Config, _Target) ->
-    [elvis_result:new(item, "This will always FAIL.", [], 1)].
+    [elvis_result:new(item, "This will always FAIL.", [])].
