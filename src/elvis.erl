@@ -15,10 +15,10 @@
     | quiet
     | verbose
     | version
-    | {code_path, [any()]}
-    | {config, [any()]}
-    | {output_format, [any()]}
-    | {parallel, [any()]}.
+    | {code_path, [term()]}
+    | {config, [term()]}
+    | {output_format, [term()]}
+    | {parallel, [term()]}.
 
 -export_type([option/0]).
 
@@ -124,7 +124,7 @@ process_options([commands | Opts], Cmds, Config) ->
     commands(),
     process_options(Opts, Cmds, Config);
 process_options([{output_format, Format} | Opts], Cmds, Config) ->
-    ok = elvis_config:set_output_format(list_to_atom(Format)),
+    ok = elvis_config:set_output_format(list_to_existing_atom(Format)),
     process_options(Opts, Cmds, Config);
 process_options([keep_rocking | Opts], Cmds, Config) ->
     ok = application:set_env(elvis, keep_rocking, true),
