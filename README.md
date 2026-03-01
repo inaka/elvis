@@ -59,8 +59,8 @@ depending on your preferred shell.
 
 ## Usage
 
-The most common use case is to `cd` into a folder containing an `elvis.config` file
-and executing `elvis rock`.
+The most common use case is to `cd` into a folder (containing an `elvis.config` file, or not -
+in which case some sane defaults apply) and execute `elvis rock`.
 
 If you just execute `elvis` with no arguments or options you'll get to the usage instructions
 outlined in this README.
@@ -97,7 +97,7 @@ in the configuration (i.e. either `elvis.config` or the path set by option `--co
 
 ### `--config <file>` (`-c <file>`)
 
-Allows providing the path to the config. file (by default `elvis.config` is assumed).
+Allows providing the path to the configuration file (by default `elvis.config` is assumed).
 
 ### `--help` (`-h`)
 

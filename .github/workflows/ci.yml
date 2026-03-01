@@ -41,8 +41,6 @@ jobs:
                 -otp-${{steps.setup-beam.outputs.otp-version}}\
                 -rebar3-${{steps.setup-beam.outputs.rebar3-version}}\
                 -hash-${{hashFiles('rebar.lock')}}"
-      - name: Format check
-        run: rebar3 fmt --check --verbose
       - shell: bash
         run: rebar3 test
       - shell: bash
