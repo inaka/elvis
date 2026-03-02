@@ -170,7 +170,7 @@ process_commands([rock], Config) ->
         ok -> ok
     end;
 process_commands([rock | Files], Config) ->
-    Paths = [file_to_path(File) || File <- Files],
+    Paths = [file_to_path(File) || File <:- Files],
     NewConfig = elvis_config:resolve_files(Config, Paths),
     case elvis_core:rock(NewConfig) of
         {fail, _} -> elvis_utils:erlang_halt(1);
