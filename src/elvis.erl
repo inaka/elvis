@@ -8,10 +8,6 @@
 
 -export([start/0]).
 
--define(APP_NAME, "elvis").
--define(DEFAULT_CONFIG_PATH, "./elvis.config").
--define(DEFAULT_REBAR_CONFIG_PATH, "./rebar.config").
-
 -type option() ::
     commands
     | help
@@ -19,10 +15,10 @@
     | quiet
     | verbose
     | version
-    | {code_path, [any()]}
-    | {config, [any()]}
-    | {output_format, [any()]}
-    | {parallel, [any()]}.
+    | {code_path, [term()]}
+    | {config, [term()]}
+    | {output_format, [term()]}
+    | {parallel, [term()]}.
 
 -export_type([option/0]).
 
@@ -111,8 +107,8 @@ process_options(Options, Commands) ->
         AtomCommands = lists:map(fun list_to_atom/1, Commands),
         process_options(Options, AtomCommands, Config)
     catch
-        _:Reason:Stack ->
-            elvis_utils:error("Error processing options: ~p\nStack: ~p", [Reason, Stack]),
+        _:Exception ->
+            elvis_utils:error("~p.", [Exception]),
             elvis_utils:erlang_halt(1)
     end.
 
@@ -128,16 +124,16 @@ process_options([commands | Opts], Cmds, Config) ->
     commands(),
     process_options(Opts, Cmds, Config);
 process_options([{output_format, Format} | Opts], Cmds, Config) ->
-    ok = application:set_env(elvis_core, output_format, list_to_atom(Format)),
+    ok = elvis_config:set_output_format(list_to_existing_atom(Format)),
     process_options(Opts, Cmds, Config);
 process_options([keep_rocking | Opts], Cmds, Config) ->
-    ok = application:set_env(elvis_core, keep_rocking, true),
+    ok = application:set_env(elvis, keep_rocking, true),
     process_options(Opts, Cmds, Config);
 process_options([quiet | Opts], Cmds, Config) ->
-    ok = application:set_env(elvis_core, no_output, true),
+    ok = elvis_config:set_no_output(true),
     process_options(Opts, Cmds, Config);
 process_options([verbose | Opts], Cmds, Config) ->
-    ok = application:set_env(elvis_core, verbose, true),
+    ok = elvis_config:set_verbose(true),
     process_options(Opts, Cmds, Config);
 process_options([version | Opts], Cmds, Config) ->
     version(),
@@ -153,7 +149,7 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
             _ ->
                 erlang:list_to_integer(Num)
         end,
-    ok = application:set_env(elvis_core, parallel, N),
+    ok = elvis_config:set_parallel(N),
     process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
@@ -200,7 +196,7 @@ process_commands([_ | _] = Cmds, _Config) ->
 -spec help() -> ok.
 help() ->
     OptSpecList = option_spec_list(),
-    getopt:usage(OptSpecList, ?APP_NAME, standard_io).
+    getopt:usage(OptSpecList, "elvis", standard_io).
 
 %% @private
 -spec help([elvis_config:t()]) -> [elvis_config:t()].
@@ -240,7 +236,7 @@ rock_one_song(Filename, Config) ->
     F = atom_to_list(Filename),
     case elvis_core:rock_this(F, Config) of
         {fail, _} ->
-            case application:get_env(elvis_core, keep_rocking, false) of
+            case application:get_env(elvis, keep_rocking, false) of
                 false ->
                     elvis_utils:erlang_halt(1);
                 true ->
@@ -250,42 +246,15 @@ rock_one_song(Filename, Config) ->
             ok
     end.
 
-%% @private
 -spec default_config() -> [elvis_config:t()].
 default_config() ->
-    default_config([
-        {?DEFAULT_CONFIG_PATH, fun() -> elvis_config:from_file(?DEFAULT_CONFIG_PATH) end},
-        {?DEFAULT_REBAR_CONFIG_PATH, fun() ->
-            elvis_config:from_rebar(?DEFAULT_REBAR_CONFIG_PATH)
-        end}
-    ]).
-
--spec default_config([{Filename, Fun}]) -> [elvis_config:t()] when
-    Filename :: file:name_all(),
-    Fun :: fun(() -> elvis_config:t()).
-default_config([{Filename, Fun} | Funs]) ->
-    Config =
-        try Fun() of
-            {fail, Errors} ->
-                io:format(
-                    standard_error,
-                    "Failed to read config from ~ts:\n\t~p\nUsing default Elvis configuration.\n",
-                    [
-                        filename:absname(Filename), Errors
-                    ]
-                ),
-                [];
-            Configs ->
-                Configs
-        catch
-            _:_ ->
-                []
-        end,
-    case Config of
-        [] ->
-            default_config(Funs);
+    case elvis_config:config() of
+        {fail, [{throw, {invalid_config, _}}]} ->
+            % When we implement warnings_as_errors, where the default is false,
+            % replace the next line with elvis_config:default() alone
+            % Maybe think about making this the default for `elvis_config:config()`
+            % with an output notice
+            application:get_env(elvis, config, elvis_config:default());
         Config ->
             Config
-    end;
-default_config([]) ->
-    application:get_env(elvis, config, elvis_config:default()).
+    end.

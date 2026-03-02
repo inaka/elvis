@@ -1,9 +1,12 @@
 _*
-erl_crash.dump
-rebar3.crashdump
-.rebar3
+_checkouts/
+_build/
+/erl_crash.dump
+/rebar3.crashdump
+.rebar3/
 doc/
 logs
+test/logs/
 
 # Ignore elvis escript
 elvis
