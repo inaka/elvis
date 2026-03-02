@@ -189,7 +189,7 @@ file_to_path(File) ->
     Dirname = filename:dirname(Path),
     Filename = filename:basename(Path),
     case elvis_file:find_files([Dirname], Filename) of
-        [] -> throw({enoent, Path});
+        [] -> error({enoent, Path});
         [File0] -> File0
     end.
 
