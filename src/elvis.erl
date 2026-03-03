@@ -11,7 +11,6 @@
 -type option() ::
     commands
     | help
-    | keep_rocking
     | quiet
     | verbose
     | version
@@ -79,9 +78,6 @@ option_spec_list() ->
         "It allows you to display the results in plain text. When "
         "none is provided elvis displays the results in colors. "
         "The options allowed are (plain | colors | parsable).",
-    KeepRocking =
-        "Won't stop rocking on first error"
-        " when given a list of files",
     Parallel =
         "Allows to analyze files concurrently. Provide max number of"
         " concurrent workers, or specify \"auto\" to peek default value"
@@ -95,8 +91,7 @@ option_spec_list() ->
         {quiet, $q, "quiet", undefined, "Suppress all output."},
         {verbose, $V, "verbose", undefined, "Enable verbose output."},
         {version, $v, "version", undefined, "Output the current elvis version."},
-        {code_path, $p, "code-path", string, "Add the directory in the code path."},
-        {keep_rocking, $k, "keep-rocking", undefined, KeepRocking}
+        {code_path, $p, "code-path", string, "Add the directory in the code path."}
     ].
 
 %% @private
@@ -125,9 +120,6 @@ process_options([commands | Opts], Cmds, Config) ->
     process_options(Opts, Cmds, Config);
 process_options([{output_format, Format} | Opts], Cmds, Config) ->
     ok = elvis_config:set_output_format(list_to_existing_atom(Format)),
-    process_options(Opts, Cmds, Config);
-process_options([keep_rocking | Opts], Cmds, Config) ->
-    ok = application:set_env(elvis, keep_rocking, true),
     process_options(Opts, Cmds, Config);
 process_options([quiet | Opts], Cmds, Config) ->
     ok = elvis_config:set_no_output(true),
