@@ -31,7 +31,7 @@ _elvis() {
   elif [[ ${prev} == "git-branch" ]]; then
     COMPREPLY=($(compgen -W "$(git branch --format='%(refname)' | sed 's|refs/heads/||' || true)" -- "${cur}"))
   else
-    COMPREPLY=($(compgen -W '--help --config --commands git-branch git-hook install rock --output_format --parallel --quiet --verbose --version --code_path --keep_rocking' -- "${cur}"))
+    COMPREPLY=($(compgen -W '--help --config --commands git-branch git-hook install rock --output_format --parallel --quiet --verbose --version --code_path' -- "${cur}"))
   fi
 
   return 0

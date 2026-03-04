@@ -26,7 +26,6 @@ _elvis() {
         '--verbose[Enable verbose output]'
         '--version[Show the current version]'
         '--code_path[Add <dir> to analysis code path]'
-        '--keep_rocking[Don’t stop on errors]'
     )
 
     formats=(

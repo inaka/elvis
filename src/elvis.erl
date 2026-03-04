@@ -11,7 +11,6 @@
 -type option() ::
     commands
     | help
-    | keep_rocking
     | quiet
     | verbose
     | version
@@ -79,9 +78,6 @@ option_spec_list() ->
         "It allows you to display the results in plain text. When "
         "none is provided elvis displays the results in colors. "
         "The options allowed are (plain | colors | parsable).",
-    KeepRocking =
-        "Won't stop rocking on first error"
-        " when given a list of files",
     Parallel =
         "Allows to analyze files concurrently. Provide max number of"
         " concurrent workers, or specify \"auto\" to peek default value"
@@ -95,8 +91,7 @@ option_spec_list() ->
         {quiet, $q, "quiet", undefined, "Suppress all output."},
         {verbose, $V, "verbose", undefined, "Enable verbose output."},
         {version, $v, "version", undefined, "Output the current elvis version."},
-        {code_path, $p, "code-path", string, "Add the directory in the code path."},
-        {keep_rocking, $k, "keep-rocking", undefined, KeepRocking}
+        {code_path, $p, "code-path", string, "Add the directory in the code path."}
     ].
 
 %% @private
@@ -125,9 +120,6 @@ process_options([commands | Opts], Cmds, Config) ->
     process_options(Opts, Cmds, Config);
 process_options([{output_format, Format} | Opts], Cmds, Config) ->
     ok = elvis_config:set_output_format(list_to_existing_atom(Format)),
-    process_options(Opts, Cmds, Config);
-process_options([keep_rocking | Opts], Cmds, Config) ->
-    ok = application:set_env(elvis, keep_rocking, true),
     process_options(Opts, Cmds, Config);
 process_options([quiet | Opts], Cmds, Config) ->
     ok = elvis_config:set_no_output(true),
@@ -164,23 +156,17 @@ process_options([], Cmds, Config) ->
     [elvis_config:t()]
 ) ->
     ok.
+process_commands([rock], Config) ->
+    case elvis_core:rock(Config) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
+    end;
 process_commands([rock | Files], Config) ->
-    case Files of
-        [] ->
-            case elvis_core:rock(Config) of
-                {fail, [{throw, {invalid_config, Reason}}]} ->
-                    io:format("Invalid config: ~ts\n", [Reason]),
-                    elvis_utils:erlang_halt(1);
-                {fail, [{throw, Error}]} ->
-                    io:format("FATAL ERROR while running Elvis:\n\t~p\n", [Error]),
-                    elvis_utils:erlang_halt(1);
-                {fail, _} ->
-                    elvis_utils:erlang_halt(1);
-                ok ->
-                    ok
-            end;
-        _ ->
-            lists:map(fun(F) -> rock_one_song(F, Config) end, Files)
+    Paths = lists:map(fun file_to_path/1, Files),
+    NewConfig = elvis_config:resolve_files(Config, Paths),
+    case elvis_core:rock(NewConfig) of
+        {fail, _} -> elvis_utils:erlang_halt(1);
+        ok -> ok
     end;
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
@@ -189,6 +175,15 @@ process_commands([], _Config) ->
     ok;
 process_commands([_ | _] = Cmds, _Config) ->
     error({unrecognized_or_unimplemented_command, Cmds}).
+
+file_to_path(File) ->
+    Path = atom_to_list(File),
+    Dirname = filename:dirname(Path),
+    Filename = filename:basename(Path),
+    case elvis_file:find_files([Dirname], Filename) of
+        [] -> error({enoent, Path});
+        [File0] -> File0
+    end.
 
 %%% Options
 
@@ -232,20 +227,6 @@ version() ->
     io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
 
 %% @private
-rock_one_song(Filename, Config) ->
-    F = atom_to_list(Filename),
-    case elvis_core:rock_this(F, Config) of
-        {fail, _} ->
-            case application:get_env(elvis, keep_rocking, false) of
-                false ->
-                    elvis_utils:erlang_halt(1);
-                true ->
-                    ok
-            end;
-        ok ->
-            ok
-    end.
-
 -spec default_config() -> [elvis_config:t()].
 default_config() ->
     case elvis_config:config() of

@@ -103,10 +103,6 @@ Allows providing the path to the configuration file (by default `elvis.config` i
 
 Shows help information.
 
-### `--keep-rocking` (`-k`)
-
-Doesn't stop analysis when erroring out on a file, if given a list of files to analyse.
-
 ### `--output-format <plain | colors | parsable>`
 
 Allows controlling the output format of the analysis' results.
