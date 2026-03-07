@@ -52,8 +52,8 @@ Elvis also comes with shell completions.
 
 Optionally, download and install:
 
-- Bash completion from <https://github.com/inaka/elvis/raw/master/priv/bash_completion/elvis>
-- Zsh completion from <https://github.com/inaka/elvis/master/priv/zsh_completion/_elvis>
+* Bash completion from <https://github.com/inaka/elvis/raw/master/priv/bash_completion/elvis>
+* Zsh completion from <https://github.com/inaka/elvis/master/priv/zsh_completion/_elvis>
 
 depending on your preferred shell.
 
