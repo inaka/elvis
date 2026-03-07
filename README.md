@@ -20,13 +20,13 @@ conventions.
 
 Some of the advantages of using `elvis` are:
 
-* enabling consistency in style across all your code base
-* encouraging the development team to sit down and talk about code conventions
-* allowing continuous monitoring of code quality
-* helping developers avoid repeated mistakes that can be automatically detected
-* providing homogenisation among different projects in a company, therefore facilitating project
+- enabling consistency in style across all your code base
+- encouraging the development team to sit down and talk about code conventions
+- allowing continuous monitoring of code quality
+- helping developers avoid repeated mistakes that can be automatically detected
+- providing homogenisation among different projects in a company, therefore facilitating project
 switching for developers, as well as allowing easier code sharing between projects
-* learning, since some of the conventions it proposes are themselves the distilled result of
+- learning, since some of the conventions it proposes are themselves the distilled result of
 working in very large code bases
 
 ## Installation
@@ -202,6 +202,12 @@ The extension to the configuration is as follows:
   ]}
 ].
 ```
+
+## Versioning
+
+This CLI tool is part of the Elvis ecosystem. For details on versioning and guidance on
+migrating between major versions when breaking changes occur, refer to the
+[`elvis_core` `README`](https://github.com/inaka/elvis_core/blob/main/README.md#versioning).
 
 ## Documentation
 
