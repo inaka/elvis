@@ -203,6 +203,12 @@ The extension to the configuration is as follows:
 ].
 ```
 
+## Versioning
+
+This CLI tool is part of the Elvis ecosystem. For details on versioning and guidance on
+migrating between major versions when breaking changes occur, refer to the
+[`elvis_core` `README`](https://github.com/inaka/elvis_core/blob/main/README.md#versioning).
+
 ## Documentation
 
 You can generate local documentation with `rebar3 ex_doc` and then access it with `open doc/index.html`.
