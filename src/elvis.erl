@@ -17,7 +17,8 @@
     | {code_path, [term()]}
     | {config, [term()]}
     | {output_format, [term()]}
-    | {parallel, [term()]}.
+    | {parallel, [term()]}
+    | {no_warnings_as_errors, [term()]}.
 
 -export_type([option/0]).
 
@@ -82,12 +83,16 @@ option_spec_list() ->
         "Allows to analyze files concurrently. Provide max number of"
         " concurrent workers, or specify \"auto\" to peek default value"
         " based on the number of schedulers.",
+    NoWarningsAsErrors =
+        "When set to false (default), the process will return a success"
+        " exit code (0) even if warnings or errors are detected.",
     [
         {help, $h, "help", undefined, "Show this help information."},
         {config, $c, "config", string, Commands},
         {commands, undefined, "commands", undefined, "Show available commands."},
         {output_format, undefined, "output-format", string, OutputFormat},
         {parallel, $P, "parallel", string, Parallel},
+        {no_warnings_as_errors, $w, "no_warnings_as_errors", undefined, NoWarningsAsErrors},
         {quiet, $q, "quiet", undefined, "Suppress all output."},
         {verbose, $V, "verbose", undefined, "Enable verbose output."},
         {version, $v, "version", undefined, "Output the current elvis version."},
@@ -143,6 +148,11 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
         end,
     ok = elvis_config:set_parallel(N),
     process_options(Opts, Cmds, Config);
+process_options([no_warnings_as_errors | Opts], Cmds, Config) ->
+    ok = elvis_config:set_warnings_as_errors(false);
+process_options([verbose | Opts], Cmds, Config) ->
+    ok = elvis_config:set_verbose(true),
+    process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
 
@@ -158,14 +168,16 @@ process_options([], Cmds, Config) ->
     ok.
 process_commands([rock], Config) ->
     case elvis_core:rock(Config) of
-        {fail, _} -> elvis_utils:erlang_halt(1);
+        {errors, _} -> elvis_utils:erlang_halt(1);
+        {warnings, _} -> elvis_utils:erlang_halt(0);
         ok -> ok
     end;
 process_commands([rock | Files], Config) ->
     Paths = lists:map(fun file_to_path/1, Files),
     NewConfig = elvis_config:resolve_files(Config, Paths),
     case elvis_core:rock(NewConfig) of
-        {fail, _} -> elvis_utils:erlang_halt(1);
+        {errors, _} -> elvis_utils:erlang_halt(1);
+        {warnings, _} -> elvis_utils:erlang_halt(0);
         ok -> ok
     end;
 process_commands([help | Cmds], Config) ->
@@ -230,11 +242,7 @@ version() ->
 -spec default_config() -> [elvis_config:t()].
 default_config() ->
     case elvis_config:config() of
-        {fail, [{throw, {invalid_config, _}}]} ->
-            % When we implement warnings_as_errors, where the default is false,
-            % replace the next line with elvis_config:default() alone
-            % Maybe think about making this the default for `elvis_config:config()`
-            % with an output notice
+        {error, _} ->
             application:get_env(elvis, config, elvis_config:default());
         Config ->
             Config
