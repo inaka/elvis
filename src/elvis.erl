@@ -149,9 +149,7 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
     ok = elvis_config:set_parallel(N),
     process_options(Opts, Cmds, Config);
 process_options([{warnings_as_errors, Choice} | Opts], Cmds, Config) ->
-    ok = elvis_config:set_warnings_as_errors(Choice);
-process_options([verbose | Opts], Cmds, Config) ->
-    ok = elvis_config:set_verbose(true),
+    ok = elvis_config:set_warnings_as_errors(Choice),
     process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
