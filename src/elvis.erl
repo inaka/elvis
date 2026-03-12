@@ -18,7 +18,7 @@
     | {config, [term()]}
     | {output_format, [term()]}
     | {parallel, [term()]}
-    | {no_warnings_as_errors, [term()]}.
+    | {warnings_as_errors, string()}.
 
 -export_type([option/0]).
 
@@ -83,8 +83,8 @@ option_spec_list() ->
         "Allows to analyze files concurrently. Provide max number of"
         " concurrent workers, or specify \"auto\" to peek default value"
         " based on the number of schedulers.",
-    NoWarningsAsErrors =
-        "When set to false (default), the process will return a success"
+    WarningsAsErrors =
+        "When set to false (default=true), the process will return a success"
         " exit code (0) even if warnings or errors are detected.",
     [
         {help, $h, "help", undefined, "Show this help information."},
@@ -92,7 +92,7 @@ option_spec_list() ->
         {commands, undefined, "commands", undefined, "Show available commands."},
         {output_format, undefined, "output-format", string, OutputFormat},
         {parallel, $P, "parallel", string, Parallel},
-        {no_warnings_as_errors, $w, "no_warnings_as_errors", undefined, NoWarningsAsErrors},
+        {warnings_as_errors, $e, "warnings_as_errors", boolean, WarningsAsErrors},
         {quiet, $q, "quiet", undefined, "Suppress all output."},
         {verbose, $V, "verbose", undefined, "Enable verbose output."},
         {version, $v, "version", undefined, "Output the current elvis version."},
@@ -148,8 +148,8 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
         end,
     ok = elvis_config:set_parallel(N),
     process_options(Opts, Cmds, Config);
-process_options([no_warnings_as_errors | Opts], Cmds, Config) ->
-    ok = elvis_config:set_warnings_as_errors(false);
+process_options([{warnings_as_errors, Choice} | Opts], Cmds, Config) ->
+    ok = elvis_config:set_warnings_as_errors(Choice);
 process_options([verbose | Opts], Cmds, Config) ->
     ok = elvis_config:set_verbose(true),
     process_options(Opts, Cmds, Config);
