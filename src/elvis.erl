@@ -14,10 +14,10 @@
     | quiet
     | verbose
     | version
-    | {code_path, [term()]}
-    | {config, [term()]}
-    | {output_format, [term()]}
-    | {parallel, [term()]}
+    | {code_path, [string()]}
+    | {config, string()}
+    | {output_format, string()}
+    | {parallel, string()}
     | {warnings_as_errors, string()}.
 
 -export_type([option/0]).
