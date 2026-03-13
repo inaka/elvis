@@ -165,7 +165,7 @@ process_commands([_ | _] = Cmds, _Config) ->
 rock(ConfigFilePath, Files) ->
     case elvis_core:rock({config_file, ConfigFilePath}, {files, Files}) of
         {errors, _} ->
-            _ = io:format(standard_error, "Elvis: linting failed~n"),
+            _ = io:format(standard_error, "Elvis: linting failed~n", []),
             elvis_utils:erlang_halt(1);
         {warnings, _} ->
             elvis_utils:erlang_halt(0);
