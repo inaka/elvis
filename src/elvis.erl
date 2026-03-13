@@ -101,30 +101,30 @@ process_options(Options, Commands) ->
 
 %% @private
 -spec process_options([option()], [string()], default | string()) -> ok.
-process_options([help | Opts], Cmds, ConfigFilePath) ->
+process_options([help | Opts], Cmds, Config) ->
     help(),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([{config, ConfigFilePath} | Opts], Cmds, _) ->
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([commands | Opts], Cmds, ConfigFilePath) ->
+    process_options(Opts, Cmds, Config);
+process_options([{config, Config} | Opts], Cmds, _) ->
+    process_options(Opts, Cmds, Config);
+process_options([commands | Opts], Cmds, Config) ->
     commands(),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([{output_format, Format} | Opts], Cmds, ConfigFilePath) ->
+    process_options(Opts, Cmds, Config);
+process_options([{output_format, Format} | Opts], Cmds, Config) ->
     ok = elvis_config:set_output_format(list_to_existing_atom(Format)),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([quiet | Opts], Cmds, ConfigFilePath) ->
+    process_options(Opts, Cmds, Config);
+process_options([quiet | Opts], Cmds, Config) ->
     ok = elvis_config:set_no_output(true),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([verbose | Opts], Cmds, ConfigFilePath) ->
+    process_options(Opts, Cmds, Config);
+process_options([verbose | Opts], Cmds, Config) ->
     ok = elvis_config:set_verbose(true),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([version | Opts], Cmds, ConfigFilePath) ->
+    process_options(Opts, Cmds, Config);
+process_options([version | Opts], Cmds, Config) ->
     version(),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([{code_path, Path} | Opts], Cmds, ConfigFilePath) ->
+    process_options(Opts, Cmds, Config);
+process_options([{code_path, Path} | Opts], Cmds, Config) ->
     true = code:add_path(Path),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([{parallel, Num} | Opts], Cmds, ConfigFilePath) ->
+    process_options(Opts, Cmds, Config);
+process_options([{parallel, Num} | Opts], Cmds, Config) ->
     N =
         case Num of
             "auto" ->
@@ -133,12 +133,12 @@ process_options([{parallel, Num} | Opts], Cmds, ConfigFilePath) ->
                 erlang:list_to_integer(Num)
         end,
     ok = elvis_config:set_parallel(N),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([{warnings_as_errors, Choice} | Opts], Cmds, ConfigFilePath) ->
+    process_options(Opts, Cmds, Config);
+process_options([{warnings_as_errors, Choice} | Opts], Cmds, Config) ->
     ok = elvis_config:set_warnings_as_errors(Choice),
-    process_options(Opts, Cmds, ConfigFilePath);
-process_options([], Cmds, ConfigFilePath) ->
-    process_commands(Cmds, ConfigFilePath).
+    process_options(Opts, Cmds, Config);
+process_options([], Cmds, Config) ->
+    process_commands(Cmds, Config).
 
 %% @private
 -spec process_commands(
