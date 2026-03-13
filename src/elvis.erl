@@ -2,7 +2,7 @@
 
 %% Public API
 
--export([main/1, default_config/0]).
+-export([main/1]).
 
 -elvis([{elvis_style, no_debug_call, disable}]).
 
@@ -235,13 +235,3 @@ version() ->
         "Version: ~s\n"
         "Elvis Core Version: ~s\n",
     io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
-
-%% @private
--spec default_config() -> [elvis_config:t()].
-default_config() ->
-    case elvis_config:config() of
-        {error, _} ->
-            application:get_env(elvis, config, elvis_config:default());
-        Config ->
-            Config
-    end.
