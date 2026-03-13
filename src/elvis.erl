@@ -18,7 +18,7 @@
     | {config, string()}
     | {output_format, string()}
     | {parallel, string()}
-    | {warnings_as_errors, string()}.
+    | {warnings_as_errors, boolean()}.
 
 -export_type([option/0]).
 
