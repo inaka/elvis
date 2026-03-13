@@ -45,7 +45,7 @@ main(Args) ->
         {ok, {Options, Commands}} ->
             process_options(Options, Commands);
         {error, {Reason, Data}} ->
-            elvis_utils:error("~s ~p~n", [Reason, Data]),
+            _ = elvis_utils:error("~s ~p~n", [Reason, Data]),
             help(),
             elvis_utils:erlang_halt(1)
     end.
@@ -91,42 +91,40 @@ option_spec_list() ->
 -spec process_options([option()], [string()]) -> ok.
 process_options(Options, Commands) ->
     try
-        Config = default_config(),
         AtomCommands = lists:map(fun list_to_atom/1, Commands),
-        process_options(Options, AtomCommands, Config)
+        process_options(Options, AtomCommands, default)
     catch
         _:Exception ->
-            elvis_utils:error("~p.", [Exception]),
+            _ = elvis_utils:error("~p.", [Exception]),
             elvis_utils:erlang_halt(1)
     end.
 
 %% @private
--spec process_options([option()], [string()], [elvis_config:t()]) -> ok.
-process_options([help | Opts], Cmds, Config) ->
+-spec process_options([option()], [string()], default | string()) -> ok.
+process_options([help | Opts], Cmds, ConfigFilePath) ->
     help(),
-    process_options(Opts, Cmds, Config);
-process_options([{config, Path} | Opts], Cmds, _) ->
-    Config = elvis_config:from_file(Path),
-    process_options(Opts, Cmds, Config);
-process_options([commands | Opts], Cmds, Config) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([{config, ConfigFilePath} | Opts], Cmds, _) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([commands | Opts], Cmds, ConfigFilePath) ->
     commands(),
-    process_options(Opts, Cmds, Config);
-process_options([{output_format, Format} | Opts], Cmds, Config) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([{output_format, Format} | Opts], Cmds, ConfigFilePath) ->
     ok = elvis_config:set_output_format(list_to_existing_atom(Format)),
-    process_options(Opts, Cmds, Config);
-process_options([quiet | Opts], Cmds, Config) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([quiet | Opts], Cmds, ConfigFilePath) ->
     ok = elvis_config:set_no_output(true),
-    process_options(Opts, Cmds, Config);
-process_options([verbose | Opts], Cmds, Config) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([verbose | Opts], Cmds, ConfigFilePath) ->
     ok = elvis_config:set_verbose(true),
-    process_options(Opts, Cmds, Config);
-process_options([version | Opts], Cmds, Config) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([version | Opts], Cmds, ConfigFilePath) ->
     version(),
-    process_options(Opts, Cmds, Config);
-process_options([{code_path, Path} | Opts], Cmds, Config) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([{code_path, Path} | Opts], Cmds, ConfigFilePath) ->
     true = code:add_path(Path),
-    process_options(Opts, Cmds, Config);
-process_options([{parallel, Num} | Opts], Cmds, Config) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([{parallel, Num} | Opts], Cmds, ConfigFilePath) ->
     N =
         case Num of
             "auto" ->
@@ -135,12 +133,12 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
                 erlang:list_to_integer(Num)
         end,
     ok = elvis_config:set_parallel(N),
-    process_options(Opts, Cmds, Config);
-process_options([{warnings_as_errors, Choice} | Opts], Cmds, Config) ->
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([{warnings_as_errors, Choice} | Opts], Cmds, ConfigFilePath) ->
     ok = elvis_config:set_warnings_as_errors(Choice),
-    process_options(Opts, Cmds, Config);
-process_options([], Cmds, Config) ->
-    process_commands(Cmds, Config).
+    process_options(Opts, Cmds, ConfigFilePath);
+process_options([], Cmds, ConfigFilePath) ->
+    process_commands(Cmds, ConfigFilePath).
 
 %% @private
 -spec process_commands(
@@ -149,23 +147,13 @@ process_options([], Cmds, Config) ->
         | help
         | string()
     ],
-    [elvis_config:t()]
+    undefined | [elvis_config:t()]
 ) ->
     ok.
-process_commands([rock], Config) ->
-    case elvis_core:rock(Config) of
-        {errors, _} -> elvis_utils:erlang_halt(1);
-        {warnings, _} -> elvis_utils:erlang_halt(0);
-        ok -> ok
-    end;
-process_commands([rock | Files], Config) ->
-    Paths = lists:map(fun file_to_path/1, Files),
-    NewConfig = elvis_config:resolve_files(Config, Paths),
-    case elvis_core:rock(NewConfig) of
-        {errors, _} -> elvis_utils:erlang_halt(1);
-        {warnings, _} -> elvis_utils:erlang_halt(0);
-        ok -> ok
-    end;
+process_commands([rock], ConfigFilePath) ->
+    rock(ConfigFilePath, undefined);
+process_commands([rock | Files], ConfigFilePath) ->
+    rock(ConfigFilePath, Files);
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
@@ -174,13 +162,15 @@ process_commands([], _Config) ->
 process_commands([_ | _] = Cmds, _Config) ->
     error({unrecognized_or_unimplemented_command, Cmds}).
 
-file_to_path(File) ->
-    Path = atom_to_list(File),
-    Dirname = filename:dirname(Path),
-    Filename = filename:basename(Path),
-    case elvis_file:find_files([Dirname], Filename) of
-        [] -> error({enoent, Path});
-        [File0] -> File0
+rock(ConfigFilePath, Files) ->
+    case elvis_core:rock({config_file, ConfigFilePath}, {files, Files}) of
+        {errors, _} ->
+            _ = io:format("Elvis: linting failed~n"),
+            elvis_utils:erlang_halt(1);
+        {warnings, _} ->
+            elvis_utils:erlang_halt(0);
+        ok ->
+            ok
     end.
 
 %%% Options
