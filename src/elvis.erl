@@ -36,20 +36,8 @@ start() ->
 main(Args) ->
     %% Load the application to be able to access its information
     %% (e.g. --version option)
-    ok =
-        case application:load(elvis) of
-            ok ->
-                ok;
-            {error, {already_loaded, elvis}} ->
-                ok
-        end,
-    ok =
-        case application:load(elvis_core) of
-            ok ->
-                ok;
-            {error, {already_loaded, elvis_core}} ->
-                ok
-        end,
+    _ = application:load(elvis),
+    _ = application:load(elvis_core),
     OptSpecList = option_spec_list(),
     case getopt:parse(OptSpecList, Args) of
         {ok, {[], []}} ->
