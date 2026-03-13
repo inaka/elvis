@@ -112,6 +112,9 @@ main_rock(_Config) ->
         ExpectedFail = "# \\.\\./\\.\\./test/examples/.*\\.erl.*FAIL",
 
         NoConfigArgs = "rock",
+        Src = "../../config/elvis2.config",
+        Dest = "./elvis.config",
+        {ok, _} = file:copy(Src, Dest),
         NoConfigFun = fun() -> elvis:main(NoConfigArgs) end,
         _ = check_some_line_output(NoConfigFun, ExpectedFail, fun matches_regex/2),
 
