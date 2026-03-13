@@ -128,7 +128,7 @@ process_options([{parallel, Num} | Opts], Cmds, ConfigFilePath) ->
     N =
         case Num of
             "auto" ->
-                erlang:system_info(schedulers);
+                erlang:system_info(schedulers_online);
             _ ->
                 erlang:list_to_integer(Num)
         end,
