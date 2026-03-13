@@ -14,7 +14,7 @@
     | quiet
     | verbose
     | version
-    | {code_path, [string()]}
+    | {code_path, string()}
     | {config, string()}
     | {output_format, string()}
     | {parallel, string()}
