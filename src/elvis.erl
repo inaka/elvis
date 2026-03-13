@@ -191,12 +191,10 @@ help(Config) ->
 -spec commands() -> ok.
 commands() ->
     Commands =
-        <<
-            "Elvis will do the following things for you when asked nicely:\n"
-            "\n"
-            "rock [file...] Rock your socks off by running all rules to your source files.\n"
-        >>,
-    io:put_chars(Commands).
+        "Elvis will do the following things for you when asked nicely:\n"
+        "\n"
+        "rock [file...] Rock your socks off by running all rules to your source files.\n",
+    io:format(Commands).
 
 %% @private
 -spec version() -> ok.
