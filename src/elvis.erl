@@ -2,7 +2,7 @@
 
 %% Public API
 
--export([main/1, default_config/0]).
+-export([main/1]).
 
 -elvis([{elvis_style, no_debug_call, disable}]).
 
@@ -14,10 +14,11 @@
     | quiet
     | verbose
     | version
-    | {code_path, [term()]}
-    | {config, [term()]}
-    | {output_format, [term()]}
-    | {parallel, [term()]}.
+    | {code_path, string()}
+    | {config, string()}
+    | {output_format, string()}
+    | {parallel, string()}
+    | {warnings_as_errors, boolean()}.
 
 -export_type([option/0]).
 
@@ -35,20 +36,8 @@ start() ->
 main(Args) ->
     %% Load the application to be able to access its information
     %% (e.g. --version option)
-    ok =
-        case application:load(elvis) of
-            ok ->
-                ok;
-            {error, {already_loaded, elvis}} ->
-                ok
-        end,
-    ok =
-        case application:load(elvis_core) of
-            ok ->
-                ok;
-            {error, {already_loaded, elvis_core}} ->
-                ok
-        end,
+    _ = application:load(elvis),
+    _ = application:load(elvis_core),
     OptSpecList = option_spec_list(),
     case getopt:parse(OptSpecList, Args) of
         {ok, {[], []}} ->
@@ -56,7 +45,7 @@ main(Args) ->
         {ok, {Options, Commands}} ->
             process_options(Options, Commands);
         {error, {Reason, Data}} ->
-            elvis_utils:error("~s ~p~n", [Reason, Data]),
+            _ = elvis_utils:error("~s ~p~n", [Reason, Data]),
             help(),
             elvis_utils:erlang_halt(1)
     end.
@@ -82,12 +71,16 @@ option_spec_list() ->
         "Allows to analyze files concurrently. Provide max number of"
         " concurrent workers, or specify \"auto\" to peek default value"
         " based on the number of schedulers.",
+    WarningsAsErrors =
+        "When set to false (default=true), the process will return a success"
+        " exit code (0) even if warnings or errors are detected.",
     [
         {help, $h, "help", undefined, "Show this help information."},
         {config, $c, "config", string, Commands},
         {commands, undefined, "commands", undefined, "Show available commands."},
         {output_format, undefined, "output-format", string, OutputFormat},
         {parallel, $P, "parallel", string, Parallel},
+        {warnings_as_errors, $e, "warnings_as_errors", boolean, WarningsAsErrors},
         {quiet, $q, "quiet", undefined, "Suppress all output."},
         {verbose, $V, "verbose", undefined, "Enable verbose output."},
         {version, $v, "version", undefined, "Output the current elvis version."},
@@ -98,22 +91,20 @@ option_spec_list() ->
 -spec process_options([option()], [string()]) -> ok.
 process_options(Options, Commands) ->
     try
-        Config = default_config(),
         AtomCommands = lists:map(fun list_to_atom/1, Commands),
-        process_options(Options, AtomCommands, Config)
+        process_options(Options, AtomCommands, default)
     catch
         _:Exception ->
-            elvis_utils:error("~p.", [Exception]),
+            _ = elvis_utils:error("~p.", [Exception]),
             elvis_utils:erlang_halt(1)
     end.
 
 %% @private
--spec process_options([option()], [string()], [elvis_config:t()]) -> ok.
+-spec process_options([option()], [string()], default | string()) -> ok.
 process_options([help | Opts], Cmds, Config) ->
     help(),
     process_options(Opts, Cmds, Config);
-process_options([{config, Path} | Opts], Cmds, _) ->
-    Config = elvis_config:from_file(Path),
+process_options([{config, Config} | Opts], Cmds, _) ->
     process_options(Opts, Cmds, Config);
 process_options([commands | Opts], Cmds, Config) ->
     commands(),
@@ -137,11 +128,14 @@ process_options([{parallel, Num} | Opts], Cmds, Config) ->
     N =
         case Num of
             "auto" ->
-                erlang:system_info(schedulers);
+                erlang:system_info(schedulers_online);
             _ ->
                 erlang:list_to_integer(Num)
         end,
     ok = elvis_config:set_parallel(N),
+    process_options(Opts, Cmds, Config);
+process_options([{warnings_as_errors, Choice} | Opts], Cmds, Config) ->
+    ok = elvis_config:set_warnings_as_errors(Choice),
     process_options(Opts, Cmds, Config);
 process_options([], Cmds, Config) ->
     process_commands(Cmds, Config).
@@ -153,21 +147,13 @@ process_options([], Cmds, Config) ->
         | help
         | string()
     ],
-    [elvis_config:t()]
+    undefined | [elvis_config:t()]
 ) ->
     ok.
-process_commands([rock], Config) ->
-    case elvis_core:rock(Config) of
-        {fail, _} -> elvis_utils:erlang_halt(1);
-        ok -> ok
-    end;
-process_commands([rock | Files], Config) ->
-    Paths = lists:map(fun file_to_path/1, Files),
-    NewConfig = elvis_config:resolve_files(Config, Paths),
-    case elvis_core:rock(NewConfig) of
-        {fail, _} -> elvis_utils:erlang_halt(1);
-        ok -> ok
-    end;
+process_commands([rock], ConfigFilePath) ->
+    rock(ConfigFilePath, undefined);
+process_commands([rock | Files], ConfigFilePath) ->
+    rock(ConfigFilePath, Files);
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
@@ -176,13 +162,15 @@ process_commands([], _Config) ->
 process_commands([_ | _] = Cmds, _Config) ->
     error({unrecognized_or_unimplemented_command, Cmds}).
 
-file_to_path(File) ->
-    Path = atom_to_list(File),
-    Dirname = filename:dirname(Path),
-    Filename = filename:basename(Path),
-    case elvis_file:find_files([Dirname], Filename) of
-        [] -> error({enoent, Path});
-        [File0] -> File0
+rock(ConfigFilePath, Files) ->
+    case elvis_core:rock({config_file, ConfigFilePath}, {files, Files}) of
+        {errors, _} ->
+            _ = io:format(standard_error, "Elvis: linting failed~n", []),
+            elvis_utils:erlang_halt(1);
+        {warnings, _} ->
+            elvis_utils:erlang_halt(0);
+        ok ->
+            ok
     end.
 
 %%% Options
@@ -203,12 +191,10 @@ help(Config) ->
 -spec commands() -> ok.
 commands() ->
     Commands =
-        <<
-            "Elvis will do the following things for you when asked nicely:\n"
-            "\n"
-            "rock [file...] Rock your socks off by running all rules to your source files.\n"
-        >>,
-    io:put_chars(Commands).
+        "Elvis will do the following things for you when asked nicely:\n"
+        "\n"
+        "rock [file...] Rock your socks off by running all rules to your source files.\n",
+    io:format(Commands).
 
 %% @private
 -spec version() -> ok.
@@ -225,17 +211,3 @@ version() ->
         "Version: ~s\n"
         "Elvis Core Version: ~s\n",
     io:format(Version, [ElvisShellVsn, ElvisCoreVsn]).
-
-%% @private
--spec default_config() -> [elvis_config:t()].
-default_config() ->
-    case elvis_config:config() of
-        {fail, [{throw, {invalid_config, _}}]} ->
-            % When we implement warnings_as_errors, where the default is false,
-            % replace the next line with elvis_config:default() alone
-            % Maybe think about making this the default for `elvis_config:config()`
-            % with an output notice
-            application:get_env(elvis, config, elvis_config:default());
-        Config ->
-            Config
-    end.
