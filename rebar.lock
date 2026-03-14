@@ -1,17 +1,16 @@
 {"1.2.0",
-[{<<"elvis_core">>,
-  {git,"https://github.com/inaka/elvis_core",
-       {ref,"1153da40f10e07d1abb153131748c8b790bfd649"}},
-  0},
+[{<<"elvis_core">>,{pkg,<<"elvis_core">>,<<"5.0.1">>},0},
  {<<"getopt">>,{pkg,<<"getopt">>,<<"1.0.3">>},0},
  {<<"katana_code">>,{pkg,<<"katana_code">>,<<"2.4.2">>},1},
  {<<"zipper">>,{pkg,<<"zipper">>,<<"1.1.0">>},1}]}.
 [
 {pkg_hash,[
+ {<<"elvis_core">>, <<"C4AC6C16B309C8F5B8B87A49A31508246624AE1AD76FA5D594B164FB7BCE5896">>},
  {<<"getopt">>, <<"4F3320C1F6F26B2BEC0F6C6446B943EB927A1E6428EA279A1C6C534906EE79F1">>},
  {<<"katana_code">>, <<"296B88FF2D29B7E30277BE5F8DA4D0F221ACE6B39F6202D850FF2839A67E27E9">>},
  {<<"zipper">>, <<"FA775C01BCD33225BE89AF320C10CE61D23943109F4D5CA718551D0C492D7E35">>}]},
 {pkg_hash_ext,[
+ {<<"elvis_core">>, <<"E23D13201DB148009A0DD88871EF09DBE20B1ABC1AF177002DBC7BA8D2E76AEA">>},
  {<<"getopt">>, <<"7E01DE90AC540F21494FF72792B1E3162D399966EBBFC674B4CE52CB8F49324F">>},
  {<<"katana_code">>, <<"9057BC1A4F80860D498BDE00B67AA26C8E3E3A03097E8CB59AC889AADC0139B6">>},
  {<<"zipper">>, <<"4644C83AE83EF3C09860CB5ED597B0C759FBBCD64AD5B00A62F51AE48AEF7535">>}]}
