@@ -122,7 +122,13 @@ main_rock(_Config) ->
 
         ConfigArgs = "rock -V -c ../../config/elvis-test.config",
         ConfigFun = fun() -> elvis:main(ConfigArgs) end,
-        _ = check_some_line_output(ConfigFun, Expected, fun matches_regex/2)
+        _ = check_some_line_output(ConfigFun, Expected, fun matches_regex/2),
+
+        ConfigArgsWithSingleSrcFile =
+            "rock -V -c ../../config/elvis-test.config ../../src/elvis.erl",
+        ConfigFun1 = fun() -> elvis:main(ConfigArgsWithSingleSrcFile) end,
+        _ = check_some_line_output(ConfigFun1, Expected,
+                                   fun matches_regex/2)
     after
         meck:unload(elvis_utils)
     end.
