@@ -153,8 +153,7 @@ process_options([], Cmds, Config) ->
 process_commands([rock], ConfigFilePath) ->
     rock(ConfigFilePath, undefined);
 process_commands([rock | Files], ConfigFilePath) ->
-    Files1 = [atom_to_list(File) || File <- Files],
-    rock(ConfigFilePath, Files1);
+    rock(ConfigFilePath, lists:map(fun atom_to_list/1, Files));
 process_commands([help | Cmds], Config) ->
     Config = help(Config),
     process_commands(Cmds, Config);
