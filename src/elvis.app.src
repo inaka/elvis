@@ -9,7 +9,8 @@
     {links, [
         {"GitHub", "https://github.com/inaka/elvis"},
         {"Blog",
-            "https://web.archive.org/web/20180317191435/https://inaka.net/blog/2014/09/05/erlang-standards-and-elvis-rock/"}
+            "https://web.archive.org/web/20180317191435/"
+            "https://inaka.net/blog/2014/09/05/erlang-standards-and-elvis-rock/"}
     ]},
     {build_tools, ["rebar3"]}
 ]}.
