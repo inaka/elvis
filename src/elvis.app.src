@@ -5,7 +5,7 @@
     {applications, [kernel, stdlib, ssl, elvis_core, katana_code, getopt]},
     {modules, [elvis]},
     {registered, []},
-    {licenses, ["Apache 2.0"]},
+    {licenses, ["Apache-2.0"]},
     {links, [
         {"GitHub", "https://github.com/inaka/elvis"},
         {"Blog",
