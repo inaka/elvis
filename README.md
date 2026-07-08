@@ -131,6 +131,17 @@ Allows verbose output.
 
 Outputs the application's version.
 
+### `--warnings_as_errors <true|false>` (`-e <true|false>`)
+
+Determines how the analysis execution influences your system's
+exit code. This is particularly useful for governing build pipelines.
+
+- `true` (default): any detected warning or error will cause the process to fail with a non-zero
+exit code. Use this to enforce strict code quality standards.
+
+- `false`: the analysis will print all findings to the console, but the process will return an exit
+code of 0. This allows the build to continue even if issues are found.
+
 ## Configuration
 
 `elvis` is configured via `elvis_core`'s `elvis.config` as detailed under
