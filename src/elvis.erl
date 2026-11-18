@@ -110,7 +110,7 @@ process_options([commands | Opts], Cmds, Config) ->
     commands(),
     process_options(Opts, Cmds, Config);
 process_options([{output_format, Format} | Opts], Cmds, Config) ->
-    ok = elvis_config:set_output_format(list_to_existing_atom(Format)),
+    ok = elvis_config:set_output_format(list_to_atom(Format)),
     process_options(Opts, Cmds, Config);
 process_options([quiet | Opts], Cmds, Config) ->
     ok = elvis_config:set_no_output(true),
