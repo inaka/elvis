@@ -9,7 +9,8 @@
     main_rock/1,
     main_default_config/1,
     main_unexistent/1,
-    main_output_format_new_atom/1,
+    main_output_format/1,
+    main_output_format_invalid/1,
     main_code_path/1
 ]).
 
@@ -156,21 +157,40 @@ main_default_config(_Config) ->
             meck:unload(elvis_utils)
         end.
 
--spec main_output_format_new_atom(config()) -> ok.
-main_output_format_new_atom(_Config) ->
-    Format = "elvis_format_" ++ integer_to_list(erlang:unique_integer([positive])),
-    {'EXIT', {badarg, _}} = (catch list_to_existing_atom(Format)),
+-spec main_output_format(config()) -> ok.
+main_output_format(_Config) ->
     try
         meck:new(elvis_utils, [passthrough]),
         meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
         meck:new(elvis_config, [passthrough]),
         meck:expect(elvis_config, set_output_format, fun(_) -> ok end),
 
-        _ = elvis:main("--output-format " ++ Format),
-
-        FormatAtom = list_to_existing_atom(Format),
-        true = meck:called(elvis_config, set_output_format, [FormatAtom]),
+        lists:foreach(
+            fun(Format) ->
+                _ = elvis:main("--output-format " ++ atom_to_list(Format)),
+                true = meck:called(elvis_config, set_output_format, [Format])
+            end,
+            [plain, colors, parsable]
+        ),
         0 = meck:num_calls(elvis_utils, erlang_halt, [1]),
+        ok
+    after
+        meck:unload(elvis_config),
+        meck:unload(elvis_utils)
+    end.
+
+-spec main_output_format_invalid(config()) -> ok.
+main_output_format_invalid(_Config) ->
+    try
+        meck:new(elvis_utils, [passthrough]),
+        meck:expect(elvis_utils, erlang_halt, fun(Code) -> Code end),
+        meck:new(elvis_config, [passthrough]),
+        meck:expect(elvis_config, set_output_format, fun(_) -> ok end),
+
+        _ = elvis:main("--output-format bananas"),
+
+        false = meck:called(elvis_config, set_output_format, '_'),
+        1 = meck:num_calls(elvis_utils, erlang_halt, [1]),
         ok
     after
         meck:unload(elvis_config),
