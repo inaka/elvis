@@ -16,7 +16,7 @@
     | version
     | {code_path, string()}
     | {config, string()}
-    | {output_format, string()}
+    | {output_format, nonempty_string()}
     | {parallel, string()}
     | {warnings_as_errors, boolean()}.
 
@@ -109,9 +109,17 @@ process_options([{config, Config} | Opts], Cmds, _) ->
 process_options([commands | Opts], Cmds, Config) ->
     commands(),
     process_options(Opts, Cmds, Config);
-process_options([{output_format, Format} | Opts], Cmds, Config) ->
-    ok = elvis_config:set_output_format(list_to_existing_atom(Format)),
+process_options([{output_format, "plain"} | Opts], Cmds, Config) ->
+    ok = elvis_config:set_output_format(plain),
     process_options(Opts, Cmds, Config);
+process_options([{output_format, "colors"} | Opts], Cmds, Config) ->
+    ok = elvis_config:set_output_format(colors),
+    process_options(Opts, Cmds, Config);
+process_options([{output_format, "parsable"} | Opts], Cmds, Config) ->
+    ok = elvis_config:set_output_format(parsable),
+    process_options(Opts, Cmds, Config);
+process_options([{output_format, Format} | _], _, _) ->
+    error({invalid_output_format, Format});
 process_options([quiet | Opts], Cmds, Config) ->
     ok = elvis_config:set_no_output(true),
     process_options(Opts, Cmds, Config);
